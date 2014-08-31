@@ -2,8 +2,17 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"text/template"
 	"github.com/blackjack/syslog"
+
 );
+
+type Nonsense struct {
+	Message string
+}
+
+
 
 func main(){
 	fmt.Println("redis-happy started")
@@ -15,6 +24,11 @@ func main(){
 	// load a configuration file
 
 	// format a template
+	data := Nonsense{"world"}
+	tmpl, err := template.New("test").Parse("Hello {{.Message}}")
+	if err != nil { panic(err) }
+	err = tmpl.Execute(os.Stdout, data)
+	if err != nil { panic(err) }
 
 	// subscribe to redis
 
