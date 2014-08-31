@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/blackjack/syslog"
-	"gopkg.in/yaml.v1"
 	"os"
 	"text/template"
 )
