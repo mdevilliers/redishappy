@@ -3,13 +3,31 @@ package main
 import (
 	"fmt"
 	"github.com/blackjack/syslog"
+	"github.com/gorilla/rpc"
+	"github.com/gorilla/rpc/json"
 	"github.com/kylelemons/go-gypsy/yaml"
+	"net/http"
 	"os"
 	"text/template"
 )
 
 type Nonsense struct {
 	Message string
+}
+
+type HelloArgs struct {
+	Who string
+}
+
+type HelloReply struct {
+	Message string
+}
+
+type HelloService struct{}
+
+func (h *HelloService) Say(r *http.Request, args *HelloArgs, reply *HelloReply) error {
+	reply.Message = "Hello, " + args.Who + "!"
+	return nil
 }
 
 func main() {
@@ -35,7 +53,7 @@ func main() {
 
 	// format a template
 	data := Nonsense{"world"}
-	tmpl, err := template.New("test").Parse("Hello {{.Message}}")
+	tmpl, err := template.New("test").Parse("Hello {{.Message}}\n")
 	if err != nil {
 		panic(err)
 	}
@@ -47,5 +65,11 @@ func main() {
 	// subscribe to redis sentinal
 
 	// host a json endpoint
+	fmt.Println("hosting json endpoint...")
+	service := rpc.NewServer()
+	service.RegisterCodec(json.NewCodec(), "application/json")
+	service.RegisterService(new(HelloService), "")
+	http.Handle("/rpc", service)
+	http.ListenAndServe(":8085", nil)
 
 }
