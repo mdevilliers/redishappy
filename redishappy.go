@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/blackjack/syslog"
+	"github.com/kylelemons/go-gypsy/yaml"
 	"os"
 	"text/template"
 )
@@ -20,6 +21,17 @@ func main() {
 	syslog.Syslog(syslog.LOG_INFO, "redis-happy started.")
 
 	// load a configuration file
+	config, err := yaml.ReadFile("config.yaml")
+	if err != nil {
+		panic(err)
+	}
+	name, err := config.Get("name")
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Parsed from config : %s\n", name)
 
 	// format a template
 	data := Nonsense{"world"}
