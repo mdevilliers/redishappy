@@ -6,7 +6,9 @@ import (
 	"github.com/gorilla/rpc"
 	"github.com/gorilla/rpc/json"
 	"github.com/kylelemons/go-gypsy/yaml"
+	"io"
 	"net/http"
+	"net"
 	"os"
 	"text/template"
 )
@@ -62,7 +64,37 @@ func main() {
 		panic(err)
 	}
 
-	// subscribe to redis sentinal
+	// subscribe to redis sentinel
+    // TODO
+
+	//connect to the haproxy management socket
+	buf := make([]byte, 512)
+
+	socket := "/tmp/haproxy"
+	sockettype := "unix" 
+	conn, err := net.Dial(sockettype, socket)
+	if err != nil {
+    	panic(err)
+	}   
+	defer conn.Close()
+
+	_, err = conn.Write([]byte("show info\n"))	
+	if err != nil {
+    	panic(err)
+	}   
+
+	n, err := conn.Read(buf)
+	resp := make([]byte, n) 
+    switch err {
+	    case io.EOF:
+	      resp = append(resp, buf[:n]...)
+	    case nil:
+	      resp = append(resp, buf[:n]...)
+	    default:
+	      panic(err)
+    }
+
+	fmt.Printf("haproxy at %s says '%s'\n", conn.RemoteAddr().String(), resp)
 
 	// host a json endpoint
 	fmt.Println("hosting json endpoint...")
