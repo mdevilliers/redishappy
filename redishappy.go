@@ -6,11 +6,10 @@ import (
 	"github.com/gorilla/rpc"
 	"github.com/gorilla/rpc/json"
 	"github.com/kylelemons/go-gypsy/yaml"
-	"io"
 	"net/http"
-	"net"
 	"os"
 	"text/template"
+	"github.com/mdevilliers/redishappy/haproxy"
 )
 
 type Nonsense struct {
@@ -68,33 +67,10 @@ func main() {
     // TODO
 
 	//connect to the haproxy management socket
-	buf := make([]byte, 512)
-
-	socket := "/tmp/haproxy"
-	sockettype := "unix" 
-	conn, err := net.Dial(sockettype, socket)
-	if err != nil {
-    	panic(err)
-	}   
-	defer conn.Close()
-
-	_, err = conn.Write([]byte("show info\n"))	
-	if err != nil {
-    	panic(err)
-	}   
-
-	n, err := conn.Read(buf)
-	resp := make([]byte, n) 
-    switch err {
-	    case io.EOF:
-	      resp = append(resp, buf[:n]...)
-	    case nil:
-	      resp = append(resp, buf[:n]...)
-	    default:
-	      panic(err)
-    }
-
-	fmt.Printf("haproxy at %s says '%s'\n", conn.RemoteAddr().String(), resp)
+	client := haproxy.NewClient("/tmp/haproxy")
+	makeRpcCall(client, "show info\n" )
+	makeRpcCall(client, "show stat\n" )
+	makeRpcCall(client, "xxxx\n" )
 
 	// host a json endpoint
 	fmt.Println("hosting json endpoint...")
@@ -104,4 +80,15 @@ func main() {
 	http.Handle("/rpc", service)
 	http.ListenAndServe(":8085", nil)
 
+}
+
+func makeRpcCall(client *haproxy.HAProxyClient, command string ) {
+	request,_ := haproxy.NewRequest(command)
+	response, err := client.Rpc(request)
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("%s : %s\n", request, response.Message)
 }
