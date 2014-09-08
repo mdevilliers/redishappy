@@ -87,14 +87,3 @@ func main() {
 	http.ListenAndServe(":8085", nil)
 
 }
-
-// func makeRpcCall(client *haproxy.HAProxyClient, command string ) {
-// 	request,_ := haproxy.NewRequest(command)
-// 	response, err := client.Rpc(request)
-
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	fmt.Printf("%s : %s\n", request, response.Message)
-// }
