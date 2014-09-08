@@ -68,9 +68,15 @@ func main() {
 
 	//connect to the haproxy management socket
 	client := haproxy.NewClient("/tmp/haproxy")
-	makeRpcCall(client, "show info\n" )
-	makeRpcCall(client, "show stat\n" )
-	makeRpcCall(client, "xxxx\n" )
+    
+	response,_ := client.Rpc("show info\n")
+	fmt.Printf( "%s\n", response.Message)
+	response,_ = client.Rpc("show stat\n")
+	fmt.Printf( "%s\n", response.Message)
+	response,_ = client.Rpc("xxxx\n")
+	fmt.Printf( "%s\n", response.Message)
+	response,_ = client.Rpc("show acl\n")
+	fmt.Printf( "%s\n", response.Message)
 
 	// host a json endpoint
 	fmt.Println("hosting json endpoint...")
@@ -82,13 +88,13 @@ func main() {
 
 }
 
-func makeRpcCall(client *haproxy.HAProxyClient, command string ) {
-	request,_ := haproxy.NewRequest(command)
-	response, err := client.Rpc(request)
+// func makeRpcCall(client *haproxy.HAProxyClient, command string ) {
+// 	request,_ := haproxy.NewRequest(command)
+// 	response, err := client.Rpc(request)
 
-	if err != nil {
-		panic(err)
-	}
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	fmt.Printf("%s : %s\n", request, response.Message)
-}
+// 	fmt.Printf("%s : %s\n", request, response.Message)
+// }

@@ -30,7 +30,12 @@ func NewRequest(command string) (*HAProxyRequest,error){
 	return request, nil
 }
 
-func (client *HAProxyClient) Rpc(request *HAProxyRequest) (*HAProxyReply, error) {
+func (client *HAProxyClient) Rpc(command string) (*HAProxyReply, error) {
+	request,_ := NewRequest(command)
+	return DoRpc(client, request)
+}
+
+func DoRpc(client *HAProxyClient, request *HAProxyRequest) (*HAProxyReply, error) {
 
 	buf := make([]byte, 512)
 
