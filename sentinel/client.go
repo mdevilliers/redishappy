@@ -1,6 +1,7 @@
 package sentinel
 
 import (
+	"errors"
 	"fmt"
 	"github.com/fzzy/radix/extra/pubsub"
 	"github.com/fzzy/radix/redis"
@@ -18,11 +19,6 @@ func NewClient(sentineladdr string) (*SentinelClient, error) {
 	}
 
 	redissubscriptionclient := pubsub.NewSubClient(redisclient)
-	subr := redissubscriptionclient.Subscribe("+switch-master") //TODO : fix radix client - doesn't support PSubscribe
-
-	if subr.Err != nil{
-		return nil, err
-	}
 
 	client := new(SentinelClient)
 	client.subscriptionclient = redissubscriptionclient
@@ -30,8 +26,21 @@ func NewClient(sentineladdr string) (*SentinelClient, error) {
 	return client, nil
 }
 
-func (client *SentinelClient) StartMonitoring() {
+func (client *SentinelClient) FindConnectedSentinels() (bool, error){ 
+	return false,errors.New("Not Implemented!")
+}
+
+func (client *SentinelClient) StartMonitoring() (bool, error) {
+
+	subr := client.subscriptionclient.Subscribe("+switch-master", "+slave-reconf-done ") //TODO : fix radix client - doesn't support PSubscribe
+
+	if subr.Err != nil{
+		return false, subr.Err
+	}
+
 	go client.loopSubscription()	
+
+	return true, nil
 }
 
 func (sub *SentinelClient) loopSubscription(){
@@ -41,7 +50,7 @@ func (sub *SentinelClient) loopSubscription(){
 			continue
 		}
 		if r.Err == nil {
-			fmt.Printf( "Subscription Message : Master changed  : %s\n", r.Message)
+			fmt.Printf( "Subscription Message : Channel : %s : %s\n", r.Channel, r.Message)
 		}
 	}
 }
