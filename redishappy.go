@@ -6,12 +6,11 @@ import (
 	"github.com/gorilla/rpc"
 	"github.com/gorilla/rpc/json"
 	"github.com/kylelemons/go-gypsy/yaml"
-	"github.com/fzzy/radix/extra/pubsub"
-	"github.com/fzzy/radix/redis"
 	"net/http"
 	"os"
 	"text/template"
 	"github.com/mdevilliers/redishappy/haproxy"
+	"github.com/mdevilliers/redishappy/sentinel"
 )
 
 type Nonsense struct {
@@ -67,25 +66,13 @@ func main() {
 
 	// subscribe to redis sentinel
     // and listen on the pubsub channel
-    sentineladdr :=  "192.168.0.20:26379"
-
-    redisclient, err := redis.Dial("tcp", sentineladdr)
+ 	sentinel, err := sentinel.NewClient("192.168.0.20:26379")
 	if err != nil {
 		panic(err)
 	}
 
-	redissubscriptionclient := pubsub.NewSubClient(redisclient)
-	subr := redissubscriptionclient.Subscribe("+switch-master") //TODO : fix radix client - doesn't support PSubscribe
-
-	if subr.Err != nil{
-		panic(subr.Err)
-	}
-
-	subscription := new (RedisSubscription)
-	subscription.Client = redissubscriptionclient
-
-	go subscription.loopSubscription()
-
+	sentinel.StartMonitoring()
+	
 	//connect to the haproxy management socket
 	client := haproxy.NewClient("/tmp/haproxy")
     
@@ -106,21 +93,5 @@ func main() {
 	http.Handle("/rpc", service)
 	http.ListenAndServe(":8085", nil)
 
-}
-
-func (sub *RedisSubscription) loopSubscription(){
-	for {
-		r := sub.Client.Receive()
-		if r.Timeout() {
-			continue
-		}
-		if r.Err == nil {
-			fmt.Printf( "Subscription Message : %s\n", r.Message)
-		}
-	}
-}
-
-type RedisSubscription struct {
-	Client *pubsub.SubClient
 }
 
