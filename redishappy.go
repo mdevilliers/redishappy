@@ -71,8 +71,14 @@ func main() {
 		panic(err)
 	}
 
+	_,err = sentinel.FindConnectedSentinels("secure")
+
+	if err != nil {
+		panic(err)
+	}
+
 	sentinel.StartMonitoring()
-	
+
 	//connect to the haproxy management socket
 	client := haproxy.NewClient("/tmp/haproxy")
     

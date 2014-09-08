@@ -1,7 +1,6 @@
 package sentinel
 
 import (
-	"errors"
 	"fmt"
 	"github.com/fzzy/radix/extra/pubsub"
 	"github.com/fzzy/radix/redis"
@@ -9,6 +8,7 @@ import (
 
 type SentinelClient struct {
 	subscriptionclient *pubsub.SubClient
+	redisclient *redis.Client
 }
 
 func NewClient(sentineladdr string) (*SentinelClient, error) { 
@@ -21,13 +21,28 @@ func NewClient(sentineladdr string) (*SentinelClient, error) {
 	redissubscriptionclient := pubsub.NewSubClient(redisclient)
 
 	client := new(SentinelClient)
+	client.redisclient = redisclient
 	client.subscriptionclient = redissubscriptionclient
 
 	return client, nil
 }
 
-func (client *SentinelClient) FindConnectedSentinels() (bool, error){ 
-	return false,errors.New("Not Implemented!")
+func (client *SentinelClient) FindConnectedSentinels(clustername string) (bool, error){ 
+
+	r := client.redisclient.Cmd("SENTINEL", "SENTINELS", clustername)
+	l:= r.String()
+	// TODO : Investigate why r.List() should return the correct datatype but doesn't
+
+	fmt.Printf( "Sentinels : Sentinels : %s \n", l)
+
+	// if(err != nil){
+	// 	return false, err
+	// }
+	// for _,element := range l {
+	//   fmt.Printf( "Sentinels : Sentinels : %s \n", element)
+	// }
+
+	return false,nil
 }
 
 func (client *SentinelClient) StartMonitoring() (bool, error) {
