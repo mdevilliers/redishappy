@@ -1,0 +1,28 @@
+{
+  "Clusters" :[
+  {
+    "Name" : "cluster one",
+    "MasterPort" : 6379,
+    "SlavePorts" : [16379, 16380],
+    "Sentinels" : [ 
+      {"Host" : "one", "Port" : 26379},
+      {"Host" : "two", "Port" : 26379}
+    ]  
+  },
+  {
+    "Name" : "cluster two",
+    "MasterPort" : 6380,
+    "Sentinels" : [ 
+      {"Host" : "three", "Port" : 26379},
+      {"Host" : "four", "Port" : 26379}
+    ]  
+  }],
+  "HAProxy" :
+    {
+      "TemplatePath": "haproxy_template.cfg",
+      "OutputPath": "/etc/haproxy/haproxy.cfg",
+      "ReloadCommand": "haproxy -f /etc/haproxy/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid)",
+      "SocketPath" : "/tmp/haproxy"
+    },
+  "Consul" : {}
+}

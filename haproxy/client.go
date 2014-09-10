@@ -18,13 +18,11 @@ type HAProxyReply struct {
 }
 
 type HAProxyClient struct {
-	SocketPath string
+	socketPath string
 }
 
 func NewClient(pathToSocket string) *HAProxyClient { 
-	client := new(HAProxyClient)
-	client.SocketPath = pathToSocket
-	return client
+	return &HAProxyClient{socketPath: pathToSocket}
 }
 
 func NewRequest(command string) (*HAProxyRequest,error){
@@ -66,7 +64,7 @@ func doRpc(client *HAProxyClient, request *HAProxyRequest) (*HAProxyReply, error
 
 	buf := make([]byte, 512)
 
-	socket := client.SocketPath
+	socket := client.socketPath
 	sockettype := "unix" 
 	conn, err := net.Dial(sockettype, socket)
 	if err != nil {

@@ -5,12 +5,13 @@ import (
 	"github.com/blackjack/syslog"
 	"github.com/gorilla/rpc"
 	"github.com/gorilla/rpc/json"
-	"github.com/kylelemons/go-gypsy/yaml"
+	// "github.com/kylelemons/go-gypsy/yaml"
 	"net/http"
 	"os"
 	"text/template"
-	"github.com/mdevilliers/redishappy/haproxy"
-	"github.com/mdevilliers/redishappy/sentinel"
+	"github.com/mdevilliers/redishappy/configuration"
+	//"github.com/mdevilliers/redishappy/haproxy"
+	// "github.com/mdevilliers/redishappy/sentinel"
 )
 
 type Nonsense struct {
@@ -40,18 +41,14 @@ func main() {
 	syslog.Openlog("redis-happy", syslog.LOG_PID, syslog.LOG_USER)
 	syslog.Syslog(syslog.LOG_INFO, "redis-happy started.")
 
-	// load a configuration file
-	config, err := yaml.ReadFile("config.yaml")
-	if err != nil {
-		panic(err)
-	}
-	name, err := config.Get("name")
+	configuration, err := configuration.LoadFromFile("config.json")
 
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("Parsed from config : %s\n", name)
+	configurationStr, err := configuration.String() 
+	fmt.Printf("Parsed from config : %s\n", configurationStr[:] )
 
 	// format a template
 	data := Nonsense{"world"}
@@ -66,30 +63,30 @@ func main() {
 
 	// subscribe to redis sentinel
     // and listen on the pubsub channel
- 	sentinel, err := sentinel.NewClient("192.168.0.20:26379")
-	if err != nil {
-		panic(err)
-	}
+    // sentinel, err := sentinel.NewClient("192.168.0.20:26379")
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	_,err = sentinel.FindConnectedSentinels("secure")
+	// _,err = sentinel.FindConnectedSentinels("secure")
 
-	if err != nil {
-		panic(err)
-	}
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	sentinel.StartMonitoring()
+	// sentinel.StartMonitoring()
 
-	//connect to the haproxy management socket
-	client := haproxy.NewClient("/tmp/haproxy")
+	// //connect to the haproxy management socket
+	// client := haproxy.NewClient("/tmp/haproxy")
     
-	response,_ := client.Rpc("show info\n")
-	fmt.Printf( "%s\n", response.Message)
-	response,_ = client.Rpc("show stat\n")
-	fmt.Printf( "%s\n", response.Message)
-	response,_ = client.Rpc("xxxx\n")
-	fmt.Printf( "%s\n", response.Message)
-	response,_ = client.Rpc("show acl\n")
-	fmt.Printf( "%s\n", response.Message)
+	// response,_ := client.Rpc("show info\n")
+	// fmt.Printf( "%s\n", response.Message)
+	// response,_ = client.Rpc("show stat\n")
+	// fmt.Printf( "%s\n", response.Message)
+	// response,_ = client.Rpc("xxxx\n")
+	// fmt.Printf( "%s\n", response.Message)
+	// response,_ = client.Rpc("show acl\n")
+	// fmt.Printf( "%s\n", response.Message)
 
 	// host a json endpoint
 	fmt.Println("hosting json endpoint...")
