@@ -1,7 +1,10 @@
 package sentinel
 
 import (
+	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 	"github.com/fzzy/radix/extra/pubsub"
 	"github.com/fzzy/radix/redis"
 )
@@ -9,6 +12,19 @@ import (
 type SentinelClient struct {
 	subscriptionclient *pubsub.SubClient
 	redisclient *redis.Client
+}
+
+type MasterSwitchedEvent struct {
+	Name string
+	OldMasterIp string
+	OldMasterPort int
+	NewMasterIp string 
+	NewMasterPort int
+}
+
+func (event *MasterSwitchedEvent ) String() (string) {
+	e, _ := json.Marshal(event)
+	return string(e[:])
 }
 
 func NewClient(sentineladdr string) (*SentinelClient, error) { 
@@ -32,33 +48,27 @@ func (client *SentinelClient) FindConnectedSentinels(clustername string) (bool, 
 	r := client.redisclient.Cmd("SENTINEL", "SENTINELS", clustername)
 	l:= r.String()
 	// TODO : Investigate why r.List() should return the correct datatype but doesn't
-
+	// TODO : Parse into an array of arrays
 	fmt.Printf( "Sentinels : Sentinels : %s \n", l)
-
-	// if(err != nil){
-	// 	return false, err
-	// }
-	// for _,element := range l {
-	//   fmt.Printf( "Sentinels : Sentinels : %s \n", element)
-	// }
 
 	return false,nil
 }
 
-func (client *SentinelClient) StartMonitoring() (bool, error) {
+func (client *SentinelClient) StartMonitoring(switchmasterchannel chan MasterSwitchedEvent ) (error) {
 
-	subr := client.subscriptionclient.Subscribe("+switch-master", "+slave-reconf-done ") //TODO : fix radix client - doesn't support PSubscribe
+	//TODO : fix radix client - doesn't support PSubscribe
+	subr := client.subscriptionclient.Subscribe("+switch-master", "+slave-reconf-done ") 
 
 	if subr.Err != nil{
-		return false, subr.Err
+		return subr.Err
 	}
 
-	go client.loopSubscription()	
+	go client.loopSubscription(switchmasterchannel)	
 
-	return true, nil
+	return nil
 }
 
-func (sub *SentinelClient) loopSubscription(){
+func (sub *SentinelClient) loopSubscription( switchmasterchannel chan MasterSwitchedEvent){
 	for {
 		r := sub.subscriptionclient.Receive()
 		if r.Timeout() {
@@ -66,6 +76,16 @@ func (sub *SentinelClient) loopSubscription(){
 		}
 		if r.Err == nil {
 			fmt.Printf( "Subscription Message : Channel : %s : %s\n", r.Channel, r.Message)
+
+			if r.Channel == "+switch-master"{
+				bits := strings.Split(r.Message, " ")
+
+				oldmasterport, _ := strconv.Atoi(bits[2])
+				newmasterport, _ := strconv.Atoi(bits[4])
+
+				event := MasterSwitchedEvent{Name : bits[0], OldMasterIp: bits[1], OldMasterPort:oldmasterport, NewMasterIp:bits[3], NewMasterPort:newmasterport}
+				switchmasterchannel <- event
+			}
 		}
 	}
 }

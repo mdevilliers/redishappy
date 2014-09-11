@@ -11,7 +11,7 @@ import (
 	"text/template"
 	"github.com/mdevilliers/redishappy/configuration"
 	//"github.com/mdevilliers/redishappy/haproxy"
-	// "github.com/mdevilliers/redishappy/sentinel"
+	"github.com/mdevilliers/redishappy/sentinel"
 )
 
 type Nonsense struct {
@@ -48,7 +48,7 @@ func main() {
 	}
 
 	configurationStr, err := configuration.String() 
-	fmt.Printf("Parsed from config : %s\n", configurationStr[:] )
+	fmt.Printf("Parsed from config : %s\n", configurationStr )
 
 	// format a template
 	data := Nonsense{"world"}
@@ -63,20 +63,23 @@ func main() {
 
 	// subscribe to redis sentinel
     // and listen on the pubsub channel
-    // sentinel, err := sentinel.NewClient("192.168.0.20:26379")
-	// if err != nil {
-	// 	panic(err)
-	// }
+    sen, err := sentinel.NewClient("192.168.0.20:26379")
+	if err != nil {
+		panic(err)
+	}
 
-	// _,err = sentinel.FindConnectedSentinels("secure")
+	_,err = sen.FindConnectedSentinels("secure")
 
-	// if err != nil {
-	// 	panic(err)
-	// }
+	if err != nil {
+		panic(err)
+	}
 
-	// sentinel.StartMonitoring()
+	switchmasterchannel := make(chan sentinel.MasterSwitchedEvent)
+	go loopSentinalEvents(switchmasterchannel)
 
-	// //connect to the haproxy management socket
+	sen.StartMonitoring(switchmasterchannel)
+
+	//connect to the haproxy management socket
 	// client := haproxy.NewClient("/tmp/haproxy")
     
 	// response,_ := client.Rpc("show info\n")
@@ -98,3 +101,9 @@ func main() {
 
 }
 
+func loopSentinalEvents( switchmasterchannel chan sentinel.MasterSwitchedEvent){
+
+	for i := range switchmasterchannel{
+		 		fmt.Printf("Master Switched : %s\n", i.String() )
+	}
+}
