@@ -13,12 +13,17 @@ type Configuration struct {
 }
 
 func LoadFromFile(filePath string) (*Configuration, error) {
-	configuration := new(Configuration)
+	
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		panic(err)
 	}
-	err = json.Unmarshal(content, &configuration)
+	return ParseConfiguration(content) 
+}
+
+func ParseConfiguration(configurationAsJson []byte) (*Configuration, error){
+	configuration := new(Configuration)
+	err := json.Unmarshal(configurationAsJson, &configuration)
 	if err != nil {
 		panic(err)
 	}

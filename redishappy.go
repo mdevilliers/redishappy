@@ -6,8 +6,7 @@ import (
 	"github.com/gorilla/rpc"
 	"github.com/gorilla/rpc/json"
 	"net/http"
-	"os"
-	"text/template"
+	// "os"
 	"github.com/mdevilliers/redishappy/configuration"
 	//"github.com/mdevilliers/redishappy/haproxy"
 	"github.com/mdevilliers/redishappy/sentinel"
@@ -17,7 +16,6 @@ func main() {
 
 	fmt.Println("redis-happy started")
 
-	// sys log test
 	syslog.Openlog("redis-happy", syslog.LOG_PID, syslog.LOG_USER)
 	syslog.Syslog(syslog.LOG_INFO, "redis-happy started.")
 
@@ -31,7 +29,7 @@ func main() {
 
 	switchmasterchannel := make(chan sentinel.MasterSwitchedEvent)
 
-	go loopSentinalEvents(switchmasterchannel)
+	go loopSentinelEvents(switchmasterchannel)
 
 	for _, configuredSentinel := range configuration.Sentinels {
 		
@@ -62,24 +60,12 @@ func main() {
 
 }
 
-func loopSentinalEvents( switchmasterchannel chan sentinel.MasterSwitchedEvent){
+func loopSentinelEvents( switchmasterchannel chan sentinel.MasterSwitchedEvent){
 
 	for i := range switchmasterchannel{
 		 		fmt.Printf("Master Switched : %s\n", i.String() )
 	}
 }
-
-// func formatTempplateExample(){
-// 	data := Nonsense{"world"}
-// 	tmpl, err := template.New("test").Parse("Hello {{.Message}}\n")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	err = tmpl.Execute(os.Stdout, data)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// }
 
 //func contactHAProxyExample(){
 	//connect to the haproxy management socket
@@ -93,10 +79,6 @@ func loopSentinalEvents( switchmasterchannel chan sentinel.MasterSwitchedEvent){
 	// response,_ = client.Rpc("show acl\n")
 	// fmt.Printf( "%s\n", response.Message)
 //}
-
-type Nonsense struct {
-	Message string
-}
 
 type HelloArgs struct {
 	Who string
