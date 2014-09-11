@@ -3,19 +3,11 @@
   {
     "Name" : "cluster one",
     "MasterPort" : 6379,
-    "SlavePorts" : [16379, 16380],
-    "Sentinels" : [ 
-      {"Host" : "one", "Port" : 26379},
-      {"Host" : "two", "Port" : 26379}
-    ]  
+    "SlavePorts" : [16379, 16380]  
   },
   {
     "Name" : "cluster two",
-    "MasterPort" : 6380,
-    "Sentinels" : [ 
-      {"Host" : "three", "Port" : 26379},
-      {"Host" : "four", "Port" : 26379}
-    ]  
+    "MasterPort" : 6380
   }],
   "HAProxy" :
     {
@@ -24,5 +16,11 @@
       "ReloadCommand": "haproxy -f /etc/haproxy/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid)",
       "SocketPath" : "/tmp/haproxy"
     },
-  "Consul" : {}
+  "Sentinels" : [ 
+      {"Host" : "192.168.0.20", "Port" : 26379},
+      {"Host" : "192.168.0.21", "Port" : 26379}
+    ],
+  "Consul" : {},
+  "Zookeeper" : {},
+  "Etcd" : {}
 }

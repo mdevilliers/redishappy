@@ -2,12 +2,14 @@ package configuration
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 )
 
 type Configuration struct {
 	Clusters []Cluster
 	HAProxy HAProxy
+	Sentinels []Sentinel
 }
 
 func LoadFromFile(filePath string) (*Configuration, error) {
@@ -23,10 +25,17 @@ func LoadFromFile(filePath string) (*Configuration, error) {
 	return configuration, nil
 }
 
-func (config *Configuration) String() (string,error) {
-	configurationStr, err := json.Marshal(config)
-	if err != nil { 
-		return "", err
+func (config *Configuration) String() (string) {
+	e, _ := json.Marshal(config)
+	return string(e[:])
+}
+
+func(config *Configuration) FindClusterByName (name string) (*Cluster,error) {
+
+	for _, cluster := range config.Clusters {
+    	if cluster.Name == name {
+    		return &cluster, nil
+    	}
 	}
-	return string(configurationStr[:]), nil
+	return &Cluster{}, errors.New("Cluster not found")
 }
