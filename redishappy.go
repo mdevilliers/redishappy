@@ -63,9 +63,14 @@ func main() {
 func loopSentinelEvents(switchmasterchannel chan sentinel.MasterSwitchedEvent) {
 
 	for i := range switchmasterchannel {
+
+		syslog.Syslogf(syslog.LOG_ERR, "redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", i.Name, i.OldMasterIp, i.OldMasterPort,i.NewMasterIp, i.NewMasterPort)
+		
 		fmt.Printf("Master Switched : %s\n", i.String())
+		
 	}
 }
+
 
 //func contactHAProxyExample(){
 //connect to the haproxy management socket

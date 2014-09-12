@@ -57,7 +57,7 @@ func (client *SentinelClient) FindConnectedSentinels(clustername string) (bool, 
 func (client *SentinelClient) StartMonitoring(switchmasterchannel chan MasterSwitchedEvent) error {
 
 	//TODO : fix radix client - doesn't support PSubscribe
-	subr := client.subscriptionclient.Subscribe("+switch-master", "+slave-reconf-done ")
+	subr := client.subscriptionclient.Subscribe("+switch-master") //, "+slave-reconf-done ")
 
 	if subr.Err != nil {
 		return subr.Err
