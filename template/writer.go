@@ -2,7 +2,6 @@ package template
 
 import (
 	"bytes"
-	"github.com/mdevilliers/redishappy/configuration"
 	"io/ioutil"
 	"text/template"
 )
@@ -18,14 +17,14 @@ type TemplateData struct {
 	Clusters *[]MasterDetails
 }
 
-func ExecuteTemplate(haproxy *configuration.HAProxy, updates *[]MasterDetails) (string, error) {
+func RenderTemplate(templatePath string, updates *[]MasterDetails) (string, error) {
 
-	templateContent, err := ioutil.ReadFile(haproxy.TemplatePath)
+	templateContent, err := ioutil.ReadFile(templatePath)
 	if err != nil {
 		return "", err
 	}
 
-	tmpl, err := template.New(haproxy.TemplatePath).Parse(string(templateContent))
+	tmpl, err := template.New(templatePath).Parse(string(templateContent))
 
 	if err != nil {
 		return "", err
