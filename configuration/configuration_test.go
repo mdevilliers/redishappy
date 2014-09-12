@@ -31,5 +31,13 @@ func TestLoadinAndParseConfiguration(t *testing.T) {
 	if cluster.Name != "cluster one" {
 		t.Error("Wrong cluster found")
 	}
+}
 
+func TestNonExistentFile(t *testing.T) {
+	
+	_, err := LoadFromFile("does-not-exist.config") 
+
+	if err == nil {
+		t.Error("File doesn't exist and no error thrown")
+	}
 }

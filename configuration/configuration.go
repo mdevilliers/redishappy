@@ -16,7 +16,7 @@ func LoadFromFile(filePath string) (*Configuration, error) {
 
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		panic(err)
+		return &Configuration{}, err
 	}
 	return ParseConfiguration(content)
 }
