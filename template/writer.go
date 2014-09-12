@@ -2,24 +2,23 @@ package template
 
 import (
 	"bytes"
-	//"fmt"
+	"github.com/mdevilliers/redishappy/configuration"
 	"io/ioutil"
 	"text/template"
-	"github.com/mdevilliers/redishappy/configuration"
 )
 
 type MasterDetails struct {
 	ExternalPort int
-	Name string
-	Ip string 
-	Port int
+	Name         string
+	Ip           string
+	Port         int
 }
 
-type TemplateData struct{
+type TemplateData struct {
 	Clusters *[]MasterDetails
 }
 
-func ExecuteTemplate( haproxy *configuration.HAProxy, updates *[]MasterDetails ) (string,error) {
+func ExecuteTemplate(haproxy *configuration.HAProxy, updates *[]MasterDetails) (string, error) {
 
 	templateContent, err := ioutil.ReadFile(haproxy.TemplatePath)
 	if err != nil {
@@ -32,7 +31,7 @@ func ExecuteTemplate( haproxy *configuration.HAProxy, updates *[]MasterDetails )
 		return "", err
 	}
 
-	data := TemplateData{Clusters : updates}
+	data := TemplateData{Clusters: updates}
 	strBuffer := new(bytes.Buffer)
 
 	err = tmpl.Execute(strBuffer, data)

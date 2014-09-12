@@ -3,7 +3,7 @@ package configuration
 import "testing"
 
 func TestLoadinAndParseConfiguration(t *testing.T) {
-   config := `{
+	config := `{
 				  "Clusters" :[
 				  {
 				    "Name" : "cluster one",
@@ -16,20 +16,20 @@ func TestLoadinAndParseConfiguration(t *testing.T) {
 				  }]
 			}`
 
-   configuration,_ := ParseConfiguration([]byte(config))
+	configuration, _ := ParseConfiguration([]byte(config))
 
-   if len(configuration.Clusters) != 2 {
-   		t.Error("There should be two clusters")
-   }
+	if len(configuration.Clusters) != 2 {
+		t.Error("There should be two clusters")
+	}
 
-   cluster,err := configuration.FindClusterByName ("cluster one")
+	cluster, err := configuration.FindClusterByName("cluster one")
 
-   if err != nil{
-   		t.Error("Couldn't find cluster one")
-   }
+	if err != nil {
+		t.Error("Couldn't find cluster one")
+	}
 
-   if cluster.Name != "cluster one" {
-   		t.Error("Wrong cluster found")
-   }
+	if cluster.Name != "cluster one" {
+		t.Error("Wrong cluster found")
+	}
 
 }

@@ -32,22 +32,22 @@ func main() {
 	go loopSentinelEvents(switchmasterchannel)
 
 	for _, configuredSentinel := range configuration.Sentinels {
-		
-		sentinelAddress := fmt.Sprintf("%s:%d",configuredSentinel.Host, configuredSentinel.Port)
+
+		sentinelAddress := fmt.Sprintf("%s:%d", configuredSentinel.Host, configuredSentinel.Port)
 		sen, err := sentinel.NewClient(sentinelAddress)
 
-		// TODO : exploding is no good - needs to connect to at least one 
+		// TODO : exploding is no good - needs to connect to at least one
 		// sentinel. Also explore of any sentinel you have to find others
 		// using   _ ,err = sen.FindConnectedSentinels("nameofcluster")
 		// check against the list of clusters to validate you can find
 		// an answer for all the clusters you are monitoring
-		// Once this is all initilised then write an haproxy config that 
+		// Once this is all initilised then write an haproxy config that
 		// validly documents the existing tompology
 		if err != nil {
 			panic(err)
 		}
 
-		sen.StartMonitoring(switchmasterchannel)	    	
+		sen.StartMonitoring(switchmasterchannel)
 	}
 
 	// host a json endpoint
@@ -60,24 +60,24 @@ func main() {
 
 }
 
-func loopSentinelEvents( switchmasterchannel chan sentinel.MasterSwitchedEvent){
+func loopSentinelEvents(switchmasterchannel chan sentinel.MasterSwitchedEvent) {
 
-	for i := range switchmasterchannel{
-		 		fmt.Printf("Master Switched : %s\n", i.String() )
+	for i := range switchmasterchannel {
+		fmt.Printf("Master Switched : %s\n", i.String())
 	}
 }
 
 //func contactHAProxyExample(){
-	//connect to the haproxy management socket
-	// client := haproxy.NewClient("/tmp/haproxy")    
-	// response,_ := client.Rpc("show info\n")
-	// fmt.Printf( "%s\n", response.Message)
-	// response,_ = client.Rpc("show stat\n")
-	// fmt.Printf( "%s\n", response.Message)
-	// response,_ = client.Rpc("xxxx\n")
-	// fmt.Printf( "%s\n", response.Message)
-	// response,_ = client.Rpc("show acl\n")
-	// fmt.Printf( "%s\n", response.Message)
+//connect to the haproxy management socket
+// client := haproxy.NewClient("/tmp/haproxy")
+// response,_ := client.Rpc("show info\n")
+// fmt.Printf( "%s\n", response.Message)
+// response,_ = client.Rpc("show stat\n")
+// fmt.Printf( "%s\n", response.Message)
+// response,_ = client.Rpc("xxxx\n")
+// fmt.Printf( "%s\n", response.Message)
+// response,_ = client.Rpc("show acl\n")
+// fmt.Printf( "%s\n", response.Message)
 //}
 
 type HelloArgs struct {

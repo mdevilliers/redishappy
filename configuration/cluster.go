@@ -1,7 +1,7 @@
 package configuration
 
 type Cluster struct {
-	Name string
+	Name       string
 	MasterPort int
 	SlavePorts []int
 }
