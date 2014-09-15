@@ -52,7 +52,10 @@ func(s SentinelPing) GetSentinel() *types.Sentinel {
 }
 
 func(topology SentinelTopology) FindSentinelInfo(sentinel *types.Sentinel) (*SentinelInfo, bool) {
-	info, ok := topology.Sentinels[sentinel.GetLocation()]
+	key := topology.createKey(sentinel)
+	info, ok := topology.Sentinels[key]
 	return info, ok
 }
-
+func(topology SentinelTopology) createKey(sentinel *types.Sentinel) (*SentinelInfo, bool) {
+	return sentinel.GetLocation()
+}
