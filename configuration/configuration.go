@@ -26,11 +26,11 @@ func ParseConfiguration(configurationAsJson []byte) (*Configuration, error) {
 	configuration := new(Configuration)
 	err := json.Unmarshal(configurationAsJson, &configuration)
 	if err != nil {
-		panic(err)
+		return &Configuration{}, err
 	}
 
 	//TODO : sanity check file
-	
+
 	return configuration, nil
 }
 
