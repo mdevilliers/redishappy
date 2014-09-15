@@ -62,17 +62,19 @@ func updateState(event interface{}) {
         case *SentinelAdded :
 
         	sentinel := e.GetSentinel()
-        	info :=  &SentinelInfo{ SentinelLocation:sentinel.GetLocation(), 
+        	uid := sentinel.GetLocation()
+        	info :=  &SentinelInfo{ SentinelLocation:uid, 
 									LastUpdated: time.Now().UTC(), 
 									KnownClusters : []string{}, 
 									State : SentinelMarkedUp }
 
-			topologyState.Sentinels[ sentinel.GetLocation() ] = info
+			topologyState.Sentinels[uid] = info
 
 		case *SentinelLost :
 
 			sentinel := e.GetSentinel()
-			currentInfo, ok := topologyState.Sentinels[sentinel.GetLocation()]
+			uid := sentinel.GetLocation()
+			currentInfo, ok := topologyState.Sentinels[uid]
 			
 			if ok {
 				currentInfo.State = SentinelMarkedDown
@@ -81,8 +83,8 @@ func updateState(event interface{}) {
 
 		case *SentinelPing :
 			sentinel := e.GetSentinel()
-
-			currentInfo, ok := topologyState.Sentinels[sentinel.GetLocation()]
+			uid := sentinel.GetLocation()
+			currentInfo, ok := topologyState.Sentinels[uid]
 			
 			if ok {
 				currentInfo.State = SentinelMarkedAlive
