@@ -1,3 +1,9 @@
+Redis Happy
+-----------
+
+Automated Redis Failover using HaProxy and Sentinel
+
+[![Build Status](https://travis-ci.org/mdevilliers/redishappy.svg?branch=master)](https://travis-ci.org/mdevilliers/redishappy)
 
 
 ```
@@ -23,9 +29,3 @@ http://localhost:8085/rpc
 ```
 go test ./... -cover
 ```
-
-
-To read
--------
-
-https://medium.com/@Drew_Stokes/actual-zero-downtime-with-haproxy-18318578fde6
