@@ -67,7 +67,7 @@ func loopSentinelEvents(switchmasterchannel chan sentinel.MasterSwitchedEvent) {
 
 		syslog.Syslogf(syslog.LOG_ERR, "redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", i.Name, i.OldMasterIp, i.OldMasterPort,i.NewMasterIp, i.NewMasterPort)
 		
-		fmt.Printf("Master Switched : %s\n", i.String())
+		fmt.Printf("Master Switched : %s\n",  util.String(i))
 		
 	}
 }
