@@ -1,17 +1,15 @@
 package sentinel
 
 import (
-	// "fmt"
 	"testing"
-	"github.com/mdevilliers/redishappy/configuration"
-	// "github.com/mdevilliers/redishappy/util"
+	"github.com/mdevilliers/redishappy/types"
 )
 
 func TestBasicEventChannel(t *testing.T) {
 
 	manager := NewManager()
 	defer manager.ClearState()
-	manager.Notify(&SentinelAdded{ sentinel : &configuration.Sentinel {Host : "10.1.1.1", Port : 12345}})
+	manager.Notify(&SentinelAdded{ sentinel : &types.Sentinel {Host : "10.1.1.1", Port : 12345}})
 
 	responseChannel := make (chan SentinelTopology)
 
@@ -23,7 +21,7 @@ func TestBasicEventChannel(t *testing.T) {
 	}
 
 	manager2 := NewManager()
-	manager2.Notify(&SentinelAdded{ sentinel : &configuration.Sentinel {Host : "10.1.1.2", Port : 12345}})
+	manager2.Notify(&SentinelAdded{ sentinel : &types.Sentinel {Host : "10.1.1.2", Port : 12345}})
 
 	manager2.GetState(TopologyRequest{ReplyChannel : responseChannel})
 
@@ -41,7 +39,7 @@ func TestAddingAndLoseingASentinel(t *testing.T) {
 	manager := NewManager()
 	defer manager.ClearState()
 
-	sentinel :=  &configuration.Sentinel {Host : "10.1.1.5", Port : 12345}
+	sentinel :=  &types.Sentinel {Host : "10.1.1.5", Port : 12345}
 	
 	manager.Notify(&SentinelAdded{ sentinel : sentinel})
 	manager.Notify(&SentinelLost{ sentinel : sentinel})
@@ -63,7 +61,7 @@ func TestAddingInfoToADiscoveredSentinel(t *testing.T) {
 	manager := NewManager()
 	defer manager.ClearState()
 
-	sentinel :=  &configuration.Sentinel {Host : "10.1.1.6", Port : 12345}
+	sentinel :=  &types.Sentinel {Host : "10.1.1.6", Port : 12345}
 
 	manager.Notify(&SentinelAdded{ sentinel :sentinel })
 

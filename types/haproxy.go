@@ -1,4 +1,4 @@
-package configuration
+package types
 
 type HAProxy struct {
 	TemplatePath  string

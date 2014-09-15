@@ -3,13 +3,14 @@ package configuration
 import (
 	"encoding/json"
 	"errors"
+	"github.com/mdevilliers/redishappy/types"
 	"io/ioutil"
 )
 
 type Configuration struct {
-	Clusters  []Cluster
-	HAProxy   HAProxy
-	Sentinels []Sentinel
+	Clusters  []types.Cluster
+	HAProxy   types.HAProxy
+	Sentinels []types.Sentinel
 }
 
 func LoadFromFile(filePath string) (*Configuration, error) {
@@ -30,12 +31,12 @@ func ParseConfiguration(configurationAsJson []byte) (*Configuration, error) {
 	return configuration, nil
 }
 
-func (config *Configuration) FindClusterByName(name string) (*Cluster, error) {
+func (config *Configuration) FindClusterByName(name string) (*types.Cluster, error) {
 
 	for _, cluster := range config.Clusters {
 		if cluster.Name == name {
 			return &cluster, nil
 		}
 	}
-	return &Cluster{}, errors.New("Cluster not found")
+	return &types.Cluster{}, errors.New("Cluster not found")
 }

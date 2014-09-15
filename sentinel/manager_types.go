@@ -1,7 +1,7 @@
 package sentinel
 
 import (
-	"github.com/mdevilliers/redishappy/configuration"
+	"github.com/mdevilliers/redishappy/types"
 	"time"
 )
 
@@ -21,38 +21,38 @@ type TopologyRequest struct{
 }
 
 type SentinelEvent interface{
-	GetSentinel() *configuration.Sentinel
+	GetSentinel() *types.Sentinel
 }
 
 type SentinelAdded struct{
-	sentinel *configuration.Sentinel
+	sentinel *types.Sentinel
 }
 
 type SentinelLost struct{
-	sentinel *configuration.Sentinel
+	sentinel *types.Sentinel
 }
 
 type SentinelPing struct{
-    sentinel *configuration.Sentinel
+    sentinel *types.Sentinel
 	Clusters []string
 }
 
 
 // TODO : find a better way to implement base type
 // functionality
-func(s SentinelAdded) GetSentinel() *configuration.Sentinel {
+func(s SentinelAdded) GetSentinel() *types.Sentinel {
 	return s.sentinel
 }
 
-func(s SentinelLost) GetSentinel() *configuration.Sentinel {
+func(s SentinelLost) GetSentinel() *types.Sentinel {
 	return s.sentinel
 }
 
-func(s SentinelPing) GetSentinel() *configuration.Sentinel {
+func(s SentinelPing) GetSentinel() *types.Sentinel {
 	return s.sentinel
 }
 
-func(topology SentinelTopology) FindSentinelInfo(sentinel *configuration.Sentinel) (*SentinelInfo, bool) {
+func(topology SentinelTopology) FindSentinelInfo(sentinel *types.Sentinel) (*SentinelInfo, bool) {
 	info, ok := topology.Sentinels[sentinel.GetLocation()]
 	return info, ok
 }
