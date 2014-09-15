@@ -37,7 +37,6 @@ type SentinelPing struct{
 	Clusters []string
 }
 
-
 // TODO : find a better way to implement base type
 // functionality
 func(s SentinelAdded) GetSentinel() *types.Sentinel {

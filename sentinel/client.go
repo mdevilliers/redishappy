@@ -80,6 +80,8 @@ func (sub *SentinelClient) loopSubscription(switchmasterchannel chan MasterSwitc
 				event := MasterSwitchedEvent{Name: bits[0], OldMasterIp: bits[1], OldMasterPort: oldmasterport, NewMasterIp: bits[3], NewMasterPort: newmasterport}
 				switchmasterchannel <- event
 			}
+		}else {
+			fmt.Printf("Subscription Message : Channel : Error %s \n", r.Err)			
 		}
 	}
 }

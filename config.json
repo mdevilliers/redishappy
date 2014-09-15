@@ -1,13 +1,13 @@
 {
   "Clusters" :[
   {
-    "Name" : "cluster one",
-    "MasterPort" : 6379,
-    "SlavePorts" : [16379, 16380]  
+    "Name" : "secure",
+    "MasterPort" : 6379
   },
   {
-    "Name" : "cluster two",
-    "MasterPort" : 6380
+    "Name" : "clustertwo",
+    "MasterPort" : 6380,
+    "SlavePorts" : [16379, 16380] 
   }],
   "HAProxy" :
     {

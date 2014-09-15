@@ -10,6 +10,7 @@ import (
 	"github.com/mdevilliers/redishappy/configuration"
 	//"github.com/mdevilliers/redishappy/haproxy"
 	"github.com/mdevilliers/redishappy/sentinel"
+	//"github.com/mdevilliers/redishappy/types"
 	"github.com/mdevilliers/redishappy/util"
 )
 
@@ -26,11 +27,11 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("Parsed from config : %s\n", util.String(configuration))
+	// fmt.Printf("Parsed from config : %s\n", util.String(configuration))
 
 	switchmasterchannel := make(chan sentinel.MasterSwitchedEvent)
 
-	go loopSentinelEvents(switchmasterchannel)
+	go loopSentinelEvents(switchmasterchannel, configuration)
 
 	for _, configuredSentinel := range configuration.Sentinels {
 
@@ -61,13 +62,19 @@ func main() {
 
 }
 
-func loopSentinelEvents(switchmasterchannel chan sentinel.MasterSwitchedEvent) {
+func loopSentinelEvents(switchmasterchannel chan sentinel.MasterSwitchedEvent, config *configuration.Configuration) {
 
-	for i := range switchmasterchannel {
+	configuration := config
 
-		syslog.Syslogf(syslog.LOG_ERR, "redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", i.Name, i.OldMasterIp, i.OldMasterPort,i.NewMasterIp, i.NewMasterPort)
+	for masterSwitch := range switchmasterchannel {
+
+		syslog.Syslogf(syslog.LOG_ERR, "redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", masterSwitch.Name, masterSwitch.OldMasterIp, masterSwitch.OldMasterPort,masterSwitch.NewMasterIp, masterSwitch.NewMasterPort)
 		
-		fmt.Printf("Master Switched : %s\n",  util.String(i))
+		fmt.Printf("Master Switched : %s\n",  util.String(masterSwitch))
+		fmt.Printf("Current Configuration : %s\n",  util.String(configuration.Clusters))
+
+		
+
 		
 	}
 }
