@@ -28,6 +28,9 @@ func ParseConfiguration(configurationAsJson []byte) (*Configuration, error) {
 	if err != nil {
 		panic(err)
 	}
+
+	//TODO : sanity check file
+	
 	return configuration, nil
 }
 

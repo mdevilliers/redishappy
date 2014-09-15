@@ -2,22 +2,16 @@ package template
 
 import (
 	"bytes"
+	"github.com/mdevilliers/redishappy/types"
 	"io/ioutil"
 	"text/template"
 )
 
-type MasterDetails struct {
-	ExternalPort int
-	Name         string
-	Ip           string
-	Port         int
-}
-
 type TemplateData struct {
-	Clusters *[]MasterDetails
+	Clusters *[]types.MasterDetails
 }
 
-func RenderTemplate(templatePath string, updates *[]MasterDetails) (string, error) {
+func RenderTemplate(templatePath string, updates *[]types.MasterDetails) (string, error) {
 
 	templateContent, err := ioutil.ReadFile(templatePath)
 	if err != nil {
@@ -38,4 +32,8 @@ func RenderTemplate(templatePath string, updates *[]MasterDetails) (string, erro
 		return "", err
 	}
 	return strBuffer.String(), nil
+}
+
+func WriteFile(outputFilePath string, content string) error {
+	return ioutil.WriteFile(outputFilePath, []byte(content), 0666)
 }

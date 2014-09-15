@@ -5,13 +5,14 @@ import (
 	"github.com/blackjack/syslog"
 	"github.com/gorilla/rpc"
 	"github.com/gorilla/rpc/json"
+	"github.com/mdevilliers/redishappy/configuration"
+	"github.com/mdevilliers/redishappy/sentinel"
+	"github.com/mdevilliers/redishappy/template"
+	"github.com/mdevilliers/redishappy/types"
+	"github.com/mdevilliers/redishappy/util"
+	"sync"
 	"net/http"
 	// "os"
-	"github.com/mdevilliers/redishappy/configuration"
-	//"github.com/mdevilliers/redishappy/haproxy"
-	"github.com/mdevilliers/redishappy/sentinel"
-	//"github.com/mdevilliers/redishappy/types"
-	"github.com/mdevilliers/redishappy/util"
 )
 
 func main() {
@@ -65,33 +66,76 @@ func main() {
 func loopSentinelEvents(switchmasterchannel chan sentinel.MasterSwitchedEvent, config *configuration.Configuration) {
 
 	configuration := config
+	lock := &sync.Mutex{}
 
 	for masterSwitch := range switchmasterchannel {
 
-		syslog.Syslogf(syslog.LOG_ERR, "redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", masterSwitch.Name, masterSwitch.OldMasterIp, masterSwitch.OldMasterPort,masterSwitch.NewMasterIp, masterSwitch.NewMasterPort)
+		syslog.Syslogf(syslog.LOG_INFO, "redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", masterSwitch.Name, masterSwitch.OldMasterIp, masterSwitch.OldMasterPort,masterSwitch.NewMasterIp, masterSwitch.NewMasterPort)
 		
 		fmt.Printf("Master Switched : %s\n",  util.String(masterSwitch))
 		fmt.Printf("Current Configuration : %s\n",  util.String(configuration.Clusters))
 
-		
+		cluster, err := configuration.FindClusterByName(masterSwitch.Name)
 
+		if err != nil {
+			syslog.Syslogf(syslog.LOG_INFO, "redis cluster called %s not found in configuration.", masterSwitch.Name)
+			return
+		}
 		
+		fmt.Printf("Cluster Configuration : %s\n",  util.String(cluster))
+
+		details := types.MasterDetails {
+							ExternalPort: cluster.MasterPort,
+							Name :masterSwitch.Name,
+							Ip : masterSwitch.NewMasterIp,
+							Port :masterSwitch.NewMasterPort}
+
+		//render template
+		// TODO : look into HAProxy supporting multiple config files....
+		path := configuration.HAProxy.OutputPath 
+		arr := []types.MasterDetails{details}
+		renderedTemplate, err := template.RenderTemplate(path, &arr)
+
+		if err != nil {
+			syslog.Syslogf(syslog.LOG_INFO, "error rendering tempate at %s.", path)
+			return
+		}
+
+		lock.Lock()
+		defer lock.Unlock()
+
+		//get hash of new config
+		newFileHash := util.HashString(renderedTemplate)
+		//check hash on existing config
+		oldFileHash, err := util.HashFile(path)
+
+		if err != nil {
+			syslog.Syslogf(syslog.LOG_INFO, "error hashing existing haproxy config file at %s.", path)
+			return
+		}
+
+		if newFileHash == oldFileHash {
+			syslog.Syslogf(syslog.LOG_INFO, "existing config file up todate. New file hash :  %s == Old file hash %s", newFileHash, oldFileHash )
+			return
+		}
+
+		//TODO : check we have permission to update file
+
+		//update file
+		err = template.WriteFile(path, renderedTemplate)
+		//reload haproxy
+		reloadCommand := configuration.HAProxy.ReloadCommand
+		err = util.ExecuteCommand(reloadCommand)
+
+		if err != nil {
+			syslog.Syslogf(syslog.LOG_INFO, "error reloading haproxy with command %s.", reloadCommand)
+			return
+		}
+
+		syslog.Syslog(syslog.LOG_INFO, "haproxy reload completed.")
+	
 	}
 }
-
-
-//func contactHAProxyExample(){
-//connect to the haproxy management socket
-// client := haproxy.NewClient("/tmp/haproxy")
-// response,_ := client.Rpc("show info\n")
-// fmt.Printf( "%s\n", response.Message)
-// response,_ = client.Rpc("show stat\n")
-// fmt.Printf( "%s\n", response.Message)
-// response,_ = client.Rpc("xxxx\n")
-// fmt.Printf( "%s\n", response.Message)
-// response,_ = client.Rpc("show acl\n")
-// fmt.Printf( "%s\n", response.Message)
-//}
 
 type HelloArgs struct {
 	Who string
