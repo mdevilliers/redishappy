@@ -1,7 +1,7 @@
 package configuration
 
-import (
-	"encoding/json"
+import(
+	"fmt"
 )
 
 type Sentinel struct {
@@ -9,7 +9,6 @@ type Sentinel struct {
 	Port int
 }
 
-func (s *Sentinel) String() string {
-	e, _ := json.Marshal(s)
-	return string(e[:])
+func(s *Sentinel) GetLocation() string {
+	return fmt.Sprintf("%s:%d", s.Host, s.Port)
 }

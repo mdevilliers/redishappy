@@ -2,58 +2,23 @@ package sentinel
 
 import (
 	"fmt"
-	"github.com/mdevilliers/redishappy/configuration"
+	"github.com/mdevilliers/redishappy/util"
 	"sync"
+	"time"
 )
 
-
-type SentinelTopology struct{
-	Count int
-}
-
-type TopologyRequest struct{
-	ReplyChannel chan SentinelTopology
-}
-
-type SentinelEvent interface{
-	GetHost() string
-	GetPort() int
-}
-
-type SentinelAdded struct{
-	sentinel *configuration.Sentinel
-}
-// type SentinelLost struct{
-// 	c *configuration.Sentinel
-// }
-// type SetinelInfo struct{
-// 	c *configuration.Sentinel
-// 	Clusters []string
-// }
-// type SentinelDiscovered struct {
-//  c *configuration.Sentinel
-// }
+const (
+	SentinelMarkedUp = iota
+	SentinelMarkedDown = iota
+	SentinelMarkedAlive = iota
+)
 
 type SentinelManager struct {
 	eventsChannel chan SentinelEvent
 	topologyRequestChannel chan TopologyRequest
 }
 
-func( s SentinelAdded) GetHost() string {
-	return s.sentinel.Host
-}
-func( s SentinelAdded) GetPort() int {
-	return s.sentinel.Port
-}
-// func( s SentinelAdded) GetHost() string {
-// 	return s.sentinel.Host
-// }
-// func( s SentinelAdded) GetPort() int {
-// 	return s.sentinel.Port
-// }
-
-
-var topologyState = SentinelTopology{Count : 0}
+var topologyState = SentinelTopology{Sentinels : map[string]*SentinelInfo{}}
 var statelock = &sync.Mutex{}
 
 func NewManager() *SentinelManager {
@@ -71,19 +36,61 @@ func (m *SentinelManager) GetState(request TopologyRequest) {
 	m.topologyRequestChannel <- request
 }
 
-func loopEvents(events chan SentinelEvent, topology chan TopologyRequest) {
+func (m *SentinelManager) ClearState() {
+	statelock.Lock()
+	defer statelock.Unlock()
+	topologyState = SentinelTopology{Sentinels : map[string]*SentinelInfo{}}
+}
 
+func loopEvents(events chan SentinelEvent, topology chan TopologyRequest) {
  	for {
             select {
 	            case event := <- events:
-	            	statelock.Lock()
-	                fmt.Printf("Got an event : %s : %d\n", event.GetHost(), event.GetPort())
-					topologyState.Count ++	
-					fmt.Printf("Updated CurrentState : Count %d\n", topologyState.Count )
-					statelock.Unlock()
+					updateState(event)
 	            case read := <-topology:
-	            	fmt.Printf("Sending CurrentState : Count %d\n", topologyState.Count )
 	                read.ReplyChannel <- topologyState	            
             }
         }
+}
+
+func updateState(event interface{}) {
+
+	statelock.Lock()
+	defer statelock.Unlock()
+
+	switch e := event.(type){
+        case *SentinelAdded :
+
+        	sentinel := e.GetSentinel()
+        	info :=  &SentinelInfo{ SentinelLocation:sentinel.GetLocation(), 
+									LastUpdated: time.Now().UTC(), 
+									KnownClusters : []string{}, 
+									State : SentinelMarkedUp }
+
+			topologyState.Sentinels[ sentinel.GetLocation() ] = info
+
+		case *SentinelLost :
+
+			sentinel := e.GetSentinel()
+			currentInfo, ok := topologyState.Sentinels[sentinel.GetLocation()]
+			
+			if ok {
+				currentInfo.State = SentinelMarkedDown
+				currentInfo.LastUpdated = time.Now().UTC()
+			}
+
+		case *SentinelPing :
+			sentinel := e.GetSentinel()
+
+			currentInfo, ok := topologyState.Sentinels[sentinel.GetLocation()]
+			
+			if ok {
+				currentInfo.State = SentinelMarkedAlive
+				currentInfo.LastUpdated = time.Now().UTC()
+				currentInfo.KnownClusters = e.Clusters
+			}			
+
+        default:
+           fmt.Println("Unknown sentinel event : ", util.String(e))
+    }
 }
