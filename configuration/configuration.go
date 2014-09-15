@@ -30,11 +30,6 @@ func ParseConfiguration(configurationAsJson []byte) (*Configuration, error) {
 	return configuration, nil
 }
 
-func (config *Configuration) String() string {
-	e, _ := json.Marshal(config)
-	return string(e[:])
-}
-
 func (config *Configuration) FindClusterByName(name string) (*Cluster, error) {
 
 	for _, cluster := range config.Clusters {

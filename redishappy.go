@@ -10,6 +10,7 @@ import (
 	"github.com/mdevilliers/redishappy/configuration"
 	//"github.com/mdevilliers/redishappy/haproxy"
 	"github.com/mdevilliers/redishappy/sentinel"
+	"github.com/mdevilliers/redishappy/util"
 )
 
 func main() {
@@ -25,7 +26,7 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("Parsed from config : %s\n", configuration.String())
+	fmt.Printf("Parsed from config : %s\n", util.String(configuration))
 
 	switchmasterchannel := make(chan sentinel.MasterSwitchedEvent)
 
