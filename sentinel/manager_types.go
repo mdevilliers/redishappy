@@ -56,6 +56,6 @@ func(topology SentinelTopology) FindSentinelInfo(sentinel *types.Sentinel) (*Sen
 	info, ok := topology.Sentinels[key]
 	return info, ok
 }
-func(topology SentinelTopology) createKey(sentinel *types.Sentinel) (*SentinelInfo, bool) {
+func(topology SentinelTopology) createKey(sentinel *types.Sentinel) string {
 	return sentinel.GetLocation()
 }

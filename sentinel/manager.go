@@ -62,7 +62,7 @@ func updateState(event interface{}) {
         case *SentinelAdded :
 
         	sentinel := e.GetSentinel()
-        	uid := sentinel.GetLocation()
+        	uid := topologyState.createKey(sentinel)
         	info :=  &SentinelInfo{ SentinelLocation:uid, 
 									LastUpdated: time.Now().UTC(), 
 									KnownClusters : []string{}, 
@@ -73,7 +73,7 @@ func updateState(event interface{}) {
 		case *SentinelLost :
 
 			sentinel := e.GetSentinel()
-			uid := sentinel.GetLocation()
+			uid := topologyState.createKey(sentinel)
 			currentInfo, ok := topologyState.Sentinels[uid]
 			
 			if ok {
@@ -83,7 +83,7 @@ func updateState(event interface{}) {
 
 		case *SentinelPing :
 			sentinel := e.GetSentinel()
-			uid := sentinel.GetLocation()
+			uid := topologyState.createKey(sentinel)
 			currentInfo, ok := topologyState.Sentinels[uid]
 			
 			if ok {
