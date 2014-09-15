@@ -1,7 +1,6 @@
 package sentinel
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/fzzy/radix/extra/pubsub"
 	"github.com/fzzy/radix/redis"
@@ -20,11 +19,6 @@ type MasterSwitchedEvent struct {
 	OldMasterPort int
 	NewMasterIp   string
 	NewMasterPort int
-}
-
-func (event *MasterSwitchedEvent) String() string {
-	e, _ := json.Marshal(event)
-	return string(e[:])
 }
 
 func NewClient(sentineladdr string) (*SentinelClient, error) {
