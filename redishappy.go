@@ -66,19 +66,30 @@ func main() {
 func loopSentinelEvents(switchmasterchannel chan sentinel.MasterSwitchedEvent, config *configuration.Configuration) {
 
 	configuration := config
-	lock := &sync.Mutex{}
 
-	for masterSwitch := range switchmasterchannel {
+	for switchEvent := range switchmasterchannel {
 
-		syslog.Syslogf(syslog.LOG_INFO, "redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", masterSwitch.Name, masterSwitch.OldMasterIp, masterSwitch.OldMasterPort,masterSwitch.NewMasterIp, masterSwitch.NewMasterPort)
+		syslog.Syslogf(syslog.LOG_INFO, "redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", switchEvent.Name, switchEvent.OldMasterIp, switchEvent.OldMasterPort,switchEvent.NewMasterIp, switchEvent.NewMasterPort)
 		
-		fmt.Printf("Master Switched : %s\n",  util.String(masterSwitch))
+		fmt.Printf("Master Switched : %s\n",  util.String(switchEvent))
 		fmt.Printf("Current Configuration : %s\n",  util.String(configuration.Clusters))
 
-		cluster, err := configuration.FindClusterByName(masterSwitch.Name)
+		do(configuration, switchEvent)
+
+	}
+}
+
+var lock = &sync.Mutex{}
+
+func do(configuration *configuration.Configuration, switchEvent sentinel.MasterSwitchedEvent ){
+
+		lock.Lock()
+		defer lock.Unlock()
+
+		cluster, err := configuration.FindClusterByName(switchEvent.Name)
 
 		if err != nil {
-			syslog.Syslogf(syslog.LOG_INFO, "redis cluster called %s not found in configuration.", masterSwitch.Name)
+			syslog.Syslogf(syslog.LOG_INFO, "redis cluster called %s not found in configuration.", switchEvent.Name)
 			return
 		}
 		
@@ -86,23 +97,22 @@ func loopSentinelEvents(switchmasterchannel chan sentinel.MasterSwitchedEvent, c
 
 		details := types.MasterDetails {
 							ExternalPort: cluster.MasterPort,
-							Name :masterSwitch.Name,
-							Ip : masterSwitch.NewMasterIp,
-							Port :masterSwitch.NewMasterPort}
+							Name :switchEvent.Name,
+							Ip : switchEvent.NewMasterIp,
+							Port :switchEvent.NewMasterPort}
 
 		//render template
 		// TODO : look into HAProxy supporting multiple config files....
-		path := configuration.HAProxy.OutputPath 
+		path := configuration.HAProxy.OutputPath
+		templatepath := configuration.HAProxy.TemplatePath
 		arr := []types.MasterDetails{details}
-		renderedTemplate, err := template.RenderTemplate(path, &arr)
+		renderedTemplate, err := template.RenderTemplate(templatepath, &arr)
 
 		if err != nil {
-			syslog.Syslogf(syslog.LOG_INFO, "error rendering tempate at %s.", path)
+			syslog.Syslogf(syslog.LOG_INFO, "error rendering tempate at %s.", templatepath)
+			fmt.Printf( "error rendering tempate at %s.", templatepath)
 			return
 		}
-
-		lock.Lock()
-		defer lock.Unlock()
 
 		//get hash of new config
 		newFileHash := util.HashString(renderedTemplate)
@@ -111,13 +121,17 @@ func loopSentinelEvents(switchmasterchannel chan sentinel.MasterSwitchedEvent, c
 
 		if err != nil {
 			syslog.Syslogf(syslog.LOG_INFO, "error hashing existing haproxy config file at %s.", path)
+			fmt.Printf( "error hashing existing haproxy config file at %s.\n", path)
 			return
 		}
 
 		if newFileHash == oldFileHash {
 			syslog.Syslogf(syslog.LOG_INFO, "existing config file up todate. New file hash :  %s == Old file hash %s", newFileHash, oldFileHash )
+			fmt.Printf("existing config file up todate. New file hash :  %s == Old file hash %s\n", newFileHash, oldFileHash )
 			return
 		}
+
+		fmt.Printf("updating config file. New file hash :  %s == Old file hash %s\n", newFileHash, oldFileHash )
 
 		//TODO : check we have permission to update file
 
@@ -125,17 +139,19 @@ func loopSentinelEvents(switchmasterchannel chan sentinel.MasterSwitchedEvent, c
 		err = template.WriteFile(path, renderedTemplate)
 		//reload haproxy
 		reloadCommand := configuration.HAProxy.ReloadCommand
-		err = util.ExecuteCommand(reloadCommand)
+		output, err := util.ExecuteCommand(reloadCommand)
 
 		if err != nil {
-			syslog.Syslogf(syslog.LOG_INFO, "error reloading haproxy with command %s.", reloadCommand)
+			syslog.Syslogf(syslog.LOG_INFO, "error reloading haproxy with command %s : %s\n", reloadCommand, err.Error())
+			fmt.Printf("error reloading haproxy with command %s : %s\n", reloadCommand, err.Error())
 			return
 		}
+		fmt.Print(string(output))
 
 		syslog.Syslog(syslog.LOG_INFO, "haproxy reload completed.")
-	
-	}
+		fmt.Print("haproxy reload completed.\n")	
 }
+
 
 type HelloArgs struct {
 	Who string

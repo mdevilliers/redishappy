@@ -4,10 +4,10 @@ import (
 	"os/exec"
 )
 
-func ExecuteCommand(cmd string) error {
-	_, err := exec.Command("sh", "-c", cmd).Output()
+func ExecuteCommand(cmd string) ([]byte, error) {
+	out, err := exec.Command("sh", "-c", cmd).Output()
 	if err != nil {
-		return err
+		return  []byte{}, err
 	}
-	return nil
+	return out, nil
 }
