@@ -25,16 +25,16 @@ type MasterSwitchedEvent struct {
 
 func NewClient(sentineladdr string) (*SentinelClient, error) {
 
-	log.Print("Connecting to sentinel@", sentineladdr)
+	log.Printf("Connecting to sentinel@%s", sentineladdr)
 	
 	redisclient, err := redis.Dial("tcp", sentineladdr)
 	
 	if err != nil {
-		log.Print("Error connecting to sentinel@", sentineladdr, err.Error())
+		log.Printf("Error connecting to sentinel@%s", sentineladdr, err.Error())
 		return nil, err
 	}
 
-	log.Print("Connected to sentinel@", sentineladdr)
+	log.Printf("Connected to sentinel@%s", sentineladdr)
 
 	redissubscriptionclient := pubsub.NewSubClient(redisclient)
 
