@@ -2,30 +2,33 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"github.com/blackjack/syslog"
 	"github.com/gorilla/rpc"
 	"github.com/gorilla/rpc/json"
+	"github.com/natefinch/lumberjack"
 	"github.com/mdevilliers/redishappy/configuration"
 	"github.com/mdevilliers/redishappy/sentinel"
 	"github.com/mdevilliers/redishappy/template"
 	"github.com/mdevilliers/redishappy/types"
 	"github.com/mdevilliers/redishappy/util"
 	"sync"
+	"log"
 	"net/http"
-	// "os"
+	"os"
 )
 
 func main() {
 
-	fmt.Println("redis-happy started")
+	//TODO : configure from command line
+	initLogging("log") //var/log/redis-happy")
 
-	syslog.Openlog("redis-happy", syslog.LOG_PID, syslog.LOG_USER)
-	syslog.Syslog(syslog.LOG_INFO, "redis-happy started.")
+	log.Print("redis-happy started")
 
 	configuration, err := configuration.LoadFromFile("config.json")
 
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// fmt.Printf("Parsed from config : %s\n", util.String(configuration))
@@ -47,14 +50,14 @@ func main() {
 		// Once this is all initilised then write an haproxy config that
 		// validly documents the existing tompology
 		if err != nil {
-			panic(err)
+			log.Panic(err)
 		}
 
 		sen.StartMonitoring(switchmasterchannel)
 	}
 
 	// host a json endpoint
-	fmt.Println("hosting json endpoint...")
+	log.Print("hosting json endpoint.")
 	service := rpc.NewServer()
 	service.RegisterCodec(json.NewCodec(), "application/json")
 	service.RegisterService(new(HelloService), "")
@@ -63,16 +66,32 @@ func main() {
 
 }
 
+func initLogging(logPath string) {
+	if len(logPath) > 0 {
+		
+		syslog.Openlog("redis-happy", syslog.LOG_PID, syslog.LOG_USER)
+		syslogWriter := syslog.Writer{LogPriority: syslog.LOG_INFO}
+
+		log.SetOutput(io.MultiWriter(&lumberjack.Logger{
+			Dir:        logPath,
+			NameFormat: "2006-01-02T15-04-05.000.log",
+			MaxSize:    100,
+			MaxBackups: 3,
+			MaxAge:     28,
+		}, os.Stdout, &syslogWriter ))
+	}
+}
+
 func loopSentinelEvents(switchmasterchannel chan sentinel.MasterSwitchedEvent, config *configuration.Configuration) {
 
 	configuration := config
 
 	for switchEvent := range switchmasterchannel {
 
-		syslog.Syslogf(syslog.LOG_INFO, "redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", switchEvent.Name, switchEvent.OldMasterIp, switchEvent.OldMasterPort,switchEvent.NewMasterIp, switchEvent.NewMasterPort)
+		log.Printf( "Redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", switchEvent.Name, switchEvent.OldMasterIp, switchEvent.OldMasterPort,switchEvent.NewMasterIp, switchEvent.NewMasterPort)
 		
-		fmt.Printf("Master Switched : %s\n",  util.String(switchEvent))
-		fmt.Printf("Current Configuration : %s\n",  util.String(configuration.Clusters))
+		log.Printf("Master Switched : %s\n",  util.String(switchEvent))
+		log.Printf("Current Configuration : %s\n",  util.String(configuration.Clusters))
 
 		do(configuration, switchEvent)
 
@@ -89,11 +108,11 @@ func do(configuration *configuration.Configuration, switchEvent sentinel.MasterS
 		cluster, err := configuration.FindClusterByName(switchEvent.Name)
 
 		if err != nil {
-			syslog.Syslogf(syslog.LOG_INFO, "redis cluster called %s not found in configuration.", switchEvent.Name)
+			log.Printf("Redis cluster called %s not found in configuration.", switchEvent.Name)
 			return
 		}
 		
-		fmt.Printf("Cluster Configuration : %s\n",  util.String(cluster))
+		log.Printf("Cluster Configuration : %s\n",  util.String(cluster))
 
 		details := types.MasterDetails {
 							ExternalPort: cluster.MasterPort,
@@ -109,8 +128,7 @@ func do(configuration *configuration.Configuration, switchEvent sentinel.MasterS
 		renderedTemplate, err := template.RenderTemplate(templatepath, &arr)
 
 		if err != nil {
-			syslog.Syslogf(syslog.LOG_INFO, "error rendering tempate at %s.", templatepath)
-			fmt.Printf( "error rendering tempate at %s.", templatepath)
+			log.Printf("Error rendering tempate at %s.", templatepath)
 			return
 		}
 
@@ -120,18 +138,16 @@ func do(configuration *configuration.Configuration, switchEvent sentinel.MasterS
 		oldFileHash, err := util.HashFile(path)
 
 		if err != nil {
-			syslog.Syslogf(syslog.LOG_INFO, "error hashing existing haproxy config file at %s.", path)
-			fmt.Printf( "error hashing existing haproxy config file at %s.\n", path)
+			log.Printf("Error hashing existing haproxy config file at %s.", path)
 			return
 		}
 
 		if newFileHash == oldFileHash {
-			syslog.Syslogf(syslog.LOG_INFO, "existing config file up todate. New file hash :  %s == Old file hash %s", newFileHash, oldFileHash )
-			fmt.Printf("existing config file up todate. New file hash :  %s == Old file hash %s\n", newFileHash, oldFileHash )
+			log.Printf("existing config file up todate. New file hash :  %s == Old file hash %s", newFileHash, oldFileHash )
 			return
 		}
 
-		fmt.Printf("updating config file. New file hash :  %s == Old file hash %s\n", newFileHash, oldFileHash )
+		log.Printf("updating config file. New file hash :  %s == Old file hash %s", newFileHash, oldFileHash )
 
 		//TODO : check we have permission to update file
 
@@ -142,14 +158,11 @@ func do(configuration *configuration.Configuration, switchEvent sentinel.MasterS
 		output, err := util.ExecuteCommand(reloadCommand)
 
 		if err != nil {
-			syslog.Syslogf(syslog.LOG_INFO, "error reloading haproxy with command %s : %s\n", reloadCommand, err.Error())
-			fmt.Printf("error reloading haproxy with command %s : %s\n", reloadCommand, err.Error())
+			log.Printf("error reloading haproxy with command %s : %s\n", reloadCommand, err.Error())
 			return
 		}
-		fmt.Print(string(output))
-
-		syslog.Syslog(syslog.LOG_INFO, "haproxy reload completed.")
-		fmt.Print("haproxy reload completed.\n")	
+		log.Printf("HAProxy output : %s", string(output))
+		log.Printf("HAPoxy reload completed.")	
 }
 
 
