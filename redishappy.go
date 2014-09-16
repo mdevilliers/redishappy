@@ -34,8 +34,6 @@ func main() {
 
 	fmt.Printf("Parsed from config : %s\n", util.String(configuration))
 
-	go initApiServer()
-
 	flipper := flipper.New(configuration)
 
 	switchmasterchannel := make(chan sentinel.MasterSwitchedEvent)
@@ -44,23 +42,10 @@ func main() {
 
 	for _, configuredSentinel := range configuration.Sentinels {
 
-		sentinelAddress := fmt.Sprintf("%s:%d", configuredSentinel.Host, configuredSentinel.Port)
-		sen, err := sentinel.NewClient(sentinelAddress)
-
-		// TODO : exploding is no good - needs to connect to at least one
-		// sentinel. Also explore of any sentinel you have to find others
-		// using   _ ,err = sen.FindConnectedSentinels("nameofcluster")
-		// check against the list of clusters to validate you can find
-		// an answer for all the clusters you are monitoring
-		// Once this is all initilised then write an haproxy config that
-		// validly documents the existing tompology
-		if err != nil {
-			log.Print(err)
-		}
-
-		sen.StartMonitoring(switchmasterchannel)
+		go startMonitoringSentinel(configuredSentinel.Host, configuredSentinel.Port, switchmasterchannel)
 	}
 
+	initApiServer()
 }
 
 func initApiServer(){
@@ -77,7 +62,7 @@ func initLogging(logPath string) {
 	if len(logPath) > 0 {
 		
 		syslog.Openlog("redis-happy", syslog.LOG_PID, syslog.LOG_USER)
-		syslogWriter := syslog.Writer{LogPriority: syslog.LOG_INFO}
+		syslogWriter := &syslog.Writer{LogPriority: syslog.LOG_INFO}
 
 		log.SetOutput(io.MultiWriter(&lumberjack.Logger{
 			Dir:        logPath,
@@ -85,8 +70,26 @@ func initLogging(logPath string) {
 			MaxSize:    100,
 			MaxBackups: 3,
 			MaxAge:     28,
-		}, os.Stdout, &syslogWriter ))
+		}, os.Stdout, syslogWriter ))
 	}
+}
+
+func startMonitoringSentinel(host string, port int, switchmasterchannel chan sentinel.MasterSwitchedEvent){
+		
+		sentinelAddress := fmt.Sprintf("%s:%d", host, port)
+		sen, err := sentinel.NewClient(sentinelAddress)
+
+		// TODO : exploding is no good - needs to connect to at least one
+		// sentinel. Also explore of any sentinel you have to find others
+		// using   _ ,err = sen.FindConnectedSentinels("nameofcluster")
+		// check against the list of clusters to validate you can find
+		// an answer for all the clusters you are monitoring
+		// Once this is all initilised then write an haproxy config that
+		// validly documents the existing tompology
+		if err != nil {
+			log.Print(err)
+		}
+		sen.StartMonitoring(switchmasterchannel)
 }
 
 func loopSentinelEvents(flipper * flipper.FlipperClient , switchmasterchannel chan sentinel.MasterSwitchedEvent) {

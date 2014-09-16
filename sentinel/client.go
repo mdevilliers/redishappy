@@ -11,6 +11,7 @@ import (
 
 type SentinelClient struct {
 	subscriptionclient *pubsub.SubClient
+	sentineladdress	   string
 	redisclient        *redis.Client
 }
 
@@ -33,12 +34,14 @@ func NewClient(sentineladdr string) (*SentinelClient, error) {
 		return nil, err
 	}
 
+	log.Print("Connected to sentinel@", sentineladdr)
+
 	redissubscriptionclient := pubsub.NewSubClient(redisclient)
 
 	client := new(SentinelClient)
 	client.redisclient = redisclient
 	client.subscriptionclient = redissubscriptionclient
-
+	client.sentineladdress = sentineladdr
 	return client, nil
 }
 
