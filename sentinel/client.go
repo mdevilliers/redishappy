@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/fzzy/radix/extra/pubsub"
 	"github.com/fzzy/radix/redis"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -23,8 +24,12 @@ type MasterSwitchedEvent struct {
 
 func NewClient(sentineladdr string) (*SentinelClient, error) {
 
+	log.Print("Connecting to sentinel@", sentineladdr)
+	
 	redisclient, err := redis.Dial("tcp", sentineladdr)
+	
 	if err != nil {
+		log.Print("Error connecting to sentinel@", sentineladdr, err.Error())
 		return nil, err
 	}
 
@@ -43,7 +48,7 @@ func (client *SentinelClient) FindConnectedSentinels(clustername string) (bool, 
 	l := r.String()
 	// TODO : Investigate why r.List() should return the correct datatype but doesn't
 	// TODO : Parse into an array of arrays
-	fmt.Printf("Sentinels : Sentinels : %s \n", l)
+	log.Printf("Sentinels : Sentinels : %s \n", l)
 
 	return false, nil
 }

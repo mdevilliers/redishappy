@@ -9,10 +9,8 @@ import (
 	"github.com/natefinch/lumberjack"
 	"github.com/mdevilliers/redishappy/configuration"
 	"github.com/mdevilliers/redishappy/sentinel"
-	"github.com/mdevilliers/redishappy/template"
-	"github.com/mdevilliers/redishappy/types"
+	"github.com/mdevilliers/redishappy/services/flipper"
 	"github.com/mdevilliers/redishappy/util"
-	"sync"
 	"log"
 	"net/http"
 	"os"
@@ -21,21 +19,28 @@ import (
 func main() {
 
 	//TODO : configure from command line
-	initLogging("log") //var/log/redis-happy")
+	logPath := "log" //var/log/redis-happy")
+	configFile := "config.json"
+
+	initLogging(logPath)
 
 	log.Print("redis-happy started")
 
-	configuration, err := configuration.LoadFromFile("config.json")
+	configuration, err := configuration.LoadFromFile(configFile)
 
 	if err != nil {
 		log.Panic(err)
 	}
 
-	// fmt.Printf("Parsed from config : %s\n", util.String(configuration))
+	fmt.Printf("Parsed from config : %s\n", util.String(configuration))
+
+	go initApiServer()
+
+	flipper := flipper.New(configuration)
 
 	switchmasterchannel := make(chan sentinel.MasterSwitchedEvent)
 
-	go loopSentinelEvents(switchmasterchannel, configuration)
+	go loopSentinelEvents(flipper, switchmasterchannel)
 
 	for _, configuredSentinel := range configuration.Sentinels {
 
@@ -50,20 +55,22 @@ func main() {
 		// Once this is all initilised then write an haproxy config that
 		// validly documents the existing tompology
 		if err != nil {
-			log.Panic(err)
+			log.Print(err)
 		}
 
 		sen.StartMonitoring(switchmasterchannel)
 	}
 
-	// host a json endpoint
+}
+
+func initApiServer(){
+
 	log.Print("hosting json endpoint.")
 	service := rpc.NewServer()
 	service.RegisterCodec(json.NewCodec(), "application/json")
 	service.RegisterService(new(HelloService), "")
 	http.Handle("/rpc", service)
 	http.ListenAndServe(":8085", nil)
-
 }
 
 func initLogging(logPath string) {
@@ -82,89 +89,12 @@ func initLogging(logPath string) {
 	}
 }
 
-func loopSentinelEvents(switchmasterchannel chan sentinel.MasterSwitchedEvent, config *configuration.Configuration) {
-
-	configuration := config
+func loopSentinelEvents(flipper * flipper.FlipperClient , switchmasterchannel chan sentinel.MasterSwitchedEvent) {
 
 	for switchEvent := range switchmasterchannel {
-
-		log.Printf( "Redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", switchEvent.Name, switchEvent.OldMasterIp, switchEvent.OldMasterPort,switchEvent.NewMasterIp, switchEvent.NewMasterPort)
-		
-		log.Printf("Master Switched : %s\n",  util.String(switchEvent))
-		log.Printf("Current Configuration : %s\n",  util.String(configuration.Clusters))
-
-		do(configuration, switchEvent)
-
+		flipper.Orchestrate(switchEvent)
 	}
 }
-
-var lock = &sync.Mutex{}
-
-func do(configuration *configuration.Configuration, switchEvent sentinel.MasterSwitchedEvent ){
-
-		lock.Lock()
-		defer lock.Unlock()
-
-		cluster, err := configuration.FindClusterByName(switchEvent.Name)
-
-		if err != nil {
-			log.Printf("Redis cluster called %s not found in configuration.", switchEvent.Name)
-			return
-		}
-		
-		log.Printf("Cluster Configuration : %s\n",  util.String(cluster))
-
-		details := types.MasterDetails {
-							ExternalPort: cluster.MasterPort,
-							Name :switchEvent.Name,
-							Ip : switchEvent.NewMasterIp,
-							Port :switchEvent.NewMasterPort}
-
-		//render template
-		// TODO : look into HAProxy supporting multiple config files....
-		path := configuration.HAProxy.OutputPath
-		templatepath := configuration.HAProxy.TemplatePath
-		arr := []types.MasterDetails{details}
-		renderedTemplate, err := template.RenderTemplate(templatepath, &arr)
-
-		if err != nil {
-			log.Printf("Error rendering tempate at %s.", templatepath)
-			return
-		}
-
-		//get hash of new config
-		newFileHash := util.HashString(renderedTemplate)
-		//check hash on existing config
-		oldFileHash, err := util.HashFile(path)
-
-		if err != nil {
-			log.Printf("Error hashing existing haproxy config file at %s.", path)
-			return
-		}
-
-		if newFileHash == oldFileHash {
-			log.Printf("existing config file up todate. New file hash :  %s == Old file hash %s", newFileHash, oldFileHash )
-			return
-		}
-
-		log.Printf("updating config file. New file hash :  %s == Old file hash %s", newFileHash, oldFileHash )
-
-		//TODO : check we have permission to update file
-
-		//update file
-		err = template.WriteFile(path, renderedTemplate)
-		//reload haproxy
-		reloadCommand := configuration.HAProxy.ReloadCommand
-		output, err := util.ExecuteCommand(reloadCommand)
-
-		if err != nil {
-			log.Printf("error reloading haproxy with command %s : %s\n", reloadCommand, err.Error())
-			return
-		}
-		log.Printf("HAProxy output : %s", string(output))
-		log.Printf("HAPoxy reload completed.")	
-}
-
 
 type HelloArgs struct {
 	Who string
