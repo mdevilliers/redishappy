@@ -1,8 +1,8 @@
 package sentinel
 
 import (
-	"fmt"
 	"github.com/mdevilliers/redishappy/util"
+	"log"
 	"sync"
 	"time"
 )
@@ -93,6 +93,6 @@ func updateState(event interface{}) {
 			}			
 
         default:
-           fmt.Println("Unknown sentinel event : ", util.String(e))
+           log.Println("Unknown sentinel event : ", util.String(e))
     }
 }
