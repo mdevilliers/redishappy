@@ -1,6 +1,6 @@
 package types
 
-import(
+import (
 	"fmt"
 )
 
@@ -9,6 +9,6 @@ type Sentinel struct {
 	Port int
 }
 
-func(s *Sentinel) GetLocation() string {
+func (s *Sentinel) GetLocation() string {
 	return fmt.Sprintf("%s:%d", s.Host, s.Port)
 }

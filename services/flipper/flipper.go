@@ -12,24 +12,24 @@ import (
 
 type FlipperClient struct {
 	configuration *configuration.Configuration
-	lock *sync.Mutex
+	lock          *sync.Mutex
 }
 
 func New(configuration *configuration.Configuration) *FlipperClient {
-	return &FlipperClient{configuration : configuration, lock : &sync.Mutex{} }
+	return &FlipperClient{configuration: configuration, lock: &sync.Mutex{}}
 }
 
-func (flipper *FlipperClient) Orchestrate(switchEvent sentinel.MasterSwitchedEvent){
-	
+func (flipper *FlipperClient) Orchestrate(switchEvent sentinel.MasterSwitchedEvent) {
+
 	flipper.lock.Lock()
 	defer flipper.lock.Unlock()
 
-	log.Printf( "Redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", switchEvent.Name, switchEvent.OldMasterIp, switchEvent.OldMasterPort,switchEvent.NewMasterIp, switchEvent.NewMasterPort)
-	
-	log.Printf("Master Switched : %s\n",  util.String(switchEvent))
-	log.Printf("Current Configuration : %s\n",  util.String(flipper.configuration.Clusters))
+	log.Printf("Redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", switchEvent.Name, switchEvent.OldMasterIp, switchEvent.OldMasterPort, switchEvent.NewMasterIp, switchEvent.NewMasterPort)
 
-	configuration :=flipper.configuration
+	log.Printf("Master Switched : %s\n", util.String(switchEvent))
+	log.Printf("Current Configuration : %s\n", util.String(flipper.configuration.Clusters))
+
+	configuration := flipper.configuration
 	path := configuration.HAProxy.OutputPath
 	templatepath := configuration.HAProxy.TemplatePath
 	reloadCommand := configuration.HAProxy.ReloadCommand
@@ -40,14 +40,14 @@ func (flipper *FlipperClient) Orchestrate(switchEvent sentinel.MasterSwitchedEve
 		log.Printf("Redis cluster called %s not found in configuration.", switchEvent.Name)
 		return
 	}
-	
-	log.Printf("Cluster found : %s\n",  util.String(cluster))
 
-	details := types.MasterDetails {
-						ExternalPort: cluster.MasterPort,
-						Name :switchEvent.Name,
-						Ip : switchEvent.NewMasterIp,
-						Port :switchEvent.NewMasterPort}
+	log.Printf("Cluster found : %s\n", util.String(cluster))
+
+	details := types.MasterDetails{
+		ExternalPort: cluster.MasterPort,
+		Name:         switchEvent.Name,
+		Ip:           switchEvent.NewMasterIp,
+		Port:         switchEvent.NewMasterPort}
 
 	//render template
 	// TODO : look into HAProxy supporting multiple config files....
@@ -70,11 +70,11 @@ func (flipper *FlipperClient) Orchestrate(switchEvent sentinel.MasterSwitchedEve
 	}
 
 	if newFileHash == oldFileHash {
-		log.Printf("Existing config file up todate. New file hash : %s == Old file hash %s. Nothing to do.", newFileHash, oldFileHash )
+		log.Printf("Existing config file up todate. New file hash : %s == Old file hash %s. Nothing to do.", newFileHash, oldFileHash)
 		return
 	}
 
-	log.Printf("Updating config file. New file hash : %s == Old file hash %s", newFileHash, oldFileHash )
+	log.Printf("Updating config file. New file hash : %s == Old file hash %s", newFileHash, oldFileHash)
 
 	//TODO : check we have permission to update file
 
@@ -93,5 +93,5 @@ func (flipper *FlipperClient) Orchestrate(switchEvent sentinel.MasterSwitchedEve
 		return
 	}
 	log.Printf("HAProxy output : %s", string(output))
-	log.Printf("HAProxy reload completed.")	
+	log.Printf("HAProxy reload completed.")
 }

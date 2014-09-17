@@ -1,16 +1,15 @@
 package main
 
 import (
-	//"fmt"
-	"io"
 	"github.com/blackjack/syslog"
 	"github.com/gorilla/rpc"
 	"github.com/gorilla/rpc/json"
-	"github.com/natefinch/lumberjack"
 	"github.com/mdevilliers/redishappy/configuration"
 	"github.com/mdevilliers/redishappy/sentinel"
 	"github.com/mdevilliers/redishappy/services/flipper"
 	"github.com/mdevilliers/redishappy/util"
+	"github.com/natefinch/lumberjack"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -33,7 +32,7 @@ func main() {
 	}
 
 	log.Printf("Parsed from config : %s\n", util.String(configuration))
-	
+
 	sentinelManager := sentinel.NewManager()
 
 	go startMonitoring(sentinelManager, configuration)
@@ -41,7 +40,7 @@ func main() {
 	initApiServer()
 }
 
-func initApiServer(){
+func initApiServer() {
 
 	log.Print("hosting json endpoint.")
 	service := rpc.NewServer()
@@ -53,7 +52,7 @@ func initApiServer(){
 
 func initLogging(logPath string) {
 	if len(logPath) > 0 {
-		
+
 		syslog.Openlog("redis-happy", syslog.LOG_PID, syslog.LOG_USER)
 		syslogWriter := &syslog.Writer{LogPriority: syslog.LOG_INFO}
 
@@ -63,11 +62,11 @@ func initLogging(logPath string) {
 			MaxSize:    100,
 			MaxBackups: 3,
 			MaxAge:     28,
-		}, os.Stdout, syslogWriter ))
+		}, os.Stdout, syslogWriter))
 	}
 }
 
-func startMonitoring(sentinelManager *sentinel.SentinelManager ,configuration *configuration.Configuration) {
+func startMonitoring(sentinelManager *sentinel.SentinelManager, configuration *configuration.Configuration) {
 
 	flipper := flipper.New(configuration)
 	switchmasterchannel := make(chan sentinel.MasterSwitchedEvent)
@@ -85,7 +84,7 @@ func startMonitoring(sentinelManager *sentinel.SentinelManager ,configuration *c
 
 		} else {
 
-			started ++
+			started++
 
 			pubsubclient, err := sentinel.NewPubSubClient(configuredSentinel)
 
@@ -97,12 +96,12 @@ func startMonitoring(sentinelManager *sentinel.SentinelManager ,configuration *c
 		}
 	}
 
-	if(started == len(configuration.Sentinels)) {
-		log.Printf( "WARNING : no sentinels are currently being monitored." )
+	if started == len(configuration.Sentinels) {
+		log.Printf("WARNING : no sentinels are currently being monitored.")
 	}
 }
 
-func loopSentinelEvents(flipper * flipper.FlipperClient , switchmasterchannel chan sentinel.MasterSwitchedEvent) {
+func loopSentinelEvents(flipper *flipper.FlipperClient, switchmasterchannel chan sentinel.MasterSwitchedEvent) {
 
 	for switchEvent := range switchmasterchannel {
 		flipper.Orchestrate(switchEvent)

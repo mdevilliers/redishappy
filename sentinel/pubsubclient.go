@@ -27,9 +27,9 @@ func NewPubSubClient(sentinel types.Sentinel) (*SentinelPubSubClient, error) {
 
 	uri := sentinel.GetLocation()
 	log.Printf("Connecting to sentinel@%s", uri)
-	
+
 	redisclient, err := redis.Dial("tcp", uri)
-	
+
 	if err != nil {
 		log.Printf("Error connecting to sentinel@%s", uri, err.Error())
 		return nil, err
@@ -39,8 +39,8 @@ func NewPubSubClient(sentinel types.Sentinel) (*SentinelPubSubClient, error) {
 
 	redissubscriptionclient := pubsub.NewSubClient(redisclient)
 
-	client := &SentinelPubSubClient { 	redisclient : redisclient,
-										subscriptionclient : redissubscriptionclient }
+	client := &SentinelPubSubClient{redisclient: redisclient,
+		subscriptionclient: redissubscriptionclient}
 	return client, nil
 }
 
@@ -76,8 +76,8 @@ func (sub *SentinelPubSubClient) loopSubscription(switchmasterchannel chan Maste
 				event := MasterSwitchedEvent{Name: bits[0], OldMasterIp: bits[1], OldMasterPort: oldmasterport, NewMasterIp: bits[3], NewMasterPort: newmasterport}
 				switchmasterchannel <- event
 			}
-		}else {
-			fmt.Printf("Subscription Message : Channel : Error %s \n", r.Err)			
+		} else {
+			fmt.Printf("Subscription Message : Channel : Error %s \n", r.Err)
 		}
 	}
 }

@@ -54,8 +54,8 @@ func TestParseInValidConfiguration(t *testing.T) {
 }
 
 func TestNonExistentFile(t *testing.T) {
-	
-	_, err := LoadFromFile("does-not-exist.config") 
+
+	_, err := LoadFromFile("does-not-exist.config")
 
 	if err == nil {
 		t.Error("File doesn't exist and no error thrown")
