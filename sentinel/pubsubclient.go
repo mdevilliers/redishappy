@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"github.com/fzzy/radix/extra/pubsub"
 	"github.com/fzzy/radix/redis"
+	"github.com/mdevilliers/redishappy/types"
 	"log"
 	"strconv"
 	"strings"
 )
 
-type SentinelClient struct {
+type SentinelPubSubClient struct {
 	subscriptionclient *pubsub.SubClient
-	sentineladdress	   string
 	redisclient        *redis.Client
 }
 
@@ -23,40 +23,28 @@ type MasterSwitchedEvent struct {
 	NewMasterPort int
 }
 
-func NewClient(sentineladdr string) (*SentinelClient, error) {
+func NewPubSubClient(sentinel types.Sentinel) (*SentinelPubSubClient, error) {
 
-	log.Printf("Connecting to sentinel@%s", sentineladdr)
+	uri := sentinel.GetLocation()
+	log.Printf("Connecting to sentinel@%s", uri)
 	
-	redisclient, err := redis.Dial("tcp", sentineladdr)
+	redisclient, err := redis.Dial("tcp", uri)
 	
 	if err != nil {
-		log.Printf("Error connecting to sentinel@%s", sentineladdr, err.Error())
+		log.Printf("Error connecting to sentinel@%s", uri, err.Error())
 		return nil, err
 	}
 
-	log.Printf("Connected to sentinel@%s", sentineladdr)
+	log.Printf("Connected to sentinel@%s", uri)
 
 	redissubscriptionclient := pubsub.NewSubClient(redisclient)
 
-	client := new(SentinelClient)
-	client.redisclient = redisclient
-	client.subscriptionclient = redissubscriptionclient
-	client.sentineladdress = sentineladdr
+	client := &SentinelPubSubClient { 	redisclient : redisclient,
+										subscriptionclient : redissubscriptionclient }
 	return client, nil
 }
 
-func (client *SentinelClient) FindConnectedSentinels(clustername string) (bool, error) {
-
-	r := client.redisclient.Cmd("SENTINEL", "SENTINELS", clustername)
-	l := r.String()
-	// TODO : Investigate why r.List() should return the correct datatype but doesn't
-	// TODO : Parse into an array of arrays
-	log.Printf("Sentinels : Sentinels : %s \n", l)
-
-	return false, nil
-}
-
-func (client *SentinelClient) StartMonitoring(switchmasterchannel chan MasterSwitchedEvent) error {
+func (client *SentinelPubSubClient) StartMonitoringMasterEvents(switchmasterchannel chan MasterSwitchedEvent) error {
 
 	//TODO : fix radix client - doesn't support PSubscribe
 	subr := client.subscriptionclient.Subscribe("+switch-master") //, "+slave-reconf-done ")
@@ -70,7 +58,7 @@ func (client *SentinelClient) StartMonitoring(switchmasterchannel chan MasterSwi
 	return nil
 }
 
-func (sub *SentinelClient) loopSubscription(switchmasterchannel chan MasterSwitchedEvent) {
+func (sub *SentinelPubSubClient) loopSubscription(switchmasterchannel chan MasterSwitchedEvent) {
 	for {
 		r := sub.subscriptionclient.Receive()
 		if r.Timeout() {

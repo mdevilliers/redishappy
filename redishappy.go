@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"io"
 	"github.com/blackjack/syslog"
 	"github.com/gorilla/rpc"
@@ -32,18 +32,11 @@ func main() {
 		log.Panic(err)
 	}
 
-	fmt.Printf("Parsed from config : %s\n", util.String(configuration))
+	log.Printf("Parsed from config : %s\n", util.String(configuration))
+	
+	sentinelManager := sentinel.NewManager()
 
-	flipper := flipper.New(configuration)
-
-	switchmasterchannel := make(chan sentinel.MasterSwitchedEvent)
-
-	go loopSentinelEvents(flipper, switchmasterchannel)
-
-	for _, configuredSentinel := range configuration.Sentinels {
-
-		go startMonitoringSentinel(configuredSentinel.Host, configuredSentinel.Port, switchmasterchannel)
-	}
+	go startMonitoring(sentinelManager, configuration)
 
 	initApiServer()
 }
@@ -74,22 +67,39 @@ func initLogging(logPath string) {
 	}
 }
 
-func startMonitoringSentinel(host string, port int, switchmasterchannel chan sentinel.MasterSwitchedEvent){
-		
-		sentinelAddress := fmt.Sprintf("%s:%d", host, port)
-		sen, err := sentinel.NewClient(sentinelAddress)
+func startMonitoring(sentinelManager *sentinel.SentinelManager ,configuration *configuration.Configuration) {
 
-		// TODO : exploding is no good - needs to connect to at least one
-		// sentinel. Also explore of any sentinel you have to find others
-		// using   _ ,err = sen.FindConnectedSentinels("nameofcluster")
-		// check against the list of clusters to validate you can find
-		// an answer for all the clusters you are monitoring
-		// Once this is all initilised then write an haproxy config that
-		// validly documents the existing tompology
+	flipper := flipper.New(configuration)
+	switchmasterchannel := make(chan sentinel.MasterSwitchedEvent)
+	go loopSentinelEvents(flipper, switchmasterchannel)
+
+	started := 0
+
+	for _, configuredSentinel := range configuration.Sentinels {
+
+		_, err := sentinelManager.StartMonitoring(configuredSentinel)
+
 		if err != nil {
-			log.Print(err)
+
+			log.Printf("Error starting sentinel (%s) healthchecker : %s", configuredSentinel.GetLocation(), err.Error())
+
+		} else {
+
+			started ++
+
+			pubsubclient, err := sentinel.NewPubSubClient(configuredSentinel)
+
+			if err != nil {
+				log.Printf("Error starting sentinel (%s) monitor : %s", configuredSentinel.GetLocation(), err.Error())
+			}
+
+			pubsubclient.StartMonitoringMasterEvents(switchmasterchannel)
 		}
-		sen.StartMonitoring(switchmasterchannel)
+	}
+
+	if(started == len(configuration.Sentinels)) {
+		log.Printf( "WARNING : no sentinels are currently being monitored." )
+	}
 }
 
 func loopSentinelEvents(flipper * flipper.FlipperClient , switchmasterchannel chan sentinel.MasterSwitchedEvent) {

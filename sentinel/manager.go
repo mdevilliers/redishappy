@@ -1,6 +1,7 @@
 package sentinel
 
 import (
+	"github.com/mdevilliers/redishappy/types"
 	"github.com/mdevilliers/redishappy/util"
 	"log"
 	"sync"
@@ -26,6 +27,19 @@ func NewManager() *SentinelManager {
 	requests := make (chan TopologyRequest)
 	go loopEvents(events, requests)
 	return &SentinelManager{ eventsChannel : events, topologyRequestChannel:requests}
+}
+
+func (m *SentinelManager) StartMonitoring(sentinel types.Sentinel) (*SentinelHealthCheckerClient, error) {
+	
+	client, err := NewHealthCheckerClient(&sentinel, m)
+
+	if err != nil {
+		m.Notify(&SentinelAdded{sentinel : &sentinel})
+		client.Start()
+	}else{
+		log.Printf("SentinelManager : error starting healthchecker %s", sentinel.GetLocation())
+	}
+	return client,err
 }
 
 func (m *SentinelManager) Notify(event SentinelEvent) {
