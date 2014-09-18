@@ -37,29 +37,6 @@ func (client *HAProxyClient) Rpc(command string) (*HAProxyReply, error) {
 	return doRpc(client, request)
 }
 
-func (client *HAProxyClient) ReloadConfig(configpath string, pidfile string) (bool, error) {
-
-	pid, err := ioutil.ReadFile(pidfile)
-	args := make([]string, 1)
-	args = append(args, "-f")
-	args = append(args, configpath)
-	args = append(args, "-p")
-	args = append(args, pidfile)
-	if pid != nil {
-		args = append(args, "-sf")
-		args = append(args, string(pid))
-	}
-	cmd := exec.Command("haproxy", args...)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err = cmd.Run()
-	if err != nil {
-		return false, err
-	}
-	fmt.Printf("HAProxy Reload %s\n", out.String())
-	return true, nil
-}
-
 func doRpc(client *HAProxyClient, request *HAProxyRequest) (*HAProxyReply, error) {
 
 	buf := make([]byte, 512)
