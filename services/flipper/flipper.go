@@ -3,10 +3,10 @@ package flipper
 import (
 	"github.com/mdevilliers/redishappy/configuration"
 	"github.com/mdevilliers/redishappy/sentinel"
+	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/template"
 	"github.com/mdevilliers/redishappy/types"
 	"github.com/mdevilliers/redishappy/util"
-	"log"
 	"sync"
 )
 
@@ -24,10 +24,10 @@ func (flipper *FlipperClient) Orchestrate(switchEvent sentinel.MasterSwitchedEve
 	flipper.lock.Lock()
 	defer flipper.lock.Unlock()
 
-	log.Printf("Redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", switchEvent.Name, switchEvent.OldMasterIp, switchEvent.OldMasterPort, switchEvent.NewMasterIp, switchEvent.NewMasterPort)
+	logger.Info.Printf("Redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", switchEvent.Name, switchEvent.OldMasterIp, switchEvent.OldMasterPort, switchEvent.NewMasterIp, switchEvent.NewMasterPort)
 
-	log.Printf("Master Switched : %s\n", util.String(switchEvent))
-	log.Printf("Current Configuration : %s\n", util.String(flipper.configuration.Clusters))
+	logger.Info.Printf("Master Switched : %s", util.String(switchEvent))
+	logger.Info.Printf("Current Configuration : %s", util.String(flipper.configuration.Clusters))
 
 	configuration := flipper.configuration
 	path := configuration.HAProxy.OutputPath
@@ -37,11 +37,11 @@ func (flipper *FlipperClient) Orchestrate(switchEvent sentinel.MasterSwitchedEve
 	cluster, err := configuration.FindClusterByName(switchEvent.Name)
 
 	if err != nil {
-		log.Printf("Redis cluster called %s not found in configuration.", switchEvent.Name)
+		logger.Error.Printf("Redis cluster called %s not found in configuration.", switchEvent.Name)
 		return
 	}
 
-	log.Printf("Cluster found : %s\n", util.String(cluster))
+	logger.Info.Printf("Cluster found : %s", util.String(cluster))
 
 	details := types.MasterDetails{
 		ExternalPort: cluster.MasterPort,
@@ -56,7 +56,7 @@ func (flipper *FlipperClient) Orchestrate(switchEvent sentinel.MasterSwitchedEve
 	renderedTemplate, err := template.RenderTemplate(templatepath, &arr)
 
 	if err != nil {
-		log.Printf("Error rendering tempate at %s.", templatepath)
+		logger.Error.Printf("Error rendering tempate at %s.", templatepath)
 		return
 	}
 
@@ -65,23 +65,23 @@ func (flipper *FlipperClient) Orchestrate(switchEvent sentinel.MasterSwitchedEve
 	oldFileHash, err := util.HashFile(path)
 
 	if err != nil {
-		log.Printf("Error hashing existing HAProxy config file at %s.", path)
+		logger.Error.Printf("Error hashing existing HAProxy config file at %s.", path)
 		return
 	}
 
 	if newFileHash == oldFileHash {
-		log.Printf("Existing config file up todate. New file hash : %s == Old file hash %s. Nothing to do.", newFileHash, oldFileHash)
+		logger.Info.Printf("Existing config file up todate. New file hash : %s == Old file hash %s. Nothing to do.", newFileHash, oldFileHash)
 		return
 	}
 
-	log.Printf("Updating config file. New file hash : %s == Old file hash %s", newFileHash, oldFileHash)
+	logger.Info.Printf("Updating config file. New file hash : %s == Old file hash %s", newFileHash, oldFileHash)
 
 	//TODO : check we have permission to update file
 
 	err = template.WriteFile(path, renderedTemplate)
 
 	if err != nil {
-		log.Printf("error writing file to %s : %s\n", path, err.Error())
+		logger.Error.Printf("Error writing file to %s : %s\n", path, err.Error())
 		return
 	}
 
@@ -89,9 +89,9 @@ func (flipper *FlipperClient) Orchestrate(switchEvent sentinel.MasterSwitchedEve
 	output, err := util.ExecuteCommand(reloadCommand)
 
 	if err != nil {
-		log.Printf("error reloading haproxy with command %s : %s\n", reloadCommand, err.Error())
+		logger.Error.Printf("Error reloading haproxy with command %s : %s\n", reloadCommand, err.Error())
 		return
 	}
-	log.Printf("HAProxy output : %s", string(output))
-	log.Printf("HAProxy reload completed.")
+	logger.Info.Printf("HAProxy output : %s", string(output))
+	logger.Info.Printf("HAProxy reload completed.")
 }

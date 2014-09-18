@@ -1,11 +1,10 @@
 package sentinel
 
 import (
-	"fmt"
 	"github.com/fzzy/radix/extra/pubsub"
 	"github.com/fzzy/radix/redis"
+	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/types"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -26,16 +25,16 @@ type MasterSwitchedEvent struct {
 func NewPubSubClient(sentinel types.Sentinel) (*SentinelPubSubClient, error) {
 
 	uri := sentinel.GetLocation()
-	log.Printf("Connecting to sentinel@%s", uri)
+	logger.Info.Printf("Connecting to sentinel@%s", uri)
 
 	redisclient, err := redis.Dial("tcp", uri)
 
 	if err != nil {
-		log.Printf("Error connecting to sentinel@%s", uri, err.Error())
+		logger.Error.Printf("Error connecting to sentinel@%s", uri, err.Error())
 		return nil, err
 	}
 
-	log.Printf("Connected to sentinel@%s", uri)
+	logger.Info.Printf("Connected to sentinel@%s", uri)
 
 	redissubscriptionclient := pubsub.NewSubClient(redisclient)
 
@@ -65,7 +64,7 @@ func (sub *SentinelPubSubClient) loopSubscription(switchmasterchannel chan Maste
 			continue
 		}
 		if r.Err == nil {
-			fmt.Printf("Subscription Message : Channel : %s : %s\n", r.Channel, r.Message)
+			logger.Info.Printf("Subscription Message : Channel : %s : %s\n", r.Channel, r.Message)
 
 			if r.Channel == "+switch-master" {
 				bits := strings.Split(r.Message, " ")
@@ -77,7 +76,7 @@ func (sub *SentinelPubSubClient) loopSubscription(switchmasterchannel chan Maste
 				switchmasterchannel <- event
 			}
 		} else {
-			fmt.Printf("Subscription Message : Channel : Error %s \n", r.Err)
+			logger.Info.Printf("Subscription Message : Channel : Error %s \n", r.Err)
 		}
 	}
 }

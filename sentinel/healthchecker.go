@@ -3,8 +3,8 @@ package sentinel
 import (
 	//"fmt"
 	"github.com/fzzy/radix/redis"
+	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/types"
-	"log"
 	"time"
 )
 
@@ -18,15 +18,14 @@ type SentinelHealthCheckerClient struct {
 func NewHealthCheckerClient(sentinel *types.Sentinel, manager *SentinelManager) (*SentinelHealthCheckerClient, error) {
 
 	uri := sentinel.GetLocation()
-	log.Printf("HealthChecker : connecting to %s", uri)
-
+	logger.Info.Print("HealthChecker : connecting to %s", uri)
 	redisclient, err := redis.Dial("tcp", uri)
 
 	if err != nil {
-		log.Printf("HealthChecker : not connected to %s, %s", uri, err.Error())
+		logger.Info.Printf("HealthChecker : not connected to %s, %s", uri, err.Error())
 		return nil, err
 	}
-	log.Printf("HealthChecker : connected to %s", uri)
+	logger.Info.Printf("HealthChecker : connected to %s", uri)
 
 	client := &SentinelHealthCheckerClient{redisClient: redisclient,
 		sentinel:        sentinel,
@@ -52,7 +51,7 @@ func (client *SentinelHealthCheckerClient) loop() {
 
 		pingResult := r.String()
 
-		log.Printf("HealthChecker: %s says %s", client.sentinel.GetLocation(), pingResult)
+		logger.Info.Printf("HealthChecker: %s says %s", client.sentinel.GetLocation(), pingResult)
 
 		if pingResult != "PONG" {
 

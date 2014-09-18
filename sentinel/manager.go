@@ -1,9 +1,9 @@
 package sentinel
 
 import (
+	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/types"
 	"github.com/mdevilliers/redishappy/util"
-	"log"
 	"sync"
 	"time"
 )
@@ -37,7 +37,7 @@ func (m *SentinelManager) StartMonitoring(sentinel types.Sentinel) (*SentinelHea
 		m.Notify(&SentinelAdded{sentinel: &sentinel})
 		client.Start()
 	} else {
-		log.Printf("SentinelManager : error starting healthchecker %s", sentinel.GetLocation())
+		logger.Error.Printf("SentinelManager : Error starting healthchecker %s", sentinel.GetLocation())
 	}
 	return client, err
 }
@@ -107,6 +107,6 @@ func updateState(event interface{}) {
 		}
 
 	default:
-		log.Println("Unknown sentinel event : ", util.String(e))
+		logger.Error.Println("Unknown sentinel event : ", util.String(e))
 	}
 }
