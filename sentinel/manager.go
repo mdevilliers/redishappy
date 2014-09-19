@@ -1,6 +1,7 @@
 package sentinel
 
 import (
+	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/types"
 	"github.com/mdevilliers/redishappy/util"
@@ -32,7 +33,8 @@ func NewManager(switchmasterchannel chan MasterSwitchedEvent) *SentinelManager {
 
 func (m *SentinelManager) NewSentinelMonitor(sentinel types.Sentinel) (*SentinelHealthCheckerClient, error) {
 
-	client, err := NewHealthCheckerClient(sentinel, m)
+	redisConnection := &redis.RadixRedisConnection{}
+	client, err := NewHealthCheckerClient(sentinel, m, redisConnection)
 
 	if err != nil {
 		logger.Info.Printf("Error starting health checker (%s) : %s", sentinel.GetLocation(), err.Error())

@@ -10,8 +10,8 @@ import (
 )
 
 type SentinelPubSubClient struct {
-	subscriptionclient *pubsub.SubClient
-	redisclient        *redis.Client
+	subscriptionClient *pubsub.SubClient
+	redisClient        *redis.Client
 }
 
 type MasterSwitchedEvent struct {
@@ -38,15 +38,15 @@ func NewPubSubClient(sentinel types.Sentinel) (*SentinelPubSubClient, error) {
 
 	redissubscriptionclient := pubsub.NewSubClient(redisclient)
 
-	client := &SentinelPubSubClient{redisclient: redisclient,
-		subscriptionclient: redissubscriptionclient}
+	client := &SentinelPubSubClient{redisClient: redisclient,
+		subscriptionClient: redissubscriptionclient}
 	return client, nil
 }
 
 func (client *SentinelPubSubClient) StartMonitoringMasterEvents(switchmasterchannel chan MasterSwitchedEvent) error {
 
 	//TODO : fix radix client - doesn't support PSubscribe
-	subr := client.subscriptionclient.Subscribe("+switch-master") //, "+slave-reconf-done ")
+	subr := client.subscriptionClient.Subscribe("+switch-master") //, "+slave-reconf-done ")
 
 	if subr.Err != nil {
 		return subr.Err
@@ -59,7 +59,7 @@ func (client *SentinelPubSubClient) StartMonitoringMasterEvents(switchmasterchan
 
 func (sub *SentinelPubSubClient) loopSubscription(switchmasterchannel chan MasterSwitchedEvent) {
 	for {
-		r := sub.subscriptionclient.Receive()
+		r := sub.subscriptionClient.Receive()
 		if r.Timeout() {
 			continue
 		}

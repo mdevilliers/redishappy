@@ -2,8 +2,8 @@ package sentinel
 
 import (
 	//"fmt"
-	"github.com/fzzy/radix/redis"
 	"github.com/mdevilliers/redishappy/services/logger"
+	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
 	"github.com/mdevilliers/redishappy/util"
 	"time"
@@ -11,16 +11,17 @@ import (
 
 type SentinelHealthCheckerClient struct {
 	sentinel        types.Sentinel
-	redisClient     *redis.Client
+	redisClient     redis.RedisClient
 	sentinelManager *SentinelManager
 	sleepInSeconds  int
 }
 
-func NewHealthCheckerClient(sentinel types.Sentinel, manager *SentinelManager) (*SentinelHealthCheckerClient, error) {
+func NewHealthCheckerClient(sentinel types.Sentinel, manager *SentinelManager, redisConnection redis.RedisConnection ) (*SentinelHealthCheckerClient, error) {
 
 	uri := sentinel.GetLocation()
 	logger.Info.Printf("HealthChecker : connecting to %s", uri)
-	redisclient, err := redis.Dial("tcp", uri)
+
+	redisclient,err := redisConnection.Dial("tcp", uri)
 
 	if err != nil {
 		logger.Info.Printf("HealthChecker : not connected to %s, %s", uri, err.Error())
