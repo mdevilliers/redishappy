@@ -37,16 +37,18 @@ func main() {
 
 	go startMonitoring(sentinelManager, configuration)
 
-	initApiServer()
+	initApiServer(sentinelManager)
 }
 
-func initApiServer() {
+func initApiServer(manager *sentinel.SentinelManager) {
 
 	logger.Info.Print("hosting json endpoint.")
 
 	pongApi := api.PingApi{}
+	sentinelApi := api.SentinelApi{Manager : manager}
 
 	goji.Get("/api/ping", pongApi.Get )
+	goji.Get("/api/sentinel", sentinelApi.Get )
 	goji.Serve()
 }
 

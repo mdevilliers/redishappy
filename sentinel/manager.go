@@ -96,6 +96,7 @@ func updateState(event interface{}) {
 
 		topologyState.Sentinels[uid] = info
 		logger.Trace.Printf("Sentinel added : %s", util.String(topologyState))
+		
 	case *SentinelLost:
 
 		sentinel := e.GetSentinel()
