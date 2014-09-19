@@ -1,6 +1,6 @@
 package api
 
-import(
+import (
 	"io"
 	"net/http"
 )
@@ -8,6 +8,6 @@ import(
 type PingApi struct {
 }
 
-func (p *PingApi)Get(w http.ResponseWriter, r *http.Request) {
+func (p *PingApi) Get(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "Pong")
 }

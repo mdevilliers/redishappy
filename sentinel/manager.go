@@ -27,7 +27,7 @@ func NewManager(switchmasterchannel chan MasterSwitchedEvent) *SentinelManager {
 	events := make(chan SentinelEvent)
 	requests := make(chan TopologyRequest)
 	go loopEvents(events, requests)
-	return &SentinelManager{eventsChannel: events, topologyRequestChannel: requests, switchmasterchannel : switchmasterchannel}
+	return &SentinelManager{eventsChannel: events, topologyRequestChannel: requests, switchmasterchannel: switchmasterchannel}
 }
 
 func (m *SentinelManager) NewSentinelMonitor(sentinel types.Sentinel) (*SentinelHealthCheckerClient, error) {
@@ -96,7 +96,7 @@ func updateState(event interface{}) {
 
 		topologyState.Sentinels[uid] = info
 		logger.Trace.Printf("Sentinel added : %s", util.String(topologyState))
-		
+
 	case *SentinelLost:
 
 		sentinel := e.GetSentinel()

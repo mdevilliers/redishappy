@@ -75,7 +75,7 @@ func (client *SentinelHealthCheckerClient) loop() {
 
 func scheduleNewHealthChecker(sentinel types.Sentinel, sentinelManager *SentinelManager) {
 	logger.Info.Printf("HealthChecker : scheduling new healthChecker for , %s", util.String(sentinel))
-	util.Schedule( func(){ sentinelManager.NewSentinelMonitor(sentinel)} , time.Second * 5)
+	util.Schedule(func() { sentinelManager.NewSentinelMonitor(sentinel) }, time.Second*5)
 }
 
 // func (client *SentinelHealthCheckerClient) findConnectedSentinels(clustername string) (bool, error) {

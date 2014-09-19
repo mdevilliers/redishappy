@@ -10,10 +10,10 @@ type SentinelTopology struct {
 }
 
 type SentinelInfo struct {
-	SentinelLocation string `json:"sentinelLocation"`
+	SentinelLocation string    `json:"sentinelLocation"`
 	LastUpdated      time.Time `json:"lastUpdated"`
-	KnownClusters    []string `json:"knownClusters"`
-	State            int `json:"state"`
+	KnownClusters    []string  `json:"knownClusters"`
+	State            int       `json:"state"`
 }
 
 type TopologyRequest struct {
@@ -37,7 +37,7 @@ type SentinelPing struct {
 	Clusters []string
 }
 
-// TODO : find a better way to implement 
+// TODO : find a better way to implement
 // base type functionality
 func (s SentinelAdded) GetSentinel() *types.Sentinel {
 	return s.Sentinel
