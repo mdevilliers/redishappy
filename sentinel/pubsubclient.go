@@ -77,6 +77,7 @@ func (sub *SentinelPubSubClient) loopSubscription(switchmasterchannel chan Maste
 			}
 		} else {
 			logger.Info.Printf("Subscription Message : Channel : Error %s \n", r.Err)
+			break
 		}
 	}
 }

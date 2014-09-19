@@ -5,24 +5,26 @@ import (
 	"github.com/fzzy/radix/redis"
 	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/types"
+	"github.com/mdevilliers/redishappy/util"
 	"time"
 )
 
 type SentinelHealthCheckerClient struct {
-	sentinel        *types.Sentinel
+	sentinel        types.Sentinel
 	redisClient     *redis.Client
 	sentinelManager *SentinelManager
 	sleepInSeconds  int
 }
 
-func NewHealthCheckerClient(sentinel *types.Sentinel, manager *SentinelManager) (*SentinelHealthCheckerClient, error) {
+func NewHealthCheckerClient(sentinel types.Sentinel, manager *SentinelManager) (*SentinelHealthCheckerClient, error) {
 
 	uri := sentinel.GetLocation()
-	logger.Info.Print("HealthChecker : connecting to %s", uri)
+	logger.Info.Printf("HealthChecker : connecting to %s", uri)
 	redisclient, err := redis.Dial("tcp", uri)
 
 	if err != nil {
 		logger.Info.Printf("HealthChecker : not connected to %s, %s", uri, err.Error())
+		scheduleNewHealthChecker(sentinel, manager)
 		return nil, err
 	}
 	logger.Info.Printf("HealthChecker : connected to %s", uri)
@@ -46,25 +48,33 @@ func (client *SentinelHealthCheckerClient) loop() {
 
 		if r.Err != nil {
 
-			client.sentinelManager.Notify(&SentinelLost{sentinel: client.sentinel})
+			client.sentinelManager.Notify(&SentinelLost{Sentinel: &client.sentinel})
+			scheduleNewHealthChecker(client.sentinel, client.sentinelManager)
+			break
 		}
 
 		pingResult := r.String()
 
-		logger.Info.Printf("HealthChecker: %s says %s", client.sentinel.GetLocation(), pingResult)
+		// logger.Info.Printf("HealthChecker: %s says %s", client.sentinel.GetLocation(), pingResult)
 
 		if pingResult != "PONG" {
 
-			client.sentinelManager.Notify(&SentinelLost{sentinel: client.sentinel})
-
+			client.sentinelManager.Notify(&SentinelLost{Sentinel: &client.sentinel})
+			scheduleNewHealthChecker(client.sentinel, client.sentinelManager)
+			break
 		} else {
 
-			client.sentinelManager.Notify(&SentinelPing{sentinel: client.sentinel})
+			client.sentinelManager.Notify(&SentinelPing{Sentinel: &client.sentinel})
 			//TODO : check for other sentinels
 		}
 
 		time.Sleep(time.Duration(client.sleepInSeconds) * time.Second)
 	}
+}
+
+func scheduleNewHealthChecker(sentinel types.Sentinel, sentinelManager *SentinelManager) {
+	logger.Info.Printf("HealthChecker : scheduling new healthChecker for , %s", util.String(sentinel))
+	util.Schedule( func(){ sentinelManager.NewSentinelMonitor(sentinel)} , time.Second * 5)
 }
 
 // func (client *SentinelHealthCheckerClient) findConnectedSentinels(clustername string) (bool, error) {

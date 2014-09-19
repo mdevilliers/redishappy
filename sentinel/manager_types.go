@@ -25,30 +25,30 @@ type SentinelEvent interface {
 }
 
 type SentinelAdded struct {
-	sentinel *types.Sentinel
+	Sentinel *types.Sentinel
 }
 
 type SentinelLost struct {
-	sentinel *types.Sentinel
+	Sentinel *types.Sentinel
 }
 
 type SentinelPing struct {
-	sentinel *types.Sentinel
+	Sentinel *types.Sentinel
 	Clusters []string
 }
 
 // TODO : find a better way to implement base type
 // functionality
 func (s SentinelAdded) GetSentinel() *types.Sentinel {
-	return s.sentinel
+	return s.Sentinel
 }
 
 func (s SentinelLost) GetSentinel() *types.Sentinel {
-	return s.sentinel
+	return s.Sentinel
 }
 
 func (s SentinelPing) GetSentinel() *types.Sentinel {
-	return s.sentinel
+	return s.Sentinel
 }
 
 func (topology SentinelTopology) FindSentinelInfo(sentinel *types.Sentinel) (*SentinelInfo, bool) {

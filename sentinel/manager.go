@@ -17,28 +17,40 @@ const (
 type SentinelManager struct {
 	eventsChannel          chan SentinelEvent
 	topologyRequestChannel chan TopologyRequest
+	switchmasterchannel    chan MasterSwitchedEvent
 }
 
 var topologyState = SentinelTopology{Sentinels: map[string]*SentinelInfo{}}
 var statelock = &sync.Mutex{}
 
-func NewManager() *SentinelManager {
+func NewManager(switchmasterchannel chan MasterSwitchedEvent) *SentinelManager {
 	events := make(chan SentinelEvent)
 	requests := make(chan TopologyRequest)
 	go loopEvents(events, requests)
-	return &SentinelManager{eventsChannel: events, topologyRequestChannel: requests}
+	return &SentinelManager{eventsChannel: events, topologyRequestChannel: requests, switchmasterchannel : switchmasterchannel}
 }
 
-func (m *SentinelManager) StartMonitoring(sentinel types.Sentinel) (*SentinelHealthCheckerClient, error) {
+func (m *SentinelManager) NewSentinelMonitor(sentinel types.Sentinel) (*SentinelHealthCheckerClient, error) {
 
-	client, err := NewHealthCheckerClient(&sentinel, m)
+	client, err := NewHealthCheckerClient(sentinel, m)
 
 	if err != nil {
-		m.Notify(&SentinelAdded{sentinel: &sentinel})
-		client.Start()
-	} else {
-		logger.Error.Printf("SentinelManager : Error starting healthchecker %s", sentinel.GetLocation())
+		logger.Info.Printf("Error starting health checker (%s) : %s", sentinel.GetLocation(), err.Error())
+		return nil, err
 	}
+
+	m.Notify(&SentinelAdded{Sentinel: &sentinel})
+	client.Start()
+
+	pubsubclient, err := NewPubSubClient(sentinel)
+
+	if err != nil {
+		logger.Info.Printf("Error starting monitor %s : %s", sentinel.GetLocation(), err.Error())
+		return nil, err
+	}
+
+	pubsubclient.StartMonitoringMasterEvents(m.switchmasterchannel)
+
 	return client, err
 }
 
@@ -83,7 +95,7 @@ func updateState(event interface{}) {
 			State:         SentinelMarkedUp}
 
 		topologyState.Sentinels[uid] = info
-
+		logger.Trace.Printf("Sentinel added : %s", util.String(topologyState))
 	case *SentinelLost:
 
 		sentinel := e.GetSentinel()
@@ -94,6 +106,7 @@ func updateState(event interface{}) {
 			currentInfo.State = SentinelMarkedDown
 			currentInfo.LastUpdated = time.Now().UTC()
 		}
+		logger.Trace.Printf("Sentinel lost : %s", util.String(topologyState))
 
 	case *SentinelPing:
 		sentinel := e.GetSentinel()

@@ -28,7 +28,12 @@ func main() {
 
 	logger.Info.Printf("Parsed from config : %s\n", util.String(configuration))
 
-	sentinelManager := sentinel.NewManager()
+	flipper := flipper.New(configuration)
+	switchmasterchannel := make(chan sentinel.MasterSwitchedEvent)
+
+	go loopSentinelEvents(flipper, switchmasterchannel)
+
+	sentinelManager := sentinel.NewManager(switchmasterchannel)
 
 	go startMonitoring(sentinelManager, configuration)
 
@@ -47,15 +52,11 @@ func initApiServer() {
 
 func startMonitoring(sentinelManager *sentinel.SentinelManager, configuration *configuration.Configuration) {
 
-	flipper := flipper.New(configuration)
-	switchmasterchannel := make(chan sentinel.MasterSwitchedEvent)
-	go loopSentinelEvents(flipper, switchmasterchannel)
-
 	started := 0
 
 	for _, configuredSentinel := range configuration.Sentinels {
 
-		_, err := sentinelManager.StartMonitoring(configuredSentinel)
+		_, err := sentinelManager.NewSentinelMonitor(configuredSentinel)
 
 		if err != nil {
 
@@ -65,13 +66,6 @@ func startMonitoring(sentinelManager *sentinel.SentinelManager, configuration *c
 
 			started++
 
-			pubsubclient, err := sentinel.NewPubSubClient(configuredSentinel)
-
-			if err != nil {
-				logger.Info.Printf("Error starting sentinel (%s) monitor : %s", configuredSentinel.GetLocation(), err.Error())
-			}
-
-			pubsubclient.StartMonitoringMasterEvents(switchmasterchannel)
 		}
 	}
 
