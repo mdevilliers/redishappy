@@ -66,6 +66,7 @@ func (client *SentinelHealthCheckerClient) loop() {
 
 			client.sentinelManager.Notify(&SentinelPing{Sentinel: &client.sentinel})
 			//TODO : check for other sentinels
+			//client.findConnectedSentinels("secure")
 		}
 
 		time.Sleep(time.Duration(client.sleepInSeconds) * time.Second)
@@ -78,10 +79,10 @@ func scheduleNewHealthChecker(sentinel types.Sentinel, sentinelManager *Sentinel
 }
 
 // func (client *SentinelHealthCheckerClient) findConnectedSentinels(clustername string) (bool, error) {
-// 	r := client.redisclient.Cmd("SENTINEL", "SENTINELS", clustername)
-// 	l := r.String()
-// 	// TODO : Investigate why r.List() should return the correct datatype but doesn't
-// 	// TODO : Parse into an array of arrays
-// 	log.Printf("Sentinels : Sentinels : %s \n", l)
+// 	r := client.redisClient.Cmd("SENTINEL", "SENTINELS", clustername)
+// 	for _, e := range r.Elems {
+// 		  t,_ := e.Hash()
+// 		  logger.Info.Printf("Sentinels : xxx : %s : %s",t["ip"], t["port"])
+// 	}
 // 	return false, nil
 // }
