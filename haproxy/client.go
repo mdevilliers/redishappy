@@ -1,12 +1,8 @@
 package haproxy
 
 import (
-	"bytes"
-	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
-	"os/exec"
 )
 
 type HAProxyRequest struct {
