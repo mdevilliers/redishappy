@@ -1,8 +1,8 @@
 package sentinel
 
 import (
-	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/services/logger"
+	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
 	"github.com/mdevilliers/redishappy/util"
 	"sync"
@@ -14,6 +14,13 @@ const (
 	SentinelMarkedDown  = iota
 	SentinelMarkedAlive = iota
 )
+
+type Manager interface {
+	Notify(event SentinelEvent)
+	GetState(request TopologyRequest)
+	NewSentinelMonitor(types.Sentinel) (*SentinelHealthCheckerClient, error)
+	ScheduleNewHealthChecker(sentinel types.Sentinel)
+}
 
 type SentinelManager struct {
 	eventsChannel          chan SentinelEvent
@@ -27,12 +34,14 @@ var statelock = &sync.Mutex{}
 func NewManager(switchmasterchannel chan MasterSwitchedEvent) *SentinelManager {
 	events := make(chan SentinelEvent)
 	requests := make(chan TopologyRequest)
-	go loopEvents(events, requests)
-	return &SentinelManager{eventsChannel: events, topologyRequestChannel: requests, switchmasterchannel: switchmasterchannel}
+	manager := &SentinelManager{eventsChannel: events, topologyRequestChannel: requests, switchmasterchannel: switchmasterchannel}
+	go loopEvents(events, requests, manager)
+	return manager
 }
 
 func (m *SentinelManager) NewSentinelMonitor(sentinel types.Sentinel) (*SentinelHealthCheckerClient, error) {
 
+	m.Notify(&SentinelAdded{Sentinel: sentinel})
 	redisConnection := &redis.RadixRedisConnection{}
 	client, err := NewHealthCheckerClient(sentinel, m, redisConnection)
 
@@ -41,7 +50,6 @@ func (m *SentinelManager) NewSentinelMonitor(sentinel types.Sentinel) (*Sentinel
 		return nil, err
 	}
 
-	m.Notify(&SentinelAdded{Sentinel: &sentinel})
 	client.Start()
 
 	pubsubclient, err := NewPubSubClient(sentinel)
@@ -64,24 +72,29 @@ func (m *SentinelManager) GetState(request TopologyRequest) {
 	m.topologyRequestChannel <- request
 }
 
+func (m *SentinelManager) ScheduleNewHealthChecker(sentinel types.Sentinel) {
+	logger.Info.Printf("SentinelManager : scheduling new healthChecker for , %s", util.String(sentinel))
+	util.Schedule(func() { m.NewSentinelMonitor(sentinel) }, time.Second*5)
+}
+
 func (m *SentinelManager) ClearState() {
 	statelock.Lock()
 	defer statelock.Unlock()
 	topologyState = SentinelTopology{Sentinels: map[string]*SentinelInfo{}}
 }
 
-func loopEvents(events chan SentinelEvent, topology chan TopologyRequest) {
+func loopEvents(events chan SentinelEvent, topology chan TopologyRequest, m Manager) {
 	for {
 		select {
 		case event := <-events:
-			updateState(event)
+			updateState(event, m)
 		case read := <-topology:
 			read.ReplyChannel <- topologyState
 		}
 	}
 }
 
-func updateState(event interface{}) {
+func updateState(event interface{}, m Manager) {
 
 	statelock.Lock()
 	defer statelock.Unlock()
@@ -109,7 +122,9 @@ func updateState(event interface{}) {
 			currentInfo.State = SentinelMarkedDown
 			currentInfo.LastUpdated = time.Now().UTC()
 		}
-		logger.Trace.Printf("Sentinel lost : %s", util.String(topologyState))
+
+		m.ScheduleNewHealthChecker(sentinel)
+		logger.Trace.Printf("Sentinel lost : %s, scheduling new health checker.", util.String(topologyState))
 
 	case *SentinelPing:
 		sentinel := e.GetSentinel()

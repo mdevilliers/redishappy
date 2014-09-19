@@ -21,41 +21,41 @@ type TopologyRequest struct {
 }
 
 type SentinelEvent interface {
-	GetSentinel() *types.Sentinel
+	GetSentinel() types.Sentinel
 }
 
 type SentinelAdded struct {
-	Sentinel *types.Sentinel
+	Sentinel types.Sentinel
 }
 
 type SentinelLost struct {
-	Sentinel *types.Sentinel
+	Sentinel types.Sentinel
 }
 
 type SentinelPing struct {
-	Sentinel *types.Sentinel
+	Sentinel types.Sentinel
 	Clusters []string
 }
 
 // TODO : find a better way to implement
 // base type functionality
-func (s SentinelAdded) GetSentinel() *types.Sentinel {
+func (s SentinelAdded) GetSentinel() types.Sentinel {
 	return s.Sentinel
 }
 
-func (s SentinelLost) GetSentinel() *types.Sentinel {
+func (s SentinelLost) GetSentinel() types.Sentinel {
 	return s.Sentinel
 }
 
-func (s SentinelPing) GetSentinel() *types.Sentinel {
+func (s SentinelPing) GetSentinel() types.Sentinel {
 	return s.Sentinel
 }
 
-func (topology SentinelTopology) FindSentinelInfo(sentinel *types.Sentinel) (*SentinelInfo, bool) {
+func (topology SentinelTopology) FindSentinelInfo(sentinel types.Sentinel) (*SentinelInfo, bool) {
 	key := topology.createKey(sentinel)
 	info, ok := topology.Sentinels[key]
 	return info, ok
 }
-func (topology SentinelTopology) createKey(sentinel *types.Sentinel) string {
+func (topology SentinelTopology) createKey(sentinel types.Sentinel) string {
 	return sentinel.GetLocation()
 }
