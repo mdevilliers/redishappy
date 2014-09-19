@@ -2,14 +2,16 @@ package sentinel
 
 import (
 	"github.com/mdevilliers/redishappy/types"
+	"github.com/mdevilliers/redishappy/services/logger"
 	"testing"
 )
 
 func TestBasicEventChannel(t *testing.T) {
-
-	manager := NewManager()
+	logger.InitLogging("log")
+	switchmasterchannel := make(chan MasterSwitchedEvent)
+	manager := NewManager(switchmasterchannel)
 	defer manager.ClearState()
-	manager.Notify(&SentinelAdded{sentinel: &types.Sentinel{Host: "10.1.1.1", Port: 12345}})
+	manager.Notify(&SentinelAdded{Sentinel: &types.Sentinel{Host: "10.1.1.1", Port: 12345}})
 
 	responseChannel := make(chan SentinelTopology)
 
@@ -20,8 +22,8 @@ func TestBasicEventChannel(t *testing.T) {
 		t.Error("Topology count should be 1")
 	}
 
-	manager2 := NewManager()
-	manager2.Notify(&SentinelAdded{sentinel: &types.Sentinel{Host: "10.1.1.2", Port: 12345}})
+	manager2 := NewManager(switchmasterchannel)
+	manager2.Notify(&SentinelAdded{Sentinel: &types.Sentinel{Host: "10.1.1.2", Port: 12345}})
 
 	manager2.GetState(TopologyRequest{ReplyChannel: responseChannel})
 
@@ -35,14 +37,15 @@ func TestBasicEventChannel(t *testing.T) {
 }
 
 func TestAddingAndLoseingASentinel(t *testing.T) {
-
-	manager := NewManager()
+	logger.InitLogging("log")
+	switchmasterchannel := make(chan MasterSwitchedEvent)
+	manager := NewManager(switchmasterchannel)
 	defer manager.ClearState()
 
 	sentinel := &types.Sentinel{Host: "10.1.1.5", Port: 12345}
 
-	manager.Notify(&SentinelAdded{sentinel: sentinel})
-	manager.Notify(&SentinelLost{sentinel: sentinel})
+	manager.Notify(&SentinelAdded{Sentinel: sentinel})
+	manager.Notify(&SentinelLost{Sentinel: sentinel})
 
 	responseChannel := make(chan SentinelTopology)
 
@@ -57,16 +60,17 @@ func TestAddingAndLoseingASentinel(t *testing.T) {
 }
 
 func TestAddingInfoToADiscoveredSentinel(t *testing.T) {
-
-	manager := NewManager()
+	logger.InitLogging("log")
+	switchmasterchannel := make(chan MasterSwitchedEvent)
+	manager := NewManager(switchmasterchannel)
 	defer manager.ClearState()
 
 	sentinel := &types.Sentinel{Host: "10.1.1.6", Port: 12345}
 
-	manager.Notify(&SentinelAdded{sentinel: sentinel})
+	manager.Notify(&SentinelAdded{Sentinel: sentinel})
 
-	ping := &SentinelPing{sentinel: sentinel, Clusters: []string{"one", "two", "three"}}
-	ping2 := &SentinelPing{sentinel: sentinel, Clusters: []string{"four", "five"}}
+	ping := &SentinelPing{Sentinel: sentinel, Clusters: []string{"one", "two", "three"}}
+	ping2 := &SentinelPing{Sentinel: sentinel, Clusters: []string{"four", "five"}}
 	manager.Notify(ping)
 	manager.Notify(ping2)
 
