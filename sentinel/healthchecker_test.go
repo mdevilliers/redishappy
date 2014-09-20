@@ -1,44 +1,69 @@
 package sentinel
 
 import (
+	"errors"
 	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
+	"reflect"
 	"testing"
 	"time"
 )
 
+// MOCKS
 type TestRedisConnection struct {
-	// RedisClient *TestRedisClient
+	RedisClient *TestRedisClient
 }
 
-type TestRedisClient struct{}
+type TestRedisClient struct {
+	RedisReply *TestRedisReply
+}
 
-type TestRedisReply struct{}
+type TestRedisReply struct {
+	Reply string
+	Error error
+}
 
 func (c TestRedisConnection) Dial(protocol, uri string) (redis.RedisClient, error) {
-	return &TestRedisClient{}, nil
+
+	//fail to connect
+	if uri == "DOESNOTEXIST:1234" {
+		return nil, errors.New("CannotConnect")
+	}
+	return c.RedisClient, nil
 }
 
 func (c *TestRedisClient) Cmd(cmd string, args ...interface{}) redis.RedisReply {
-	return &TestRedisReply{}
+	return c.RedisReply
 }
 
 func (c *TestRedisReply) String() string {
-	return "PIG"
+	return c.Reply
 }
 
 func (c *TestRedisReply) Err() error {
-	return nil
+	return c.Error
 }
 
 type TestManager struct {
-	NotifyCalled                   int
+	NotifyCalledWithSentinelPing   int
+	NotifyCalledWithSentinelLost   int
+	NotifyCalledWithSentinelAdded  int
 	ScheduleNewHealthCheckerCalled int
 }
 
 func (tm *TestManager) Notify(event SentinelEvent) {
-	tm.NotifyCalled++
+	t := reflect.TypeOf(event).String()
+
+	if t == "*sentinel.SentinelLost" {
+		tm.NotifyCalledWithSentinelLost++
+	}
+	if t == "*sentinel.SentinelPing" {
+		tm.NotifyCalledWithSentinelPing++
+	}
+	if t == "*sentinel.SentinelAdded" {
+		tm.NotifyCalledWithSentinelAdded++
+	}
 }
 func (*TestManager) GetState(request TopologyRequest) {
 
@@ -50,19 +75,67 @@ func (tm *TestManager) ScheduleNewHealthChecker(sentinel types.Sentinel) {
 	tm.ScheduleNewHealthCheckerCalled++
 }
 
-func TestNewClientWillFailWhenPingUnsucessful(t *testing.T) {
+func TestNewClientWillGetASuccessfulPing(t *testing.T) {
 	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{}
 	sentinelManager := &TestManager{}
-	redisConnection := &TestRedisConnection{}
+	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{RedisReply: &TestRedisReply{Reply: "PONG"}}}
 
 	client, _ := NewHealthCheckerClient(sentinel, sentinelManager, redisConnection)
 	client.Start()
 
 	time.Sleep(time.Second)
 
-	if sentinelManager.NotifyCalled != 1 {
+	if sentinelManager.NotifyCalledWithSentinelPing != 1 {
+		t.Error("Notify should have been called with a SentinelPing event!")
+	}
+}
+
+func TestNewClientWillFailWhenPingUnsucessful(t *testing.T) {
+	logger.InitLogging("../log")
+
+	sentinel := types.Sentinel{}
+	sentinelManager := &TestManager{}
+	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{RedisReply: &TestRedisReply{Reply: "ERROR"}}}
+
+	client, _ := NewHealthCheckerClient(sentinel, sentinelManager, redisConnection)
+	client.Start()
+
+	time.Sleep(time.Second)
+
+	if sentinelManager.NotifyCalledWithSentinelLost != 1 {
+		t.Error("Notify should have been called with a SentinelPing event!")
+	}
+}
+
+func TestNewClientWillFailWhenErrorOnPing(t *testing.T) {
+	logger.InitLogging("../log")
+
+	sentinel := types.Sentinel{}
+	sentinelManager := &TestManager{}
+	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{RedisReply: &TestRedisReply{Error: errors.New("BOOYAH!")}}}
+
+	client, _ := NewHealthCheckerClient(sentinel, sentinelManager, redisConnection)
+	client.Start()
+
+	time.Sleep(time.Second)
+
+	if sentinelManager.NotifyCalledWithSentinelLost != 1 {
+		t.Error("Notify should have been called with a SentinelPing event!")
+	}
+}
+
+func TestNewClientWillWillSignalSentinelLostIfCanNotConnect(t *testing.T) {
+	logger.InitLogging("../log")
+
+	sentinel := types.Sentinel{Host: "DOESNOTEXIST", Port: 1234} // mock coded to not connect
+	sentinelManager := &TestManager{}
+	redisConnection := &TestRedisConnection{}
+
+	_, _ = NewHealthCheckerClient(sentinel, sentinelManager, redisConnection)
+
+	if sentinelManager.NotifyCalledWithSentinelLost != 1 {
 		t.Error("Notify should have been called!")
 	}
 }
