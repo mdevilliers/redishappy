@@ -1,8 +1,7 @@
 package sentinel
 
 import (
-	"github.com/fzzy/radix/extra/pubsub"
-	"github.com/fzzy/radix/redis"
+	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/types"
 	"strconv"
@@ -10,8 +9,7 @@ import (
 )
 
 type SentinelPubSubClient struct {
-	subscriptionClient *pubsub.SubClient
-	redisClient        *redis.Client
+	subscriptionClient redis.RedisPubSubClient
 }
 
 type MasterSwitchedEvent struct {
@@ -22,12 +20,12 @@ type MasterSwitchedEvent struct {
 	NewMasterPort int
 }
 
-func NewPubSubClient(sentinel types.Sentinel) (*SentinelPubSubClient, error) {
+func NewPubSubClient(sentinel types.Sentinel, redisConnection redis.RedisConnection) (*SentinelPubSubClient, error) {
 
 	uri := sentinel.GetLocation()
 	logger.Info.Printf("Connecting to sentinel@%s", uri)
 
-	redisclient, err := redis.Dial("tcp", uri)
+	redisclient, err := redisConnection.Dial("tcp", uri)
 
 	if err != nil {
 		logger.Error.Printf("Error connecting to sentinel@%s", uri, err.Error())
@@ -36,10 +34,9 @@ func NewPubSubClient(sentinel types.Sentinel) (*SentinelPubSubClient, error) {
 
 	logger.Info.Printf("Connected to sentinel@%s", uri)
 
-	redissubscriptionclient := pubsub.NewSubClient(redisclient)
+	redissubscriptionclient := redisclient.NewPubSubClient()
 
-	client := &SentinelPubSubClient{redisClient: redisclient,
-		subscriptionClient: redissubscriptionclient}
+	client := &SentinelPubSubClient{ subscriptionClient: redissubscriptionclient}
 	return client, nil
 }
 
@@ -48,8 +45,8 @@ func (client *SentinelPubSubClient) StartMonitoringMasterEvents(switchmasterchan
 	//TODO : fix radix client - doesn't support PSubscribe
 	subr := client.subscriptionClient.Subscribe("+switch-master") //, "+slave-reconf-done ")
 
-	if subr.Err != nil {
-		return subr.Err
+	if subr.Err() != nil {
+		return subr.Err()
 	}
 
 	go client.loopSubscription(switchmasterchannel)
@@ -63,11 +60,11 @@ func (sub *SentinelPubSubClient) loopSubscription(switchmasterchannel chan Maste
 		if r.Timeout() {
 			continue
 		}
-		if r.Err == nil {
+		if r.Err() == nil {
 			logger.Info.Printf("Subscription Message : Channel : %s : %s\n", r.Channel, r.Message)
 
-			if r.Channel == "+switch-master" {
-				bits := strings.Split(r.Message, " ")
+			if r.Channel() == "+switch-master" {
+				bits := strings.Split(r.Message(), " ")
 
 				oldmasterport, _ := strconv.Atoi(bits[2])
 				newmasterport, _ := strconv.Atoi(bits[4])

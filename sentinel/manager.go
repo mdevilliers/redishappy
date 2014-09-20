@@ -52,7 +52,7 @@ func (m *SentinelManager) NewSentinelMonitor(sentinel types.Sentinel) (*Sentinel
 
 	client.Start()
 
-	pubsubclient, err := NewPubSubClient(sentinel)
+	pubsubclient, err := NewPubSubClient(sentinel, &redis.RadixRedisConnection{})
 
 	if err != nil {
 		logger.Info.Printf("Error starting monitor %s : %s", sentinel.GetLocation(), err.Error())
