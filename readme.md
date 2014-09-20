@@ -7,7 +7,7 @@ Automated Redis Failover using HaProxy and Sentinel
 
 
 ```
-go get
+go test -v ./...
 ```
 
 ```
@@ -16,4 +16,22 @@ go install
 
 ```
 redishappy
+```
+
+
+Testing
+-------
+
+```
+go test -cover -test.coverprofile=redishappy-test-coverage.out
+
+go tool cover -html=redishappy-test-coverage.out
+
+```
+
+PreCheckin
+----------
+
+```
+gofmt -l -s -w .
 ```
