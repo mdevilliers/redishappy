@@ -25,13 +25,13 @@ type Manager interface {
 type SentinelManager struct {
 	eventsChannel          chan SentinelEvent
 	topologyRequestChannel chan TopologyRequest
-	switchmasterchannel    chan MasterSwitchedEvent
+	switchmasterchannel    chan types.MasterSwitchedEvent
 }
 
 var topologyState = SentinelTopology{Sentinels: map[string]*SentinelInfo{}}
 var statelock = &sync.Mutex{}
 
-func NewManager(switchmasterchannel chan MasterSwitchedEvent) *SentinelManager {
+func NewManager(switchmasterchannel chan types.MasterSwitchedEvent) *SentinelManager {
 	events := make(chan SentinelEvent)
 	requests := make(chan TopologyRequest)
 	manager := &SentinelManager{eventsChannel: events, topologyRequestChannel: requests, switchmasterchannel: switchmasterchannel}

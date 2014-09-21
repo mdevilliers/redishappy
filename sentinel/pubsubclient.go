@@ -12,14 +12,6 @@ type SentinelPubSubClient struct {
 	subscriptionClient redis.RedisPubSubClient
 }
 
-type MasterSwitchedEvent struct {
-	Name          string
-	OldMasterIp   string
-	OldMasterPort int
-	NewMasterIp   string
-	NewMasterPort int
-}
-
 func NewPubSubClient(sentinel types.Sentinel, redisConnection redis.RedisConnection) (*SentinelPubSubClient, error) {
 
 	uri := sentinel.GetLocation()
@@ -40,7 +32,7 @@ func NewPubSubClient(sentinel types.Sentinel, redisConnection redis.RedisConnect
 	return client, nil
 }
 
-func (client *SentinelPubSubClient) StartMonitoringMasterEvents(switchmasterchannel chan MasterSwitchedEvent) error {
+func (client *SentinelPubSubClient) StartMonitoringMasterEvents(switchmasterchannel chan types.MasterSwitchedEvent) error {
 
 	subr := client.subscriptionClient.Subscribe("+switch-master") //, "+slave-reconf-done ")
 
@@ -53,7 +45,7 @@ func (client *SentinelPubSubClient) StartMonitoringMasterEvents(switchmasterchan
 	return nil
 }
 
-func (sub *SentinelPubSubClient) loopSubscription(switchmasterchannel chan MasterSwitchedEvent) {
+func (sub *SentinelPubSubClient) loopSubscription(switchmasterchannel chan types.MasterSwitchedEvent) {
 	for {
 		r := sub.subscriptionClient.Receive()
 		if r.Timeout() {
@@ -73,11 +65,11 @@ func (sub *SentinelPubSubClient) loopSubscription(switchmasterchannel chan Maste
 	}
 }
 
-func parseSwitchMasterMessage(message string) MasterSwitchedEvent {
+func parseSwitchMasterMessage(message string) types.MasterSwitchedEvent {
 	bits := strings.Split(message, " ")
 
 	oldmasterport, _ := strconv.Atoi(bits[2])
 	newmasterport, _ := strconv.Atoi(bits[4])
 
-	return MasterSwitchedEvent{Name: bits[0], OldMasterIp: bits[1], OldMasterPort: oldmasterport, NewMasterIp: bits[3], NewMasterPort: newmasterport}
+	return types.MasterSwitchedEvent{Name: bits[0], OldMasterIp: bits[1], OldMasterPort: oldmasterport, NewMasterIp: bits[3], NewMasterPort: newmasterport}
 }

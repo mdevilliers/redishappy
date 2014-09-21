@@ -8,7 +8,7 @@ import (
 
 func TestBasicEventChannel(t *testing.T) {
 	logger.InitLogging("../log")
-	switchmasterchannel := make(chan MasterSwitchedEvent)
+	switchmasterchannel := make(chan types.MasterSwitchedEvent)
 	manager := NewManager(switchmasterchannel)
 	defer manager.ClearState()
 	manager.Notify(&SentinelAdded{Sentinel: types.Sentinel{Host: "10.1.1.1", Port: 12345}})
@@ -38,7 +38,7 @@ func TestBasicEventChannel(t *testing.T) {
 
 func TestAddingAndLoseingASentinel(t *testing.T) {
 	logger.InitLogging("../log")
-	switchmasterchannel := make(chan MasterSwitchedEvent)
+	switchmasterchannel := make(chan types.MasterSwitchedEvent)
 	manager := NewManager(switchmasterchannel)
 	defer manager.ClearState()
 
@@ -61,7 +61,7 @@ func TestAddingAndLoseingASentinel(t *testing.T) {
 
 func TestAddingInfoToADiscoveredSentinel(t *testing.T) {
 	logger.InitLogging("../log")
-	switchmasterchannel := make(chan MasterSwitchedEvent)
+	switchmasterchannel := make(chan types.MasterSwitchedEvent)
 	manager := NewManager(switchmasterchannel)
 	defer manager.ClearState()
 

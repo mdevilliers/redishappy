@@ -22,5 +22,6 @@
     ],
   "Consul" : {},
   "Zookeeper" : {},
-  "Etcd" : {}
+  "Etcd" : {},
+  "A10" : {}
 }

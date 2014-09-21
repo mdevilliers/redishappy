@@ -70,16 +70,16 @@ func (c *RadixRedisReply) Err() error {
 
 func (c *RadixRedisClient) NewPubSubClient() RedisPubSubClient {
 	client := pubsub.NewSubClient(c.client)
-	return &RadixPubSubClient{client : client}
+	return &RadixPubSubClient{client: client}
 }
 
 func (c *RadixPubSubClient) Subscribe(channels ...interface{}) RedisPubSubReply {
 	reply := c.client.Subscribe(channels)
-	return &RadixPubSubReply{reply : reply}
+	return &RadixPubSubReply{reply: reply}
 }
 func (c *RadixPubSubClient) Receive() RedisPubSubReply {
 	reply := c.client.Receive()
-	return &RadixPubSubReply{reply : reply}
+	return &RadixPubSubReply{reply: reply}
 }
 
 func (r *RadixPubSubReply) Err() error {

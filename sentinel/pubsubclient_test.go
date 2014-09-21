@@ -49,7 +49,7 @@ func TestNewPubSubClientReturnsMasterSwitchEventToTheCorrectChannel(t *testing.T
 		t.Error("Client should not throw error if connected successfully!")
 	}
 
-	switchmasterchannel := make(chan MasterSwitchedEvent)
+	switchmasterchannel := make(chan types.MasterSwitchedEvent)
 	_ = client.StartMonitoringMasterEvents(switchmasterchannel)
 	event := <-switchmasterchannel
 
@@ -71,7 +71,7 @@ func TestNewPubSubClientReturnsErrorWhenConnectionDisappears(t *testing.T) {
 		t.Error("Client should not throw error if connected successfully!")
 	}
 
-	switchmasterchannel := make(chan MasterSwitchedEvent)
+	switchmasterchannel := make(chan types.MasterSwitchedEvent)
 	err = client.StartMonitoringMasterEvents(switchmasterchannel)
 
 	if err == nil {

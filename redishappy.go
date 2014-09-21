@@ -4,8 +4,9 @@ import (
 	"github.com/mdevilliers/redishappy/api"
 	"github.com/mdevilliers/redishappy/configuration"
 	"github.com/mdevilliers/redishappy/sentinel"
-	"github.com/mdevilliers/redishappy/services/flipper"
+	"github.com/mdevilliers/redishappy/services/haproxy"
 	"github.com/mdevilliers/redishappy/services/logger"
+	"github.com/mdevilliers/redishappy/types"
 	"github.com/mdevilliers/redishappy/util"
 	"github.com/zenazn/goji"
 )
@@ -28,8 +29,8 @@ func main() {
 
 	logger.Info.Printf("Parsed from config : %s\n", util.String(configuration))
 
-	flipper := flipper.New(configuration)
-	switchmasterchannel := make(chan sentinel.MasterSwitchedEvent)
+	flipper := haproxy.NewFlipper(configuration)
+	switchmasterchannel := make(chan types.MasterSwitchedEvent)
 
 	go loopSentinelEvents(flipper, switchmasterchannel)
 
@@ -76,7 +77,7 @@ func startMonitoring(sentinelManager *sentinel.SentinelManager, configuration *c
 	}
 }
 
-func loopSentinelEvents(flipper *flipper.FlipperClient, switchmasterchannel chan sentinel.MasterSwitchedEvent) {
+func loopSentinelEvents(flipper types.FlipperClient, switchmasterchannel chan types.MasterSwitchedEvent) {
 
 	for switchEvent := range switchmasterchannel {
 		flipper.Orchestrate(switchEvent)

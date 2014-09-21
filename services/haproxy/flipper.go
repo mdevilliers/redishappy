@@ -1,8 +1,7 @@
-package flipper
+package haproxy
 
 import (
 	"github.com/mdevilliers/redishappy/configuration"
-	"github.com/mdevilliers/redishappy/sentinel"
 	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/template"
 	"github.com/mdevilliers/redishappy/types"
@@ -10,22 +9,21 @@ import (
 	"sync"
 )
 
-type FlipperClient struct {
+type HAProxyFlipperClient struct {
 	configuration *configuration.Configuration
 	lock          *sync.Mutex
 }
 
-func New(configuration *configuration.Configuration) *FlipperClient {
-	return &FlipperClient{configuration: configuration, lock: &sync.Mutex{}}
+func NewFlipper(configuration *configuration.Configuration) *HAProxyFlipperClient {
+	return &HAProxyFlipperClient{configuration: configuration, lock: &sync.Mutex{}}
 }
 
-func (flipper *FlipperClient) Orchestrate(switchEvent sentinel.MasterSwitchedEvent) {
+func (flipper *HAProxyFlipperClient) Orchestrate(switchEvent types.MasterSwitchedEvent) {
 
 	flipper.lock.Lock()
 	defer flipper.lock.Unlock()
 
 	logger.Info.Printf("Redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", switchEvent.Name, switchEvent.OldMasterIp, switchEvent.OldMasterPort, switchEvent.NewMasterIp, switchEvent.NewMasterPort)
-
 	logger.Info.Printf("Master Switched : %s", util.String(switchEvent))
 	logger.Info.Printf("Current Configuration : %s", util.String(flipper.configuration.Clusters))
 
@@ -49,9 +47,6 @@ func (flipper *FlipperClient) Orchestrate(switchEvent sentinel.MasterSwitchedEve
 		Ip:           switchEvent.NewMasterIp,
 		Port:         switchEvent.NewMasterPort}
 
-	//render template
-	// TODO : look into HAProxy supporting multiple config files....
-
 	arr := []types.MasterDetails{details}
 	renderedTemplate, err := template.RenderTemplate(templatepath, &arr)
 
@@ -60,7 +55,6 @@ func (flipper *FlipperClient) Orchestrate(switchEvent sentinel.MasterSwitchedEve
 		return
 	}
 
-	//get hash of the new and old files
 	newFileHash := util.HashString(renderedTemplate)
 	oldFileHash, err := util.HashFile(path)
 
