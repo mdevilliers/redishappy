@@ -124,7 +124,7 @@ func updateState(event interface{}, m Manager) {
 		}
 
 		m.ScheduleNewHealthChecker(sentinel)
-		logger.Trace.Printf("Sentinel lost : %s, scheduling new health checker.", util.String(topologyState))
+		logger.Trace.Printf("Sentinel lost : %s (scheduling new health checker).", util.String(topologyState))
 
 	case *SentinelPing:
 		sentinel := e.GetSentinel()

@@ -10,8 +10,7 @@ import (
 	"time"
 )
 
-
-func TestNewClientWillGetASuccessfulPing(t *testing.T) {
+func TestNewHealthCheckerClientWillGetASuccessfulPing(t *testing.T) {
 	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{}
@@ -28,7 +27,7 @@ func TestNewClientWillGetASuccessfulPing(t *testing.T) {
 	}
 }
 
-func TestNewClientWillFailWhenPingUnsucessful(t *testing.T) {
+func TestNewHealthCheckerClientWillFailWhenPingUnsucessful(t *testing.T) {
 	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{}
@@ -45,7 +44,7 @@ func TestNewClientWillFailWhenPingUnsucessful(t *testing.T) {
 	}
 }
 
-func TestNewClientWillFailWhenErrorOnPing(t *testing.T) {
+func TestNewHealthCheckerClientWillFailWhenErrorOnPing(t *testing.T) {
 	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{}
@@ -62,7 +61,7 @@ func TestNewClientWillFailWhenErrorOnPing(t *testing.T) {
 	}
 }
 
-func TestNewClientWillWillSignalSentinelLostIfCanNotConnect(t *testing.T) {
+func TestNewHealthCheckerClientWillWillSignalSentinelLostIfCanNotConnect(t *testing.T) {
 	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{Host: "DOESNOTEXIST", Port: 1234} // mock coded to not connect
@@ -82,12 +81,25 @@ type TestRedisConnection struct {
 }
 
 type TestRedisClient struct {
-	RedisReply *TestRedisReply
+	RedisReply   *TestRedisReply
+	PubSubClient *TestPubSubClient
 }
 
 type TestRedisReply struct {
 	Reply string
 	Error error
+}
+
+type TestPubSubClient struct {
+	SubscribePubSubReply *TestRedisPubSubReply
+	ReceivePubSubReply   *TestRedisPubSubReply
+}
+
+type TestRedisPubSubReply struct {
+	Error              error
+	TimedOut           bool
+	ChannelListeningOn string
+	MessageToReturn    string
 }
 
 func (c TestRedisConnection) Dial(protocol, uri string) (redis.RedisClient, error) {
@@ -104,7 +116,14 @@ func (c *TestRedisClient) Cmd(cmd string, args ...interface{}) redis.RedisReply 
 }
 
 func (c *TestRedisClient) NewPubSubClient() redis.RedisPubSubClient {
-	return nil
+	return c.PubSubClient
+}
+
+func (c *TestPubSubClient) Subscribe(channels ...interface{}) redis.RedisPubSubReply {
+	return c.SubscribePubSubReply
+}
+func (c *TestPubSubClient) Receive() redis.RedisPubSubReply {
+	return c.ReceivePubSubReply
 }
 
 func (c *TestRedisReply) String() string {
@@ -112,6 +131,22 @@ func (c *TestRedisReply) String() string {
 }
 
 func (c *TestRedisReply) Err() error {
+	return c.Error
+}
+
+func (c *TestRedisPubSubReply) Message() string {
+	return c.MessageToReturn
+}
+
+func (c *TestRedisPubSubReply) Channel() string {
+	return c.ChannelListeningOn
+}
+
+func (c *TestRedisPubSubReply) Timeout() bool {
+	return c.TimedOut
+}
+
+func (c *TestRedisPubSubReply) Err() error {
 	return c.Error
 }
 

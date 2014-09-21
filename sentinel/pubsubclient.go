@@ -1,8 +1,8 @@
 package sentinel
 
 import (
-	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/services/logger"
+	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
 	"strconv"
 	"strings"
@@ -36,13 +36,12 @@ func NewPubSubClient(sentinel types.Sentinel, redisConnection redis.RedisConnect
 
 	redissubscriptionclient := redisclient.NewPubSubClient()
 
-	client := &SentinelPubSubClient{ subscriptionClient: redissubscriptionclient}
+	client := &SentinelPubSubClient{subscriptionClient: redissubscriptionclient}
 	return client, nil
 }
 
 func (client *SentinelPubSubClient) StartMonitoringMasterEvents(switchmasterchannel chan MasterSwitchedEvent) error {
 
-	//TODO : fix radix client - doesn't support PSubscribe
 	subr := client.subscriptionClient.Subscribe("+switch-master") //, "+slave-reconf-done ")
 
 	if subr.Err() != nil {
@@ -64,12 +63,7 @@ func (sub *SentinelPubSubClient) loopSubscription(switchmasterchannel chan Maste
 			logger.Info.Printf("Subscription Message : Channel : %s : %s\n", r.Channel, r.Message)
 
 			if r.Channel() == "+switch-master" {
-				bits := strings.Split(r.Message(), " ")
-
-				oldmasterport, _ := strconv.Atoi(bits[2])
-				newmasterport, _ := strconv.Atoi(bits[4])
-
-				event := MasterSwitchedEvent{Name: bits[0], OldMasterIp: bits[1], OldMasterPort: oldmasterport, NewMasterIp: bits[3], NewMasterPort: newmasterport}
+				event := parseSwitchMasterMessage(r.Message())
 				switchmasterchannel <- event
 			}
 		} else {
@@ -77,4 +71,13 @@ func (sub *SentinelPubSubClient) loopSubscription(switchmasterchannel chan Maste
 			break
 		}
 	}
+}
+
+func parseSwitchMasterMessage(message string) MasterSwitchedEvent {
+	bits := strings.Split(message, " ")
+
+	oldmasterport, _ := strconv.Atoi(bits[2])
+	newmasterport, _ := strconv.Atoi(bits[4])
+
+	return MasterSwitchedEvent{Name: bits[0], OldMasterIp: bits[1], OldMasterPort: oldmasterport, NewMasterIp: bits[3], NewMasterPort: newmasterport}
 }
