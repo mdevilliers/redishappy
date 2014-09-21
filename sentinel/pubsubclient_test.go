@@ -3,11 +3,8 @@ package sentinel
 import (
 	"errors"
 	"github.com/mdevilliers/redishappy/services/logger"
-	// "github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
-	// "reflect"
 	"testing"
-	// "time"
 )
 
 // see healthchecker_test for mocks used
@@ -37,17 +34,6 @@ func TestNewPubSubClientWillThrowErrorWhenCanNotConnect(t *testing.T) {
 	}
 }
 
-// type TestPubSubClient struct {
-// 	SubscribePubSubReply *TestRedisPubSubReply
-// 	ReceivePubSubReply *TestRedisPubSubReply
-// }
-
-// type TestRedisPubSubReply struct {
-// 	Error     error
-// 	TimedOut bool
-// 	ChannelListeningOn string
-// 	MessageToReturn string
-// }
 func TestNewPubSubClientReturnsMasterSwitchEventToTheCorrectChannel(t *testing.T) {
 	logger.InitLogging("../log")
 
