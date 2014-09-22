@@ -30,11 +30,14 @@ func main() {
 	logger.Info.Printf("Parsed from config : %s\n", util.String(configuration))
 
 	flipper := haproxy.NewFlipper(configuration)
+
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
 
 	go loopSentinelEvents(flipper, switchmasterchannel)
 
 	sentinelManager := sentinel.NewManager(switchmasterchannel)
+
+	initiliseRunningState(flipper, sentinelManager, configuration)
 
 	go startMonitoring(sentinelManager, configuration)
 
@@ -51,6 +54,20 @@ func initApiServer(manager *sentinel.SentinelManager) {
 	goji.Get("/api/ping", pongApi.Get)
 	goji.Get("/api/sentinel", sentinelApi.Get)
 	goji.Serve()
+}
+
+func initiliseRunningState(flipper types.FlipperClient, sentinelManager *sentinel.SentinelManager, configuration *configuration.Configuration) {
+
+	detailarray := []types.MasterDetails{}
+
+	for _, clusterDetails := range configuration.Clusters {
+
+		details := sentinelManager.DiscoverMasterForCluster(clusterDetails.Name)
+		details.ExternalPort = clusterDetails.MasterPort
+		detailarray = append(detailarray, details)
+	}
+
+	flipper.InitialiseRunningState(detailarray)
 }
 
 func startMonitoring(sentinelManager *sentinel.SentinelManager, configuration *configuration.Configuration) {

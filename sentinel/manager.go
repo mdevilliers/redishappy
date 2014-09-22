@@ -64,6 +64,15 @@ func (m *SentinelManager) NewSentinelMonitor(sentinel types.Sentinel) (*Sentinel
 	return client, err
 }
 
+func (m *SentinelManager) DiscoverMasterForCluster(clusterName string) types.MasterDetails {
+
+	// dummy implementation as a strawman
+	if clusterName == "secure" {
+		return types.MasterDetails{Name: clusterName, Ip: "1.1.1.1", Port: 1234}
+	}
+	return types.MasterDetails{Name: clusterName, Ip: "2.3.4.5", Port: 1234}
+}
+
 func (m *SentinelManager) Notify(event SentinelEvent) {
 	m.eventsChannel <- event
 }

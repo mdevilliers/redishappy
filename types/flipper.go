@@ -8,6 +8,14 @@ type MasterSwitchedEvent struct {
 	NewMasterPort int
 }
 
+type MasterDetails struct {
+	ExternalPort int
+	Name         string
+	Ip           string
+	Port         int
+}
+
 type FlipperClient interface {
+	InitialiseRunningState(state []MasterDetails)
 	Orchestrate(switchEvent MasterSwitchedEvent)
 }
