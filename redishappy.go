@@ -58,16 +58,16 @@ func initApiServer(manager *sentinel.SentinelManager) {
 
 func initiliseRunningState(flipper types.FlipperClient, sentinelManager *sentinel.SentinelManager, configuration *configuration.Configuration) {
 
-	detailarray := []types.MasterDetails{}
+	detailcollection := types.NewMasterDetailsCollection()
 
 	for _, clusterDetails := range configuration.Clusters {
 
 		details := sentinelManager.DiscoverMasterForCluster(clusterDetails.Name)
 		details.ExternalPort = clusterDetails.MasterPort
-		detailarray = append(detailarray, details)
+		detailcollection.AddOrReplace(&details)
 	}
 
-	flipper.InitialiseRunningState(detailarray)
+	flipper.InitialiseRunningState(detailcollection)
 }
 
 func startMonitoring(sentinelManager *sentinel.SentinelManager, configuration *configuration.Configuration) {
@@ -79,13 +79,9 @@ func startMonitoring(sentinelManager *sentinel.SentinelManager, configuration *c
 		_, err := sentinelManager.NewSentinelMonitor(configuredSentinel)
 
 		if err != nil {
-
 			logger.Info.Printf("Error starting sentinel (%s) healthchecker : %s", configuredSentinel.GetLocation(), err.Error())
-
 		} else {
-
 			started++
-
 		}
 	}
 

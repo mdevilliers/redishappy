@@ -12,22 +12,22 @@ import (
 type HAProxyFlipperClient struct {
 	configuration *configuration.Configuration
 	lock          *sync.Mutex
-	state         []types.MasterDetails
+	state         *types.MasterDetailsCollection
 }
 
 func NewFlipper(configuration *configuration.Configuration) *HAProxyFlipperClient {
 	return &HAProxyFlipperClient{configuration: configuration, lock: &sync.Mutex{}}
 }
 
-func (flipper *HAProxyFlipperClient) InitialiseRunningState(state []types.MasterDetails) {
+func (flipper *HAProxyFlipperClient) InitialiseRunningState(details *types.MasterDetailsCollection) {
 	flipper.lock.Lock()
 	defer flipper.lock.Unlock()
-	_, err := flipper.renderAndReload(state)
+	_, err := flipper.renderAndReload(details)
 
 	if err != nil {
 		logger.Error.Panicf("Unable to initilise and write state : %s", err.Error())
 	}
-	flipper.state = state
+	flipper.state = details
 }
 
 func (flipper *HAProxyFlipperClient) Orchestrate(switchEvent types.MasterSwitchedEvent) {
@@ -49,18 +49,18 @@ func (flipper *HAProxyFlipperClient) Orchestrate(switchEvent types.MasterSwitche
 
 	logger.Info.Printf("Cluster found : %s", util.String(cluster))
 
-	detail := types.MasterDetails{
+	detail := &types.MasterDetails{
 		ExternalPort: cluster.MasterPort,
 		Name:         switchEvent.Name,
 		Ip:           switchEvent.NewMasterIp,
 		Port:         switchEvent.NewMasterPort}
 
-	// TODO : fold in initial state
-	details := []types.MasterDetails{detail}
-	flipper.renderAndReload(details)
+	flipper.state.AddOrReplace(detail)
+
+	flipper.renderAndReload(flipper.state)
 }
 
-func (flipper *HAProxyFlipperClient) renderAndReload(details []types.MasterDetails) (bool, error) {
+func (flipper *HAProxyFlipperClient) renderAndReload(details *types.MasterDetailsCollection) (bool, error) {
 
 	configuration := flipper.configuration
 	outputPath := configuration.HAProxy.OutputPath
@@ -91,8 +91,8 @@ func executeHAproxyCommand(reloadCommand string) (bool, error) {
 	return true, nil
 }
 
-func renderTemplate(details []types.MasterDetails, outputPath string, templatepath string) (bool, error) {
-	renderedTemplate, err := template.RenderTemplate(templatepath, &details)
+func renderTemplate(details *types.MasterDetailsCollection, outputPath string, templatepath string) (bool, error) {
+	renderedTemplate, err := template.RenderTemplate(templatepath, details)
 
 	if err != nil {
 		logger.Error.Printf("Error rendering tempate at %s.", templatepath)
