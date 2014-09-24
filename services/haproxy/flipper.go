@@ -92,6 +92,7 @@ func executeHAproxyCommand(reloadCommand string) (bool, error) {
 }
 
 func renderTemplate(details *types.MasterDetailsCollection, outputPath string, templatepath string) (bool, error) {
+
 	renderedTemplate, err := template.RenderTemplate(templatepath, details)
 
 	if err != nil {

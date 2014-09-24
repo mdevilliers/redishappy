@@ -1,7 +1,6 @@
 package sentinel
 
 import (
-	//"fmt"
 	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
@@ -37,10 +36,12 @@ func NewHealthCheckerClient(sentinel types.Sentinel, manager Manager, redisConne
 }
 
 func (client *SentinelHealthCheckerClient) Start() {
-	go client.loop()
+	go client.healthcheckloop()
+	// TODO : check for other sentinels
+	//go client.sentineldiscoveryloop()
 }
 
-func (client *SentinelHealthCheckerClient) loop() {
+func (client *SentinelHealthCheckerClient) healthcheckloop() {
 
 	for {
 
@@ -63,14 +64,20 @@ func (client *SentinelHealthCheckerClient) loop() {
 		} else {
 
 			client.sentinelManager.Notify(&SentinelPing{Sentinel: client.sentinel})
-			//TODO : check for other sentinels
-			//client.findConnectedSentinels("secure")
+
 		}
 
 		time.Sleep(time.Duration(client.sleepInSeconds) * time.Second)
 	}
 }
 
+// TODO : check for other sentinels
+// func (client *SentinelHealthCheckerClient) sentineldiscoveryloop() {
+// 	for {
+// 		client.findConnectedSentinels("secure")
+// 		time.Sleep(time.Duration(client.sleepInSeconds) * time.Second)
+// 	}
+// }
 // func (client *SentinelHealthCheckerClient) findConnectedSentinels(clustername string) (bool, error) {
 // 	r := client.redisClient.Cmd("SENTINEL", "SENTINELS", clustername)
 // 	for _, e := range r.Elems {

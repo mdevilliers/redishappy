@@ -26,12 +26,34 @@ func ParseConfiguration(configurationAsJson []byte) (*Configuration, error) {
 	configuration := new(Configuration)
 	err := json.Unmarshal(configurationAsJson, &configuration)
 	if err != nil {
-		return &Configuration{}, err
+		return nil, err
 	}
 
-	//TODO : sanity check file
+	ok, err := SenseCheckConfiguration(configuration)
 
-	return configuration, nil
+	if !ok {
+		return nil, err
+	}
+
+	return configuration, err
+}
+
+func SenseCheckConfiguration(config *Configuration) (bool, error) {
+
+	tests := []SanityCheck{&ConfigContainsRequiredSections{},
+		&ConfigContainsAtLeastOneSentinelDefinition{},
+		&ConfigContainsAtLeastOneClusterDefinition{}}
+
+	for _, test := range tests {
+
+		ok, err := test.Check(config)
+
+		if !ok {
+			return false, err
+		}
+	}
+
+	return true, nil
 }
 
 func (config *Configuration) FindClusterByName(name string) (*types.Cluster, error) {
