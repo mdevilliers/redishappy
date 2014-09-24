@@ -29,31 +29,27 @@ func ParseConfiguration(configurationAsJson []byte) (*Configuration, error) {
 		return nil, err
 	}
 
-	ok, err := SenseCheckConfiguration(configuration)
-
-	if !ok {
-		return nil, err
-	}
-
-	return configuration, err
+	return configuration, nil
 }
 
-func SenseCheckConfiguration(config *Configuration) (bool, error) {
+func SenseCheckConfiguration(config *Configuration) (bool, []string) {
+
+	errorlist := []string{}
+	hasError := false
 
 	tests := []SanityCheck{&ConfigContainsRequiredSections{},
-		&ConfigContainsAtLeastOneSentinelDefinition{},
-		&ConfigContainsAtLeastOneClusterDefinition{}}
+		&CheckPermissionToWriteToHAProxyConfigFile{}}
 
 	for _, test := range tests {
 
 		ok, err := test.Check(config)
-
 		if !ok {
-			return false, err
+			errorlist = append(errorlist, err.Error())
+			hasError = true
 		}
 	}
 
-	return true, nil
+	return hasError, errorlist
 }
 
 func (config *Configuration) FindClusterByName(name string) (*types.Cluster, error) {
