@@ -134,6 +134,10 @@ func (c *TestRedisReply) Err() error {
 	return c.Error
 }
 
+func (c *TestRedisReply) List() ([]string, error) {
+	return nil, nil
+}
+
 func (c *TestRedisPubSubReply) Message() string {
 	return c.MessageToReturn
 }
