@@ -70,10 +70,13 @@ func startMonitoring(flipper types.FlipperClient, sentinelManager *sentinel.Sent
 
 			for _, clusterDetails := range configuration.Clusters {
 
-				details := client.DiscoverMasterForCluster(clusterDetails.Name)
-				details.ExternalPort = clusterDetails.MasterPort
-				// TODO : last one wins?
-				detailcollection.AddOrReplace(&details)
+				details, err := client.DiscoverMasterForCluster(clusterDetails.Name)
+
+				if err == nil {
+					details.ExternalPort = clusterDetails.MasterPort
+					// TODO : last one wins?
+					detailcollection.AddOrReplace(&details)
+				}
 			}
 		}
 	}

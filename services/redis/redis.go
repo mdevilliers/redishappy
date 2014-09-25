@@ -10,6 +10,7 @@ type RedisConnection interface {
 }
 
 type RedisReply interface {
+	List() ([]string, error)
 	String() string
 	Err() error
 }
@@ -66,6 +67,10 @@ func (c *RadixRedisReply) String() string {
 
 func (c *RadixRedisReply) Err() error {
 	return c.reply.Err
+}
+
+func (c *RadixRedisReply) List() ([]string, error) {
+	return c.reply.List()
 }
 
 func (c *RadixRedisClient) NewPubSubClient() RedisPubSubClient {

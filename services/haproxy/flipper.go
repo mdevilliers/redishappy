@@ -6,6 +6,7 @@ import (
 	"github.com/mdevilliers/redishappy/services/template"
 	"github.com/mdevilliers/redishappy/types"
 	"github.com/mdevilliers/redishappy/util"
+	"os"
 	"sync"
 )
 
@@ -100,22 +101,22 @@ func renderTemplate(details *types.MasterDetailsCollection, outputPath string, t
 		return false, err
 	}
 
-	newFileHash := util.HashString(renderedTemplate)
-	oldFileHash, err := util.HashFile(outputPath)
+	if fileExists(outputPath) {
+		newFileHash := util.HashString(renderedTemplate)
+		oldFileHash, err := util.HashFile(outputPath)
 
-	if err != nil {
-		logger.Error.Printf("Error hashing existing HAProxy config file at %s.", outputPath)
-		return false, err
+		if err != nil {
+			logger.Error.Printf("Error hashing existing HAProxy config file at %s.", outputPath)
+			return false, err
+		}
+
+		if newFileHash == oldFileHash {
+			logger.Info.Printf("Existing config file up todate. New file hash : %s == Old file hash %s. Nothing to do.", newFileHash, oldFileHash)
+			return true, nil
+		}
+
+		logger.Info.Printf("Updating config file. New file hash : %s == Old file hash %s", newFileHash, oldFileHash)
 	}
-
-	if newFileHash == oldFileHash {
-		logger.Info.Printf("Existing config file up todate. New file hash : %s == Old file hash %s. Nothing to do.", newFileHash, oldFileHash)
-		return true, nil
-	}
-
-	logger.Info.Printf("Updating config file. New file hash : %s == Old file hash %s", newFileHash, oldFileHash)
-
-	//TODO : check we have permission to update file
 
 	err = template.WriteFile(outputPath, renderedTemplate)
 
@@ -125,4 +126,13 @@ func renderTemplate(details *types.MasterDetailsCollection, outputPath string, t
 	}
 
 	return true, nil
+}
+
+func fileExists(name string) bool {
+	if _, err := os.Stat(name); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
 }
