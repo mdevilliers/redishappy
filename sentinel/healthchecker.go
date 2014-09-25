@@ -35,6 +35,14 @@ func NewHealthCheckerClient(sentinel types.Sentinel, manager Manager, redisConne
 	return client, nil
 }
 
+func (m *SentinelHealthCheckerClient) DiscoverMasterForCluster(clusterName string) types.MasterDetails {
+	//dummy implementation as a strawman
+	if clusterName == "secure" {
+		return types.MasterDetails{Name: clusterName, Ip: "1.1.1.1", Port: 1234}
+	}
+	return types.MasterDetails{Name: clusterName, Ip: "2.3.4.5", Port: 1234}
+}
+
 func (client *SentinelHealthCheckerClient) Start() {
 	go client.healthcheckloop()
 	// TODO : check for other sentinels

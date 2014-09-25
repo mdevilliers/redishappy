@@ -37,9 +37,7 @@ func main() {
 
 	sentinelManager := sentinel.NewManager(switchmasterchannel)
 
-	initiliseRunningState(flipper, sentinelManager, configuration)
-
-	go startMonitoring(sentinelManager, configuration)
+	go startMonitoring(flipper, sentinelManager, configuration)
 
 	initApiServer(sentinelManager)
 }
@@ -56,34 +54,31 @@ func initApiServer(manager *sentinel.SentinelManager) {
 	goji.Serve()
 }
 
-func initiliseRunningState(flipper types.FlipperClient, sentinelManager *sentinel.SentinelManager, configuration *configuration.Configuration) {
-
-	detailcollection := types.NewMasterDetailsCollection()
-
-	for _, clusterDetails := range configuration.Clusters {
-
-		details := sentinelManager.DiscoverMasterForCluster(clusterDetails.Name)
-		details.ExternalPort = clusterDetails.MasterPort
-		detailcollection.AddOrReplace(&details)
-	}
-
-	flipper.InitialiseRunningState(detailcollection)
-}
-
-func startMonitoring(sentinelManager *sentinel.SentinelManager, configuration *configuration.Configuration) {
+func startMonitoring(flipper types.FlipperClient, sentinelManager *sentinel.SentinelManager, configuration *configuration.Configuration) {
 
 	started := 0
+	detailcollection := types.NewMasterDetailsCollection()
 
 	for _, configuredSentinel := range configuration.Sentinels {
 
-		_, err := sentinelManager.NewSentinelMonitor(configuredSentinel)
+		client, err := sentinelManager.NewSentinelMonitor(configuredSentinel)
 
 		if err != nil {
 			logger.Info.Printf("Error starting sentinel (%s) healthchecker : %s", configuredSentinel.GetLocation(), err.Error())
 		} else {
 			started++
+
+			for _, clusterDetails := range configuration.Clusters {
+
+				details := client.DiscoverMasterForCluster(clusterDetails.Name)
+				details.ExternalPort = clusterDetails.MasterPort
+				// TODO : last one wins?
+				detailcollection.AddOrReplace(&details)
+			}
 		}
 	}
+
+	flipper.InitialiseRunningState(detailcollection)
 
 	if started == 0 {
 		logger.Info.Printf("WARNING : no sentinels are currently being monitored.")
