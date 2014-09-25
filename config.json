@@ -6,7 +6,7 @@
   },
   {
     "Name" : "clustertwo",
-    "MasterPort" : 6380,
+    "MasterPort" : 6380
   }],
   "HAProxy" :
     {
