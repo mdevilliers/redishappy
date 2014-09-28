@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"github.com/mdevilliers/redishappy/api"
 	"github.com/mdevilliers/redishappy/configuration"
 	"github.com/mdevilliers/redishappy/sentinel"
@@ -11,12 +12,17 @@ import (
 	"github.com/zenazn/goji"
 )
 
+var configFile string
+var logPath string
+
+func init() {
+	flag.StringVar(&configFile, "config", "config.json", "Full path of the configuration JSON file.")
+	flag.StringVar(&logPath, "log", "log", "Folder for the logging folder.")
+}
+
 func main() {
 
-	//TODO : configure from command line
-	logPath := "log" //var/log/redis-happy")
-	configFile := "config.json"
-
+	flag.Parse()
 	logger.InitLogging(logPath)
 
 	logger.Info.Print("redis-happy started")
@@ -24,7 +30,7 @@ func main() {
 	configuration, err := configuration.LoadFromFile(configFile)
 
 	if err != nil {
-		logger.Error.Panic(err)
+		logger.Error.Panicf("Error opening config file : %s", err.Error())
 	}
 
 	logger.Info.Printf("Parsed from config : %s\n", util.String(configuration))
