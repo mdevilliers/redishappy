@@ -155,9 +155,9 @@ func (c *TestRedisPubSubReply) Err() error {
 }
 
 type TestManager struct {
-	NotifyCalledWithSentinelPing   int
-	NotifyCalledWithSentinelLost   int
-	NotifyCalledWithSentinelAdded  int
+	NotifyCalledWithSentinelPing  int
+	NotifyCalledWithSentinelLost  int
+	NotifyCalledWithSentinelAdded int
 }
 
 func (tm *TestManager) Notify(event SentinelEvent) {

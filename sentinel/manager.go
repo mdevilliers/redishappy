@@ -26,7 +26,7 @@ type SentinelManager struct {
 	eventsChannel          chan SentinelEvent
 	topologyRequestChannel chan TopologyRequest
 	switchmasterchannel    chan types.MasterSwitchedEvent
-	redisConnection 	   redis.RedisConnection
+	redisConnection        redis.RedisConnection
 }
 
 var topologyState = SentinelTopology{Sentinels: map[string]*SentinelInfo{}}
@@ -35,10 +35,10 @@ var statelock = &sync.Mutex{}
 func NewManager(switchmasterchannel chan types.MasterSwitchedEvent) *SentinelManager {
 	events := make(chan SentinelEvent)
 	requests := make(chan TopologyRequest)
-	manager := &SentinelManager{eventsChannel: events, 
-								topologyRequestChannel: requests, 
-								switchmasterchannel: switchmasterchannel,
-								redisConnection : redis.RadixRedisConnection{}}
+	manager := &SentinelManager{eventsChannel: events,
+		topologyRequestChannel: requests,
+		switchmasterchannel:    switchmasterchannel,
+		redisConnection:        redis.RadixRedisConnection{}}
 	go loopEvents(events, requests, manager)
 	return manager
 }
@@ -57,7 +57,7 @@ func (m *SentinelManager) NewSentinelClient(sentinel types.Sentinel) (*SentinelH
 	return client, err
 }
 
-func (m *SentinelManager) NewSentinelMonitor(sentinel types.Sentinel) (*SentinelPubSubClient, error){
+func (m *SentinelManager) NewSentinelMonitor(sentinel types.Sentinel) (*SentinelPubSubClient, error) {
 
 	pubsubclient, err := NewPubSubClient(sentinel, m.redisConnection)
 
@@ -69,7 +69,6 @@ func (m *SentinelManager) NewSentinelMonitor(sentinel types.Sentinel) (*Sentinel
 	pubsubclient.StartMonitoringMasterEvents(m.switchmasterchannel)
 	return pubsubclient, nil
 }
-
 
 func (m *SentinelManager) Notify(event SentinelEvent) {
 	m.eventsChannel <- event
