@@ -36,13 +36,10 @@ func main() {
 	logger.Info.Printf("Parsed from config : %s\n", util.String(configuration))
 
 	flipper := haproxy.NewFlipper(configuration)
-
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
-
-	go loopSentinelEvents(flipper, switchmasterchannel)
-
 	sentinelManager := sentinel.NewManager(switchmasterchannel)
 
+	go loopSentinelEvents(flipper, switchmasterchannel)
 	go startMonitoring(flipper, sentinelManager, configuration)
 
 	initApiServer(sentinelManager)
