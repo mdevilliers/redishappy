@@ -20,13 +20,14 @@ func NewHealthCheckerClient(sentinel types.Sentinel, manager Manager, redisConne
 	uri := sentinel.GetLocation()
 	logger.Info.Printf("HealthChecker : connecting to %s", uri)
 
-	redisclient, err := redisConnection.Dial("tcp", uri)
+	redisclient, err := redisConnection.GetConnection("tcp", uri)
 
 	if err != nil {
 		logger.Info.Printf("HealthChecker : not connected to %s, %s", uri, err.Error())
 		manager.Notify(&SentinelLost{Sentinel: sentinel})
 		return nil, err
 	}
+
 	logger.Info.Printf("HealthChecker : connected to %s", uri)
 
 	client := &SentinelHealthCheckerClient{redisClient: redisclient,

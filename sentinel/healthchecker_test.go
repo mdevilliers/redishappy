@@ -102,7 +102,7 @@ type TestRedisPubSubReply struct {
 	MessageToReturn    string
 }
 
-func (c TestRedisConnection) Dial(protocol, uri string) (redis.RedisClient, error) {
+func (c TestRedisConnection) GetConnection(protocol, uri string) (redis.RedisClient, error) {
 
 	//fail to connect
 	if uri == "DOESNOTEXIST:1234" {
@@ -158,7 +158,6 @@ type TestManager struct {
 	NotifyCalledWithSentinelPing   int
 	NotifyCalledWithSentinelLost   int
 	NotifyCalledWithSentinelAdded  int
-	ScheduleNewHealthCheckerCalled int
 }
 
 func (tm *TestManager) Notify(event SentinelEvent) {
@@ -177,9 +176,11 @@ func (tm *TestManager) Notify(event SentinelEvent) {
 func (*TestManager) GetState(request TopologyRequest) {
 
 }
-func (*TestManager) NewSentinelMonitor(types.Sentinel) (*SentinelHealthCheckerClient, error) {
+
+func (*TestManager) NewSentinelMonitor(types.Sentinel) (*SentinelPubSubClient, error) {
 	return nil, nil
 }
-func (tm *TestManager) ScheduleNewHealthChecker(sentinel types.Sentinel) {
-	tm.ScheduleNewHealthCheckerCalled++
+
+func (*TestManager) NewSentinelClient(types.Sentinel) (*SentinelHealthCheckerClient, error) {
+	return nil, nil
 }

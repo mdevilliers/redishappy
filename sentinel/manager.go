@@ -18,14 +18,15 @@ const (
 type Manager interface {
 	Notify(event SentinelEvent)
 	GetState(request TopologyRequest)
-	NewSentinelMonitor(types.Sentinel) (*SentinelHealthCheckerClient, error)
-	ScheduleNewHealthChecker(sentinel types.Sentinel)
+	NewSentinelClient(types.Sentinel) (*SentinelHealthCheckerClient, error)
+	NewSentinelMonitor(types.Sentinel) (*SentinelPubSubClient, error)
 }
 
 type SentinelManager struct {
 	eventsChannel          chan SentinelEvent
 	topologyRequestChannel chan TopologyRequest
 	switchmasterchannel    chan types.MasterSwitchedEvent
+	redisConnection 	   redis.RedisConnection
 }
 
 var topologyState = SentinelTopology{Sentinels: map[string]*SentinelInfo{}}
@@ -34,16 +35,18 @@ var statelock = &sync.Mutex{}
 func NewManager(switchmasterchannel chan types.MasterSwitchedEvent) *SentinelManager {
 	events := make(chan SentinelEvent)
 	requests := make(chan TopologyRequest)
-	manager := &SentinelManager{eventsChannel: events, topologyRequestChannel: requests, switchmasterchannel: switchmasterchannel}
+	manager := &SentinelManager{eventsChannel: events, 
+								topologyRequestChannel: requests, 
+								switchmasterchannel: switchmasterchannel,
+								redisConnection : redis.RadixRedisConnection{}}
 	go loopEvents(events, requests, manager)
 	return manager
 }
 
-func (m *SentinelManager) NewSentinelMonitor(sentinel types.Sentinel) (*SentinelHealthCheckerClient, error) {
+func (m *SentinelManager) NewSentinelClient(sentinel types.Sentinel) (*SentinelHealthCheckerClient, error) {
 
 	m.Notify(&SentinelAdded{Sentinel: sentinel})
-	redisConnection := &redis.RadixRedisConnection{}
-	client, err := NewHealthCheckerClient(sentinel, m, redisConnection)
+	client, err := NewHealthCheckerClient(sentinel, m, m.redisConnection)
 
 	if err != nil {
 		logger.Info.Printf("Error starting health checker (%s) : %s", sentinel.GetLocation(), err.Error())
@@ -51,8 +54,12 @@ func (m *SentinelManager) NewSentinelMonitor(sentinel types.Sentinel) (*Sentinel
 	}
 
 	client.Start()
+	return client, err
+}
 
-	pubsubclient, err := NewPubSubClient(sentinel, &redis.RadixRedisConnection{})
+func (m *SentinelManager) NewSentinelMonitor(sentinel types.Sentinel) (*SentinelPubSubClient, error){
+
+	pubsubclient, err := NewPubSubClient(sentinel, m.redisConnection)
 
 	if err != nil {
 		logger.Info.Printf("Error starting monitor %s : %s", sentinel.GetLocation(), err.Error())
@@ -60,9 +67,9 @@ func (m *SentinelManager) NewSentinelMonitor(sentinel types.Sentinel) (*Sentinel
 	}
 
 	pubsubclient.StartMonitoringMasterEvents(m.switchmasterchannel)
-
-	return client, err
+	return pubsubclient, nil
 }
+
 
 func (m *SentinelManager) Notify(event SentinelEvent) {
 	m.eventsChannel <- event
@@ -70,11 +77,6 @@ func (m *SentinelManager) Notify(event SentinelEvent) {
 
 func (m *SentinelManager) GetState(request TopologyRequest) {
 	m.topologyRequestChannel <- request
-}
-
-func (m *SentinelManager) ScheduleNewHealthChecker(sentinel types.Sentinel) {
-	logger.Info.Printf("SentinelManager : scheduling new healthChecker for , %s", util.String(sentinel))
-	util.Schedule(func() { m.NewSentinelMonitor(sentinel) }, time.Second*5)
 }
 
 func (m *SentinelManager) ClearState() {
@@ -123,8 +125,9 @@ func updateState(event interface{}, m Manager) {
 			currentInfo.LastUpdated = time.Now().UTC()
 		}
 
-		m.ScheduleNewHealthChecker(sentinel)
-		logger.Trace.Printf("Sentinel lost : %s (scheduling new health checker).", util.String(topologyState))
+		util.Schedule(func() { m.NewSentinelClient(sentinel) }, time.Second*5)
+		util.Schedule(func() { m.NewSentinelMonitor(sentinel) }, time.Second*5)
+		logger.Trace.Printf("Sentinel lost : %s (scheduling new client and monitor).", util.String(topologyState))
 
 	case *SentinelPing:
 		sentinel := e.GetSentinel()

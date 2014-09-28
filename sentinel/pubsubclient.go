@@ -17,10 +17,10 @@ func NewPubSubClient(sentinel types.Sentinel, redisConnection redis.RedisConnect
 	uri := sentinel.GetLocation()
 	logger.Info.Printf("Connecting to sentinel@%s", uri)
 
-	redisclient, err := redisConnection.Dial("tcp", uri)
+	redisclient, err := redisConnection.GetConnection("tcp", uri)
 
 	if err != nil {
-		logger.Error.Printf("Error connecting to sentinel@%s", uri, err.Error())
+		logger.Error.Printf("Error connecting to sentinel@%s : %s", uri, err.Error())
 		return nil, err
 	}
 

@@ -6,7 +6,7 @@ import (
 )
 
 type RedisConnection interface {
-	Dial(protocol, uri string) (RedisClient, error)
+	GetConnection(protocol, uri string) (RedisClient, error)
 }
 
 type RedisReply interface {
@@ -51,7 +51,7 @@ type RadixPubSubReply struct {
 	reply *pubsub.SubReply
 }
 
-func (c RadixRedisConnection) Dial(protocol, uri string) (RedisClient, error) {
+func (c RadixRedisConnection) GetConnection(protocol, uri string) (RedisClient, error) {
 	redisclient, err := redis.Dial(protocol, uri)
 	return &RadixRedisClient{client: redisclient}, err
 }
