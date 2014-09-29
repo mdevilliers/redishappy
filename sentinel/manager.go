@@ -18,7 +18,7 @@ const (
 type Manager interface {
 	Notify(event SentinelEvent)
 	GetState(request TopologyRequest)
-	NewSentinelClient(types.Sentinel) (*SentinelHealthCheckerClient, error)
+	NewSentinelClient(types.Sentinel) (*SentinelClient, error)
 	NewMonitor(types.Sentinel) (*Monitor, error)
 }
 
@@ -43,13 +43,13 @@ func NewManager(switchmasterchannel chan types.MasterSwitchedEvent) *SentinelMan
 	return manager
 }
 
-func (m *SentinelManager) NewSentinelClient(sentinel types.Sentinel) (*SentinelHealthCheckerClient, error) {
+func (m *SentinelManager) NewSentinelClient(sentinel types.Sentinel) (*SentinelClient, error) {
 
 	m.Notify(&SentinelAdded{Sentinel: sentinel})
-	client, err := NewHealthCheckerClient(sentinel, m, m.redisConnection)
+	client, err := NewSentinelClient(sentinel, m, m.redisConnection)
 
 	if err != nil {
-		logger.Info.Printf("Error starting health checker (%s) : %s", sentinel.GetLocation(), err.Error())
+		logger.Error.Printf("Error starting sentinel client (%s) : %s", sentinel.GetLocation(), err.Error())
 		return nil, err
 	}
 
@@ -62,7 +62,7 @@ func (m *SentinelManager) NewMonitor(sentinel types.Sentinel) (*Monitor, error) 
 	monitor, err := NewMonitor(sentinel, m.redisConnection)
 
 	if err != nil {
-		logger.Info.Printf("Error starting monitor %s : %s", sentinel.GetLocation(), err.Error())
+		logger.Error.Printf("Error starting monitor %s : %s", sentinel.GetLocation(), err.Error())
 		return nil, err
 	}
 

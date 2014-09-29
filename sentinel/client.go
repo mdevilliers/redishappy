@@ -8,14 +8,14 @@ import (
 	"time"
 )
 
-type SentinelHealthCheckerClient struct {
+type SentinelClient struct {
 	sentinel        types.Sentinel
 	redisClient     redis.RedisClient
 	sentinelManager Manager
 	sleepInSeconds  int
 }
 
-func NewHealthCheckerClient(sentinel types.Sentinel, manager Manager, redisConnection redis.RedisConnection) (*SentinelHealthCheckerClient, error) {
+func NewSentinelClient(sentinel types.Sentinel, manager Manager, redisConnection redis.RedisConnection) (*SentinelClient, error) {
 
 	uri := sentinel.GetLocation()
 	logger.Info.Printf("HealthChecker : connecting to %s", uri)
@@ -30,14 +30,14 @@ func NewHealthCheckerClient(sentinel types.Sentinel, manager Manager, redisConne
 
 	logger.Info.Printf("HealthChecker : connected to %s", uri)
 
-	client := &SentinelHealthCheckerClient{redisClient: redisclient,
+	client := &SentinelClient{redisClient: redisclient,
 		sentinel:        sentinel,
 		sentinelManager: manager,
 		sleepInSeconds:  1}
 	return client, nil
 }
 
-func (m *SentinelHealthCheckerClient) DiscoverMasterForCluster(clusterName string) (types.MasterDetails, error) {
+func (m *SentinelClient) DiscoverMasterForCluster(clusterName string) (types.MasterDetails, error) {
 
 	r := m.redisClient.Cmd("SENTINEL", "get-master-addr-by-name", clusterName)
 
@@ -51,13 +51,13 @@ func (m *SentinelHealthCheckerClient) DiscoverMasterForCluster(clusterName strin
 	return types.MasterDetails{}, err
 }
 
-func (client *SentinelHealthCheckerClient) Start() {
+func (client *SentinelClient) Start() {
 	go client.healthcheckloop()
 	// TODO : check for other sentinels
 	//go client.sentineldiscoveryloop()
 }
 
-func (client *SentinelHealthCheckerClient) healthcheckloop() {
+func (client *SentinelClient) healthcheckloop() {
 
 	for {
 
@@ -86,13 +86,13 @@ func (client *SentinelHealthCheckerClient) healthcheckloop() {
 }
 
 // TODO : check for other sentinels
-// func (client *SentinelHealthCheckerClient) sentineldiscoveryloop() {
+// func (client *SentinelClient) sentineldiscoveryloop() {
 // 	for {
 // 		client.findConnectedSentinels("secure")
 // 		time.Sleep(time.Duration(client.sleepInSeconds) * time.Second)
 // 	}
 // }
-// func (client *SentinelHealthCheckerClient) findConnectedSentinels(clustername string) (bool, error) {
+// func (client *SentinelClient) findConnectedSentinels(clustername string) (bool, error) {
 // 	r := client.redisClient.Cmd("SENTINEL", "SENTINELS", clustername)
 // 	for _, e := range r.Elems {
 // 		  t,_ := e.Hash()

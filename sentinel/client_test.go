@@ -10,14 +10,14 @@ import (
 	"time"
 )
 
-func TestNewHealthCheckerClientWillGetASuccessfulPing(t *testing.T) {
+func TestNewSentinelClientClientWillGetASuccessfulPing(t *testing.T) {
 	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{}
 	sentinelManager := &TestManager{}
 	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{RedisReply: &TestRedisReply{Reply: "PONG"}}}
 
-	client, _ := NewHealthCheckerClient(sentinel, sentinelManager, redisConnection)
+	client, _ := NewSentinelClient(sentinel, sentinelManager, redisConnection)
 	client.Start()
 
 	time.Sleep(time.Second)
@@ -27,14 +27,14 @@ func TestNewHealthCheckerClientWillGetASuccessfulPing(t *testing.T) {
 	}
 }
 
-func TestNewHealthCheckerClientWillFailWhenPingUnsucessful(t *testing.T) {
+func TestNewSentinelClientWillFailWhenPingUnsucessful(t *testing.T) {
 	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{}
 	sentinelManager := &TestManager{}
 	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{RedisReply: &TestRedisReply{Reply: "ERROR"}}}
 
-	client, _ := NewHealthCheckerClient(sentinel, sentinelManager, redisConnection)
+	client, _ := NewSentinelClient(sentinel, sentinelManager, redisConnection)
 	client.Start()
 
 	time.Sleep(time.Second)
@@ -44,14 +44,14 @@ func TestNewHealthCheckerClientWillFailWhenPingUnsucessful(t *testing.T) {
 	}
 }
 
-func TestNewHealthCheckerClientWillFailWhenErrorOnPing(t *testing.T) {
+func TestNewSentinelClientWillFailWhenErrorOnPing(t *testing.T) {
 	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{}
 	sentinelManager := &TestManager{}
 	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{RedisReply: &TestRedisReply{Error: errors.New("BOOYAH!")}}}
 
-	client, _ := NewHealthCheckerClient(sentinel, sentinelManager, redisConnection)
+	client, _ := NewSentinelClient(sentinel, sentinelManager, redisConnection)
 	client.Start()
 
 	time.Sleep(time.Second)
@@ -61,14 +61,14 @@ func TestNewHealthCheckerClientWillFailWhenErrorOnPing(t *testing.T) {
 	}
 }
 
-func TestNewHealthCheckerClientWillWillSignalSentinelLostIfCanNotConnect(t *testing.T) {
+func TestNewSentinelClientWillWillSignalSentinelLostIfCanNotConnect(t *testing.T) {
 	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{Host: "DOESNOTEXIST", Port: 1234} // mock coded to not connect
 	sentinelManager := &TestManager{}
 	redisConnection := &TestRedisConnection{}
 
-	_, _ = NewHealthCheckerClient(sentinel, sentinelManager, redisConnection)
+	_, _ = NewSentinelClient(sentinel, sentinelManager, redisConnection)
 
 	if sentinelManager.NotifyCalledWithSentinelLost != 1 {
 		t.Error("Notify should have been called!")
@@ -181,6 +181,6 @@ func (*TestManager) NewMonitor(types.Sentinel) (*Monitor, error) {
 	return nil, nil
 }
 
-func (*TestManager) NewSentinelClient(types.Sentinel) (*SentinelHealthCheckerClient, error) {
+func (*TestManager) NewSentinelClient(types.Sentinel) (*SentinelClient, error) {
 	return nil, nil
 }
