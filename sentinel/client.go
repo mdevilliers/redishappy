@@ -60,11 +60,9 @@ func (client *SentinelClient) Start() {
 func (client *SentinelClient) healthcheckloop() {
 
 	for {
-
 		r := client.redisClient.Cmd("PING")
 
 		if r.Err() != nil {
-
 			client.sentinelManager.Notify(&SentinelLost{Sentinel: client.sentinel})
 			break
 		}
@@ -72,15 +70,11 @@ func (client *SentinelClient) healthcheckloop() {
 		pingResult := r.String()
 
 		if pingResult != "PONG" {
-
 			client.sentinelManager.Notify(&SentinelLost{Sentinel: client.sentinel})
 			break
 		} else {
-
 			client.sentinelManager.Notify(&SentinelPing{Sentinel: client.sentinel})
-
 		}
-
 		time.Sleep(time.Duration(client.sleepInSeconds) * time.Second)
 	}
 }

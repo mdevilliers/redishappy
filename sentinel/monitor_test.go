@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// see healthchecker_test for mocks used
+// see monitor for mocks used
 func TestMonitorWillErrorWhenCanConnect(t *testing.T) {
 	logger.InitLogging("../log")
 
