@@ -6,8 +6,8 @@ import (
 
 type PubSubClient struct {
 	subscriptionClient RedisPubSubClient
-	channel			   chan RedisPubSubReply
-	key 	           string
+	channel            chan RedisPubSubReply
+	key                string
 }
 
 func NewPubSubClient(url string, key string, channel chan RedisPubSubReply, redisConnection RedisConnection) (*PubSubClient, error) {
@@ -21,7 +21,7 @@ func NewPubSubClient(url string, key string, channel chan RedisPubSubReply, redi
 
 	logger.Info.Printf("Connected to %s", url)
 
-	subclient := &PubSubClient{subscriptionClient: client.NewPubSubClient(), key: key, channel : channel}
+	subclient := &PubSubClient{subscriptionClient: client.NewPubSubClient(), key: key, channel: channel}
 	return subclient, nil
 }
 

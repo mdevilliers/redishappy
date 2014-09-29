@@ -71,8 +71,6 @@ func (client *SentinelHealthCheckerClient) healthcheckloop() {
 
 		pingResult := r.String()
 
-		// logger.Info.Printf("HealthChecker: %s says %s", client.sentinel.GetLocation(), pingResult)
-
 		if pingResult != "PONG" {
 
 			client.sentinelManager.Notify(&SentinelLost{Sentinel: client.sentinel})

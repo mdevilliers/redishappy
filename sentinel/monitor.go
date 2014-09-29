@@ -9,7 +9,7 @@ import (
 )
 
 type Monitor struct {
-	client *redis.PubSubClient
+	client  *redis.PubSubClient
 	channel chan redis.RedisPubSubReply
 }
 
@@ -19,21 +19,21 @@ func NewMonitor(sentinel types.Sentinel, redisConnection redis.RedisConnection) 
 	logger.Info.Printf("Connecting to sentinel@%s", uri)
 
 	channel := make(chan redis.RedisPubSubReply)
-	key := "+switch-master"//, "+slave-reconf-done ")
+	key := "+switch-master" //, "+slave-reconf-done ")
 
 	client, err := redis.NewPubSubClient(uri, key, channel, redisConnection)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
-	monitor := &Monitor{client: client, channel : channel}
+	monitor := &Monitor{client: client, channel: channel}
 	return monitor, nil
 }
 
 func (m *Monitor) StartMonitoringMasterEvents(switchmasterchannel chan types.MasterSwitchedEvent) error {
 
-	err := m.client.Start() 
+	err := m.client.Start()
 
 	if err != nil {
 		return err
@@ -46,7 +46,7 @@ func (m *Monitor) StartMonitoringMasterEvents(switchmasterchannel chan types.Mas
 
 func (m *Monitor) loop(switchmasterchannel chan types.MasterSwitchedEvent) {
 	for {
-		message := <- m.channel
+		message := <-m.channel
 
 		if message.Timeout() {
 			continue
