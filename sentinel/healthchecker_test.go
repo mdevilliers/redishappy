@@ -177,7 +177,7 @@ func (*TestManager) GetState(request TopologyRequest) {
 
 }
 
-func (*TestManager) NewSentinelMonitor(types.Sentinel) (*SentinelPubSubClient, error) {
+func (*TestManager) NewMonitor(types.Sentinel) (*Monitor, error) {
 	return nil, nil
 }
 

@@ -70,7 +70,7 @@ func startMonitoring(flipper types.FlipperClient, sentinelManager *sentinel.Sent
 			logger.Info.Printf("Error starting sentinel (%s) client : %s", configuredSentinel.GetLocation(), err.Error())
 		} else {
 
-			sentinelManager.NewSentinelMonitor(configuredSentinel)
+			sentinelManager.NewMonitor(configuredSentinel)
 			started++
 
 			for _, clusterDetails := range configuration.Clusters {

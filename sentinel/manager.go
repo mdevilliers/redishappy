@@ -19,7 +19,7 @@ type Manager interface {
 	Notify(event SentinelEvent)
 	GetState(request TopologyRequest)
 	NewSentinelClient(types.Sentinel) (*SentinelHealthCheckerClient, error)
-	NewSentinelMonitor(types.Sentinel) (*SentinelPubSubClient, error)
+	NewMonitor(types.Sentinel) (*Monitor, error)
 }
 
 type SentinelManager struct {
@@ -57,17 +57,17 @@ func (m *SentinelManager) NewSentinelClient(sentinel types.Sentinel) (*SentinelH
 	return client, err
 }
 
-func (m *SentinelManager) NewSentinelMonitor(sentinel types.Sentinel) (*SentinelPubSubClient, error) {
+func (m *SentinelManager) NewMonitor(sentinel types.Sentinel) (*Monitor, error) {
 
-	pubsubclient, err := NewPubSubClient(sentinel, m.redisConnection)
+	monitor, err := NewMonitor(sentinel, m.redisConnection)
 
 	if err != nil {
 		logger.Info.Printf("Error starting monitor %s : %s", sentinel.GetLocation(), err.Error())
 		return nil, err
 	}
 
-	pubsubclient.StartMonitoringMasterEvents(m.switchmasterchannel)
-	return pubsubclient, nil
+	monitor.StartMonitoringMasterEvents(m.switchmasterchannel)
+	return monitor, nil
 }
 
 func (m *SentinelManager) Notify(event SentinelEvent) {
@@ -125,7 +125,7 @@ func updateState(event interface{}, m Manager) {
 		}
 
 		util.Schedule(func() { m.NewSentinelClient(sentinel) }, time.Second*5)
-		util.Schedule(func() { m.NewSentinelMonitor(sentinel) }, time.Second*5)
+		util.Schedule(func() { m.NewMonitor(sentinel) }, time.Second*5)
 		logger.Trace.Printf("Sentinel lost : %s (scheduling new client and monitor).", util.String(topologyState))
 
 	case *SentinelPing:
