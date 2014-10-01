@@ -7,10 +7,9 @@ import (
 type PubSubClient struct {
 	subscriptionClient RedisPubSubClient
 	channel            chan RedisPubSubReply
-	key                string
 }
 
-func NewPubSubClient(url string, key string, channel chan RedisPubSubReply, redisConnection RedisConnection) (*PubSubClient, error) {
+func NewPubSubClient(url string, channel chan RedisPubSubReply, redisConnection RedisConnection) (*PubSubClient, error) {
 
 	client, err := redisConnection.GetConnection("tcp", url)
 
@@ -21,13 +20,13 @@ func NewPubSubClient(url string, key string, channel chan RedisPubSubReply, redi
 
 	logger.Info.Printf("Connected to %s", url)
 
-	subclient := &PubSubClient{subscriptionClient: client.NewPubSubClient(), key: key, channel: channel}
+	subclient := &PubSubClient{subscriptionClient: client.NewPubSubClient(), channel: channel}
 	return subclient, nil
 }
 
-func (client *PubSubClient) Start() error {
+func (client *PubSubClient) Start(keys []string) error {
 
-	subr := client.subscriptionClient.Subscribe(client.key)
+	subr := client.subscriptionClient.Subscribe(keys)
 
 	if subr.Err() != nil {
 		return subr.Err()

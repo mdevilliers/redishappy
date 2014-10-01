@@ -1,39 +1,42 @@
 package sentinel
 
 import (
+	"errors"
 	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Monitor struct {
-	client  *redis.PubSubClient
-	channel chan redis.RedisPubSubReply
+	client   *redis.PubSubClient
+	channel  chan redis.RedisPubSubReply
+	manager  Manager
+	sentinel types.Sentinel
 }
 
-func NewMonitor(sentinel types.Sentinel, redisConnection redis.RedisConnection) (*Monitor, error) {
+func NewMonitor(sentinel types.Sentinel, manager Manager, redisConnection redis.RedisConnection) (*Monitor, error) {
 
 	uri := sentinel.GetLocation()
 	logger.Info.Printf("Connecting to sentinel@%s", uri)
 
 	channel := make(chan redis.RedisPubSubReply)
-	key := "+switch-master" //, "+slave-reconf-done ")
-
-	client, err := redis.NewPubSubClient(uri, key, channel, redisConnection)
+	client, err := redis.NewPubSubClient(uri, channel, redisConnection)
 
 	if err != nil {
 		return nil, err
 	}
 
-	monitor := &Monitor{client: client, channel: channel}
+	monitor := &Monitor{client: client, channel: channel, manager: manager, sentinel: sentinel}
 	return monitor, nil
 }
 
 func (m *Monitor) StartMonitoringMasterEvents(switchmasterchannel chan types.MasterSwitchedEvent) error {
 
-	err := m.client.Start()
+	keys := []string{"+switch-master", "+sentinel"} //, "+slave-reconf-done ")
+	err := m.client.Start(keys)
 
 	if err != nil {
 		return err
@@ -46,22 +49,55 @@ func (m *Monitor) StartMonitoringMasterEvents(switchmasterchannel chan types.Mas
 
 func (m *Monitor) loop(switchmasterchannel chan types.MasterSwitchedEvent) {
 	for {
-		message := <-m.channel
+		select {
+		case message := <-m.channel:
+			err := m.dealWithSentinelMessage(message, switchmasterchannel)
+			if err != nil {
+				break
+			}
 
-		if message.Timeout() {
-			continue
-		}
-		if message.Err() == nil {
-			logger.Info.Printf("Subscription Message : Channel : %s : %s\n", message.Channel, message.Message)
-
-			event := parseSwitchMasterMessage(message.Message())
-			switchmasterchannel <- event
-
-		} else {
-			logger.Info.Printf("Subscription Message : Channel : Error %s \n", message.Err)
-			break
+		case <-time.After(time.Duration(1) * time.Second):
+			m.manager.Notify(&SentinelPing{Sentinel: m.sentinel})
 		}
 	}
+}
+
+func (m *Monitor) dealWithSentinelMessage(message redis.RedisPubSubReply, switchmasterchannel chan types.MasterSwitchedEvent) error {
+
+	// if message.Timeout() {
+	// 	continue
+	// }
+	if message.Err() != nil {
+		m.manager.Notify(&SentinelLost{Sentinel: m.sentinel})
+		logger.Info.Printf("Subscription Message : Channel : Error %s \n", message.Err())
+		return errors.New("Sentinel Lost")
+	}
+
+	channel := message.Channel()
+
+	if channel == "+switch-master" {
+		logger.Info.Printf("Subscription Message : Channel : %s : %s\n", message.Channel(), message.Message)
+
+		event := parseSwitchMasterMessage(message.Message())
+		switchmasterchannel <- event
+		return nil
+	}
+	if channel == "+sentinel" {
+
+		host, port := parseInstanceDetailsForIpAndPortMessage(message.Message())
+		m.manager.Notify(&SentinelAdded{Sentinel: types.Sentinel{Host: host, Port: port}})
+		return nil
+	}
+
+	logger.Error.Printf("Subscription Message : Unknown Channel : %s \n", channel)
+	return nil
+}
+
+func parseInstanceDetailsForIpAndPortMessage(message string) (string, int) {
+	//<instance-type> <name> <ip> <port> @ <master-name> <master-ip> <master-port>
+	bits := strings.Split(message, " ")
+	port, _ := strconv.Atoi(bits[3])
+	return bits[2], port
 }
 
 func parseSwitchMasterMessage(message string) types.MasterSwitchedEvent {

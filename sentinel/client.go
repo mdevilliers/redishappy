@@ -5,14 +5,14 @@ import (
 	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
 	"strconv"
-	"time"
+	// "time"
 )
 
 type SentinelClient struct {
-	sentinel        types.Sentinel
-	redisClient     redis.RedisClient
-	sentinelManager Manager
-	sleepInSeconds  int
+	sentinel       types.Sentinel
+	redisClient    redis.RedisClient
+	manager        Manager
+	sleepInSeconds int
 }
 
 func NewSentinelClient(sentinel types.Sentinel, manager Manager, redisConnection redis.RedisConnection) (*SentinelClient, error) {
@@ -31,9 +31,9 @@ func NewSentinelClient(sentinel types.Sentinel, manager Manager, redisConnection
 	logger.Info.Printf("SentinelClient : connected to %s", uri)
 
 	client := &SentinelClient{redisClient: redisclient,
-		sentinel:        sentinel,
-		sentinelManager: manager,
-		sleepInSeconds:  1}
+		sentinel:       sentinel,
+		manager:        manager,
+		sleepInSeconds: 1}
 	return client, nil
 }
 
@@ -51,46 +51,38 @@ func (m *SentinelClient) DiscoverMasterForCluster(clusterName string) (types.Mas
 	return types.MasterDetails{}, err
 }
 
-func (client *SentinelClient) Start() {
-	go client.healthcheckloop()
-	// TODO : check for other sentinels
-	//go client.sentineldiscoveryloop()
-}
-
-func (client *SentinelClient) healthcheckloop() {
-
-	for {
-		r := client.redisClient.Cmd("PING")
-
-		if r.Err() != nil {
-			client.sentinelManager.Notify(&SentinelLost{Sentinel: client.sentinel})
-			break
-		}
-
-		pingResult := r.String()
-
-		if pingResult != "PONG" {
-			client.sentinelManager.Notify(&SentinelLost{Sentinel: client.sentinel})
-			break
-		} else {
-			client.sentinelManager.Notify(&SentinelPing{Sentinel: client.sentinel})
-		}
-		time.Sleep(time.Duration(client.sleepInSeconds) * time.Second)
+func (client *SentinelClient) FindConnectedSentinels(clustername string) {
+	r := client.redisClient.Cmd("SENTINEL", "SENTINELS", clustername)
+	for _, e := range r.Elems() {
+		t, _ := e.Hash()
+		logger.Info.Printf("Sentinel found : %s : %s", t["ip"], t["port"])
+		port, _ := strconv.Atoi(t["port"])
+		client.manager.Notify(&SentinelAdded{Sentinel: types.Sentinel{Host: t["ip"], Port: port}})
 	}
 }
 
-// TODO : check for other sentinels
-// func (client *SentinelClient) sentineldiscoveryloop() {
+// func (client *SentinelClient) Start() {
+// 	go client.loop()
+// }
+
+// func (client *SentinelClient) loop() {
+
 // 	for {
-// 		client.findConnectedSentinels("secure")
+// 		r := client.redisClient.Cmd("PING")
+
+// 		if r.Err() != nil {
+// 			client.sentinelManager.Notify(&SentinelLost{Sentinel: client.sentinel})
+// 			break
+// 		}
+
+// 		pingResult := r.String()
+
+// 		if pingResult != "PONG" {
+// 			client.sentinelManager.Notify(&SentinelLost{Sentinel: client.sentinel})
+// 			break
+// 		} else {
+// 			client.sentinelManager.Notify(&SentinelPing{Sentinel: client.sentinel})
+// 		}
 // 		time.Sleep(time.Duration(client.sleepInSeconds) * time.Second)
 // 	}
-// }
-// func (client *SentinelClient) findConnectedSentinels(clustername string) (bool, error) {
-// 	r := client.redisClient.Cmd("SENTINEL", "SENTINELS", clustername)
-// 	for _, e := range r.Elems {
-// 		  t,_ := e.Hash()
-// 		  logger.Info.Printf("Sentinels : xxx : %s : %s",t["ip"], t["port"])
-// 	}
-// 	return false, nil
 // }

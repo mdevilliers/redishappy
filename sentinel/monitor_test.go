@@ -12,9 +12,10 @@ func TestMonitorWillErrorWhenCanConnect(t *testing.T) {
 	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{}
+	manager := &TestManager{}
 	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{RedisReply: &TestRedisReply{}}}
 
-	_, err := NewMonitor(sentinel, redisConnection)
+	_, err := NewMonitor(sentinel, manager, redisConnection)
 
 	if err != nil {
 		t.Error("Client should not throw error if connected successfully!")
@@ -25,9 +26,10 @@ func TestMonitorWillThrowErrorWhenCanNotConnect(t *testing.T) {
 	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{Host: "DOESNOTEXIST", Port: 1234} // mock coded to not connect
+	manager := &TestManager{}
 	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{RedisReply: &TestRedisReply{}}}
 
-	_, err := NewMonitor(sentinel, redisConnection)
+	_, err := NewMonitor(sentinel, manager, redisConnection)
 
 	if err == nil {
 		t.Error("Client should throw error if unable to connect!")
@@ -38,12 +40,13 @@ func TestMonitorReturnsMasterSwitchEventToTheCorrectChannel(t *testing.T) {
 	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{}
+	manager := &TestManager{}
 	subscribeReply := &TestRedisPubSubReply{}
 	subscriptionMessage := "name 1.1.1.1 1234 2.2.2.2 5678"
 	receiveReply := &TestRedisPubSubReply{TimedOut: false, ChannelListeningOn: "+switch-master", MessageToReturn: subscriptionMessage}
 	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{PubSubClient: &TestPubSubClient{SubscribePubSubReply: subscribeReply, ReceivePubSubReply: receiveReply}}}
 
-	client, err := NewMonitor(sentinel, redisConnection)
+	client, err := NewMonitor(sentinel, manager, redisConnection)
 
 	if err != nil {
 		t.Error("Client should not throw error if connected successfully!")
@@ -62,10 +65,11 @@ func TestMonitorReturnsErrorWhenConnectionDisappears(t *testing.T) {
 	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{}
+	manager := &TestManager{}
 	subscribeReply := &TestRedisPubSubReply{Error: errors.New("CANT'T CONNECT")}
 	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{PubSubClient: &TestPubSubClient{SubscribePubSubReply: subscribeReply}}}
 
-	client, err := NewMonitor(sentinel, redisConnection)
+	client, err := NewMonitor(sentinel, manager, redisConnection)
 
 	if err != nil {
 		t.Error("Client should not throw error if connected successfully!")

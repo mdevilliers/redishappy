@@ -13,6 +13,8 @@ type RedisReply interface {
 	List() ([]string, error)
 	String() string
 	Err() error
+	Elems() []RedisReply
+	Hash() (map[string]string, error)
 }
 
 type RedisClient interface {
@@ -58,7 +60,7 @@ func (c RadixRedisConnection) GetConnection(protocol, uri string) (RedisClient, 
 
 func (c *RadixRedisClient) Cmd(cmd string, args ...interface{}) RedisReply {
 	re := c.client.Cmd(cmd, args)
-	return &RadixRedisReply{reply: re}
+	return makeRedisReply(re)
 }
 
 func (c *RadixRedisReply) String() string {
@@ -67,6 +69,24 @@ func (c *RadixRedisReply) String() string {
 
 func (c *RadixRedisReply) Err() error {
 	return c.reply.Err
+}
+
+func (c *RadixRedisReply) Elems() []RedisReply {
+	elements := c.reply.Elems
+	reply := make([]RedisReply, len(elements))
+
+	for n, element := range elements {
+		reply[n] = makeRedisReply(element)
+	}
+
+	return reply
+}
+func makeRedisReply(re *redis.Reply) RedisReply {
+	return &RadixRedisReply{reply: re}
+}
+
+func (c *RadixRedisReply) Hash() (map[string]string, error) {
+	return c.reply.Hash()
 }
 
 func (c *RadixRedisReply) List() ([]string, error) {

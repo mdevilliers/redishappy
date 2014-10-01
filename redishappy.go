@@ -68,21 +68,25 @@ func startMonitoring(flipper types.FlipperClient, sentinelManager *sentinel.Sent
 
 		if err != nil {
 			logger.Info.Printf("Error starting sentinel (%s) client : %s", configuredSentinel.GetLocation(), err.Error())
-		} else {
+			continue
+		}
 
-			sentinelManager.NewMonitor(configuredSentinel)
-			started++
+		sentinelManager.NewMonitor(configuredSentinel)
+		started++
 
-			for _, clusterDetails := range configuration.Clusters {
+		for _, clusterDetails := range configuration.Clusters {
 
-				details, err := client.DiscoverMasterForCluster(clusterDetails.Name)
+			details, err := client.DiscoverMasterForCluster(clusterDetails.Name)
 
-				if err == nil {
-					details.ExternalPort = clusterDetails.MasterPort
-					// TODO : last one wins?
-					detailcollection.AddOrReplace(&details)
-				}
+			if err != nil {
+				continue
 			}
+			details.ExternalPort = clusterDetails.MasterPort
+			// TODO : last one wins?
+			detailcollection.AddOrReplace(&details)
+
+			// explore the cluster
+			client.FindConnectedSentinels(clusterDetails.Name)
 		}
 	}
 
@@ -91,6 +95,7 @@ func startMonitoring(flipper types.FlipperClient, sentinelManager *sentinel.Sent
 	if started == 0 {
 		logger.Info.Printf("WARNING : no sentinels are currently being monitored.")
 	}
+
 }
 
 func loopSentinelEvents(flipper types.FlipperClient, switchmasterchannel chan types.MasterSwitchedEvent) {
