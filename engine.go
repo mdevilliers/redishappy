@@ -11,7 +11,7 @@ import (
 )
 
 func NewRedisHappyEngine( flipper types.FlipperClient, configuration *configuration.Configuration, logPath string) {
-
+	logger.InitLogging(logPath)
 	logger.Info.Printf("Configuration : %s\n", util.String(configuration))
 	
 	logger.InitLogging(logPath)
