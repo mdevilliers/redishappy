@@ -35,7 +35,7 @@ func NewMonitor(sentinel types.Sentinel, manager Manager, redisConnection redis.
 
 func (m *Monitor) StartMonitoringMasterEvents(switchmasterchannel chan types.MasterSwitchedEvent) error {
 
-	keys := []string{"+switch-master", "+sentinel"} //, "+slave-reconf-done ")
+	keys := []string{"+switch-master"}//, "+sentinel"} //, "+slave-reconf-done ")
 	err := m.client.Start(keys)
 
 	if err != nil {
@@ -76,7 +76,7 @@ func (m *Monitor) dealWithSentinelMessage(message redis.RedisPubSubReply, switch
 	channel := message.Channel()
 
 	if channel == "+switch-master" {
-		logger.Info.Printf("Subscription Message : Channel : %s : %s\n", message.Channel(), message.Message)
+		logger.Info.Printf("Subscription Message : Channel : %s : %s\n", message.Channel(), message.Message())
 
 		event := parseSwitchMasterMessage(message.Message())
 		switchmasterchannel <- event

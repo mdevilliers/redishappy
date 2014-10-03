@@ -35,3 +35,15 @@ PreCheckin
 ```
 gofmt -l -s -w .
 ```
+
+Testing with Docker
+-------------------
+
+https://github.com/mdevilliers/docker-rediscluster
+
+Will start up a master/slave, 3 sentinel redis cluster for testing.
+
+TODO
+----
+
+1. Need a circuit breaker if the a sentinel is unreachable

@@ -66,7 +66,8 @@ func (m *SentinelManager) NewMonitor(sentinel types.Sentinel) (*Monitor, error) 
 		return nil, err
 	}
 
-	monitor.StartMonitoringMasterEvents(m.switchmasterchannel)
+	go monitor.StartMonitoringMasterEvents(m.switchmasterchannel)
+
 	return monitor, nil
 }
 
