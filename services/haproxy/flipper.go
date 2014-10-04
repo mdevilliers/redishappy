@@ -101,7 +101,7 @@ func renderTemplate(details *types.MasterDetailsCollection, outputPath string, t
 		return false, err
 	}
 
-	if fileExists(outputPath) {
+	if util.FileExists(outputPath) {
 		newFileHash := util.HashString(renderedTemplate)
 		oldFileHash, err := util.HashFile(outputPath)
 
@@ -126,13 +126,4 @@ func renderTemplate(details *types.MasterDetailsCollection, outputPath string, t
 	}
 
 	return true, nil
-}
-
-func fileExists(name string) bool {
-	if _, err := os.Stat(name); err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-	}
-	return true
 }
