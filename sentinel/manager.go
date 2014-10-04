@@ -115,7 +115,7 @@ func updateState(event interface{}, m Manager) {
 
 			topologyState.Sentinels[uid] = info
 			
-			m.NewMonitor(sentinel)
+			go m.NewMonitor(sentinel)
 			
 			logger.Trace.Printf("Sentinel added : %s", util.String(topologyState))
 		}
