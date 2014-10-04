@@ -15,8 +15,6 @@ func NewRedisHappyEngine(flipper types.FlipperClient, configuration *configurati
 	logger.InitLogging(logPath)
 	logger.Info.Printf("Configuration : %s\n", util.String(configuration))
 
-	logger.InitLogging(logPath)
-
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
 	sentinelManager := sentinel.NewManager(switchmasterchannel)
 
