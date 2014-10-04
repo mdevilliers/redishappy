@@ -24,8 +24,8 @@ type MasterDetailsCollection struct {
 	items map[string]*MasterDetails
 }
 
-func NewMasterDetailsCollection() *MasterDetailsCollection {
-	return &MasterDetailsCollection{items: map[string]*MasterDetails{}}
+func NewMasterDetailsCollection() MasterDetailsCollection {
+	return MasterDetailsCollection{items: map[string]*MasterDetails{}}
 }
 
 func (m *MasterDetailsCollection) AddOrReplace(master *MasterDetails) {

@@ -36,7 +36,7 @@ func NewSentinelClient(sentinel types.Sentinel, manager Manager, redisConnection
 	return client, nil
 }
 
-func (m *SentinelClient) DiscoverMasterForCluster(clusterName string) (types.MasterDetails, error) {
+func (m *SentinelClient) DiscoverMasterForCluster(clusterName string) (*types.MasterDetails, error) {
 
 	r := m.redisClient.Cmd("SENTINEL", "get-master-addr-by-name", clusterName)
 
@@ -44,10 +44,10 @@ func (m *SentinelClient) DiscoverMasterForCluster(clusterName string) (types.Mas
 
 	if err == nil {
 		port, _ := strconv.Atoi(bits[1])
-		return types.MasterDetails{Name: clusterName, Ip: bits[0], Port: port}, nil
+		return &types.MasterDetails{Name: clusterName, Ip: bits[0], Port: port}, nil
 	}
 
-	return types.MasterDetails{}, err
+	return &types.MasterDetails{}, err
 }
 
 func (client *SentinelClient) FindConnectedSentinels(clustername string) {

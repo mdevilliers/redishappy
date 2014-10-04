@@ -184,11 +184,3 @@ func (tm *TestManager) Notify(event SentinelEvent) {
 func (tm *TestManager) GetState(request TopologyRequest) {
 
 }
-
-func (tm *TestManager) NewMonitor(types.Sentinel) (*Monitor, error) {
-	return nil, nil
-}
-
-func (tm *TestManager) NewSentinelClient(types.Sentinel) (*SentinelClient, error) {
-	return nil, nil
-}

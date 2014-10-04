@@ -74,7 +74,7 @@ func (m *Monitor) dealWithSentinelMessage(message redis.RedisPubSubReply, switch
 	}
 
 	channel := message.Channel()
-	logger.Info.Printf("Channel : %s", channel)
+
 	if channel == "+switch-master" {
 		logger.Info.Printf("Subscription Message : Channel : %s : %s\n", message.Channel(), message.Message())
 
@@ -88,8 +88,6 @@ func (m *Monitor) dealWithSentinelMessage(message redis.RedisPubSubReply, switch
 		m.manager.Notify(&SentinelAdded{Sentinel: types.Sentinel{Host: host, Port: port}})
 		return nil
 	}
-
-	logger.Error.Printf("Subscription Message : Unknown Channel : %s \n", channel)
 	return nil
 }
 

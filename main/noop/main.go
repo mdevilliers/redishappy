@@ -18,7 +18,7 @@ func init() {
 func main() {
 
 	flag.Parse()
-	
+
 	configuration, err := configuration.LoadFromFile(configFile)
 
 	if err != nil {
@@ -26,5 +26,5 @@ func main() {
 	}
 
 	flipper := NewNoOpFlipper()
-	redishappy.NewRedisHappyEngine(flipper ,configuration, logPath )
+	redishappy.NewRedisHappyEngine(flipper, configuration, logPath)
 }

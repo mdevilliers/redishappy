@@ -10,10 +10,11 @@ import (
 	"github.com/zenazn/goji"
 )
 
-func NewRedisHappyEngine( flipper types.FlipperClient, configuration *configuration.Configuration, logPath string) {
+func NewRedisHappyEngine(flipper types.FlipperClient, configuration *configuration.Configuration, logPath string) {
+
 	logger.InitLogging(logPath)
 	logger.Info.Printf("Configuration : %s\n", util.String(configuration))
-	
+
 	logger.InitLogging(logPath)
 
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
@@ -39,43 +40,13 @@ func initApiServer(manager *sentinel.SentinelManager) {
 
 func startMonitoring(flipper types.FlipperClient, sentinelManager *sentinel.SentinelManager, configuration *configuration.Configuration) {
 
-	started := 0
-	detailcollection := types.NewMasterDetailsCollection()
+	detailsCollectionChannel := make(chan types.MasterDetailsCollection, 1)
 
-	for _, configuredSentinel := range configuration.Sentinels {
+	go sentinelManager.Start(detailsCollectionChannel, configuration)
 
-		client, err := sentinelManager.NewSentinelClient(configuredSentinel)
+	detailcollection := <-detailsCollectionChannel
 
-		if err != nil {
-			logger.Info.Printf("Error starting sentinel (%s) client : %s", configuredSentinel.GetLocation(), err.Error())
-			continue
-		}
-
-		go sentinelManager.NewMonitor(configuredSentinel)
-		started++
-
-		for _, clusterDetails := range configuration.Clusters {
-
-			details, err := client.DiscoverMasterForCluster(clusterDetails.Name)
-
-			if err != nil {
-				continue
-			}
-			details.ExternalPort = clusterDetails.MasterPort
-			// TODO : last one wins?
-			detailcollection.AddOrReplace(&details)
-
-			// explore the cluster
-			client.FindConnectedSentinels(clusterDetails.Name)
-		}
-	}
-
-	flipper.InitialiseRunningState(detailcollection)
-
-	if started == 0 {
-		logger.Info.Printf("WARNING : no sentinels are currently being monitored.")
-	}
-
+	flipper.InitialiseRunningState(&detailcollection)
 }
 
 func loopSentinelEvents(flipper types.FlipperClient, switchmasterchannel chan types.MasterSwitchedEvent) {

@@ -4,7 +4,6 @@ import (
 	"flag"
 	"github.com/mdevilliers/redishappy"
 	"github.com/mdevilliers/redishappy/configuration"
-	"github.com/mdevilliers/redishappy/services/haproxy"
 	"log"
 )
 
@@ -19,13 +18,13 @@ func init() {
 func main() {
 
 	flag.Parse()
-	
+
 	configuration, err := configuration.LoadFromFile(configFile)
 
 	if err != nil {
 		log.Panicf("Error opening config file : %s", err.Error())
 	}
 
-	flipper := haproxy.NewFlipper(configuration)
-	redishappy.NewRedisHappyEngine(flipper ,configuration, logPath )
+	flipper := NewHAProxyFlipper(configuration)
+	redishappy.NewRedisHappyEngine(flipper, configuration, logPath)
 }
