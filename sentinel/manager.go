@@ -52,8 +52,6 @@ func (m *SentinelManager) NewSentinelClient(sentinel types.Sentinel) (*SentinelC
 		logger.Error.Printf("Error starting sentinel client (%s) : %s", sentinel.GetLocation(), err.Error())
 		return nil, err
 	}
-
-	// client.Start()
 	return client, err
 }
 
@@ -106,15 +104,21 @@ func updateState(event interface{}, m Manager) {
 
 		sentinel := e.GetSentinel()
 		uid := topologyState.createKey(sentinel)
-		info := &SentinelInfo{SentinelLocation: uid,
-			LastUpdated:   time.Now().UTC(),
-			KnownClusters: []string{},
-			State:         SentinelMarkedUp}
 
-		topologyState.Sentinels[uid] = info
-		//TODO : if a new sentinel start a monitor
+		//if we don't know about the sentinel start monitoring it
+		if _,ok := topologyState.Sentinels[uid]; !ok {
 
-		logger.Trace.Printf("Sentinel added : %s", util.String(topologyState))
+			info := &SentinelInfo{SentinelLocation: uid,
+				LastUpdated:   time.Now().UTC(),
+				KnownClusters: []string{},
+				State:         SentinelMarkedUp}
+
+			topologyState.Sentinels[uid] = info
+			
+			m.NewMonitor(sentinel)
+			
+			logger.Trace.Printf("Sentinel added : %s", util.String(topologyState))
+		}
 
 	case *SentinelLost:
 
@@ -127,7 +131,6 @@ func updateState(event interface{}, m Manager) {
 			currentInfo.LastUpdated = time.Now().UTC()
 		}
 
-		//util.Schedule(func() { m.NewSentinelClient(sentinel) }, time.Second*5)
 		util.Schedule(func() { m.NewMonitor(sentinel) }, time.Second*5)
 		logger.Trace.Printf("Sentinel lost : %s (scheduling new client and monitor).", util.String(topologyState))
 

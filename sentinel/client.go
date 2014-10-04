@@ -5,7 +5,6 @@ import (
 	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
 	"strconv"
-	// "time"
 )
 
 type SentinelClient struct {
@@ -60,29 +59,3 @@ func (client *SentinelClient) FindConnectedSentinels(clustername string) {
 		client.manager.Notify(&SentinelAdded{Sentinel: types.Sentinel{Host: t["ip"], Port: port}})
 	}
 }
-
-// func (client *SentinelClient) Start() {
-// 	go client.loop()
-// }
-
-// func (client *SentinelClient) loop() {
-
-// 	for {
-// 		r := client.redisClient.Cmd("PING")
-
-// 		if r.Err() != nil {
-// 			client.sentinelManager.Notify(&SentinelLost{Sentinel: client.sentinel})
-// 			break
-// 		}
-
-// 		pingResult := r.String()
-
-// 		if pingResult != "PONG" {
-// 			client.sentinelManager.Notify(&SentinelLost{Sentinel: client.sentinel})
-// 			break
-// 		} else {
-// 			client.sentinelManager.Notify(&SentinelPing{Sentinel: client.sentinel})
-// 		}
-// 		time.Sleep(time.Duration(client.sleepInSeconds) * time.Second)
-// 	}
-// }
