@@ -23,5 +23,6 @@ _testmain.go
 *.exe
 *.test
 
-noop
-redis-haproxy
+# executables in the main folder
+main/noop/noop
+main/redis-haproxy/redis-haproxy

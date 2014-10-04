@@ -20,12 +20,7 @@ func TestParseValidConfiguration(t *testing.T) {
 				  "Sentinels" : [ 
 				      {"Host" : "192.168.0.20", "Port" : 26379},
 				      {"Host" : "192.168.0.21", "Port" : 26379}
-				  ],
-				  "HAProxy" :{
-      				"TemplatePath": "example_haproxy_template.cfg",
-      				"OutputPath": "/etc/haproxy/haproxy.cfg",
-      				"ReloadCommand": "haproxy -f /etc/haproxy/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid)"
-    			  }
+				  ]
 			}`
 
 	configuration, err := ParseConfiguration([]byte(config))
