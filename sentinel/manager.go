@@ -166,7 +166,14 @@ func updateState(event interface{}, m *SentinelManager) {
 			currentInfo.LastUpdated = time.Now().UTC()
 		}
 
-		util.Schedule(func() { m.newMonitor(sentinel) }, time.Second*5)
+		util.Schedule(func() { 
+					_,err := m.newMonitor(sentinel) 
+					if err != nil {
+						m.Notify(&SentinelLost{Sentinel: sentinel})
+					}
+
+				}, time.Second * 5)
+		
 		logger.Trace.Printf("Sentinel lost : %s (scheduling new client and monitor).", util.String(topologyState))
 
 	case *SentinelPing:

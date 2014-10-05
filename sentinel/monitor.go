@@ -1,7 +1,6 @@
 package sentinel
 
 import (
-	"errors"
 	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
@@ -35,7 +34,7 @@ func NewMonitor(sentinel types.Sentinel, manager Manager, redisConnection redis.
 
 func (m *Monitor) StartMonitoringMasterEvents(switchmasterchannel chan types.MasterSwitchedEvent) error {
 
-	keys := []string{"+switch-master", "+sentinel", "+slave-reconf-done"}
+	keys := []string{"+switch-master", "+sentinel"}
 	err := m.client.Start(keys)
 
 	if err != nil {
@@ -48,47 +47,48 @@ func (m *Monitor) StartMonitoringMasterEvents(switchmasterchannel chan types.Mas
 }
 
 func (m *Monitor) loop(switchmasterchannel chan types.MasterSwitchedEvent) {
-	for {
-		select {
-		case message := <-m.channel:
-			err := m.dealWithSentinelMessage(message, switchmasterchannel)
-			if err != nil {
-				break
-			}
+	L : for {
+			select {
+			case message := <-m.channel:
+				shutdown := m.dealWithSentinelMessage(message, switchmasterchannel)
+				if shutdown {
+					logger.Info.Print("SHUTDOWN")
+					break L
+				}
 
-		case <-time.After(time.Duration(1) * time.Second):
-			m.manager.Notify(&SentinelPing{Sentinel: m.sentinel})
-		}
+			case <-time.After(time.Duration(1) * time.Second):
+				m.manager.Notify(&SentinelPing{Sentinel: m.sentinel})
+			}
 	}
 }
 
-func (m *Monitor) dealWithSentinelMessage(message redis.RedisPubSubReply, switchmasterchannel chan types.MasterSwitchedEvent) error {
+func (m *Monitor) dealWithSentinelMessage(message redis.RedisPubSubReply, switchmasterchannel chan types.MasterSwitchedEvent) bool {
 
 	if message.Timeout() {
-		return errors.New("Timeout")
+		return true
 	}
 	if message.Err() != nil {
 		m.manager.Notify(&SentinelLost{Sentinel: m.sentinel})
-		logger.Info.Printf("Subscription Message : Channel : Error %s \n", message.Err())
-		return errors.New("Sentinel Lost")
+		logger.Info.Printf("Subscription Message : Channel : Error %s", message.Err())
+		return true
 	}
 
 	channel := message.Channel()
 
 	if channel == "+switch-master" {
-		logger.Info.Printf("Subscription Message : Channel : %s : %s\n", message.Channel(), message.Message())
+		logger.Info.Printf("Subscription Message : Channel : %s : %s", message.Channel(), message.Message())
 
 		event := parseSwitchMasterMessage(message.Message())
 		switchmasterchannel <- event
-		return nil
+		return false
 	}
 	if channel == "+sentinel" {
 
 		host, port := parseInstanceDetailsForIpAndPortMessage(message.Message())
 		m.manager.Notify(&SentinelAdded{Sentinel: types.Sentinel{Host: host, Port: port}})
-		return nil
+		return false
 	}
-	return nil
+	return false
 }
 
 func parseInstanceDetailsForIpAndPortMessage(message string) (string, int) {
