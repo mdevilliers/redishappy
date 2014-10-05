@@ -20,6 +20,7 @@ type RedisReply interface {
 type RedisClient interface {
 	Cmd(cmd string, args ...interface{}) RedisReply
 	NewPubSubClient() RedisPubSubClient
+	Close()
 }
 
 type RedisPubSubClient interface {
@@ -61,6 +62,10 @@ func (c RadixRedisConnection) GetConnection(protocol, uri string) (RedisClient, 
 func (c *RadixRedisClient) Cmd(cmd string, args ...interface{}) RedisReply {
 	re := c.client.Cmd(cmd, args)
 	return makeRedisReply(re)
+}
+
+func (c *RadixRedisClient) Close() {
+	c.client.Close()
 }
 
 func (c *RadixRedisReply) String() string {

@@ -50,6 +50,10 @@ func (c *TestRedisClient) Cmd(cmd string, args ...interface{}) redis.RedisReply 
 	return c.RedisReply
 }
 
+func (c *TestRedisClient) Close() {
+	// do nothing
+}
+
 func (c *TestRedisClient) NewPubSubClient() redis.RedisPubSubClient {
 	return c.PubSubClient
 }

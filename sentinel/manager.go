@@ -71,7 +71,8 @@ func (m *SentinelManager) GetTopology(stateChannel chan types.MasterDetailsColle
 	for _, sentinel := range configuration.Sentinels {
 
 		client, err := NewSentinelClient(sentinel, m.redisConnection)
-
+		defer client.Close()
+		
 		if err != nil {
 			logger.Info.Printf("Error starting sentinel (%s) client : %s", sentinel.GetLocation(), err.Error())
 			continue
@@ -151,7 +152,7 @@ func updateState(event interface{}, m *SentinelManager) {
 
 			info := &SentinelInfo{SentinelLocation: uid,
 				LastUpdated:   time.Now().UTC(),
-				KnownClusters: []string{},
+				KnownClusters: []ClusterInfo{},
 				State:         SentinelMarkedUp}
 
 			topologyState.Sentinels[uid] = info
@@ -184,7 +185,7 @@ func updateState(event interface{}, m *SentinelManager) {
 		if ok {
 			currentInfo.State = SentinelMarkedAlive
 			currentInfo.LastUpdated = time.Now().UTC()
-			currentInfo.KnownClusters = e.Clusters
+			// currentInfo.KnownClusters = e.Clusters
 		}
 
 	default:

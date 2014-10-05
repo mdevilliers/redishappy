@@ -10,14 +10,19 @@ type SentinelTopology struct {
 }
 
 type SentinelInfo struct {
-	SentinelLocation string    `json:"sentinelLocation"`
-	LastUpdated      time.Time `json:"lastUpdated"`
-	KnownClusters    []string  `json:"knownClusters"`
-	State            int       `json:"state"`
+	SentinelLocation string        `json:"sentinelLocation"`
+	LastUpdated      time.Time     `json:"lastUpdated"`
+	KnownClusters    []ClusterInfo `json:"clusters"`
+	State            int           `json:"state"`
 }
 
 type TopologyRequest struct {
 	ReplyChannel chan SentinelTopology
+}
+
+type ClusterInfo struct {
+	Name  string `json:"name"`
+	Flags string `json:"flags"`
 }
 
 type SentinelEvent interface {

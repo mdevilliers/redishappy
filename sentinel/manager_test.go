@@ -60,7 +60,7 @@ func TestAddingAndLoseingASentinel(t *testing.T) {
 	// fmt.Printf("%s\n",util.String(topologyState))
 }
 
-func TestAddingInfoToADiscoveredSentinel(t *testing.T) {
+func TestAddingSentinelMultipleTimes(t *testing.T) {
 	logger.InitLogging("../log")
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
 	manager := NewManager(switchmasterchannel, &configuration.Configuration{})
@@ -70,8 +70,8 @@ func TestAddingInfoToADiscoveredSentinel(t *testing.T) {
 
 	manager.Notify(&SentinelAdded{Sentinel: sentinel})
 
-	ping := &SentinelPing{Sentinel: sentinel, Clusters: []string{"one", "two", "three"}}
-	ping2 := &SentinelPing{Sentinel: sentinel, Clusters: []string{"four", "five"}}
+	ping := &SentinelPing{Sentinel: sentinel}
+	ping2 := &SentinelPing{Sentinel: sentinel}
 	manager.Notify(ping)
 	manager.Notify(ping2)
 
@@ -80,13 +80,9 @@ func TestAddingInfoToADiscoveredSentinel(t *testing.T) {
 	manager.GetState(TopologyRequest{ReplyChannel: responseChannel})
 	topologyState := <-responseChannel
 
-	info, ok := topologyState.FindSentinelInfo(sentinel)
+	_, ok := topologyState.FindSentinelInfo(sentinel)
 
-	if ok {
-		if len(info.KnownClusters) != 2 {
-			t.Error("There should only be 2 known clusters")
-		}
-	} else {
+	if !ok {
 		t.Error("Added sentinel not found")
 	}
 
