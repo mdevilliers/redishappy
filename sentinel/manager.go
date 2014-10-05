@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	SentinelMarkedUp    = iota
-	SentinelMarkedDown  = iota
-	SentinelMarkedAlive = iota
+	SentinelMarkedUp    = 1
+	SentinelMarkedDown  = 2
+	SentinelMarkedAlive = 3
 )
 
 type Manager interface {
@@ -31,14 +31,22 @@ type SentinelManager struct {
 var topologyState = SentinelTopology{Sentinels: map[string]*SentinelInfo{}}
 var statelock = &sync.Mutex{}
 
-func NewManager(switchmasterchannel chan types.MasterSwitchedEvent) *SentinelManager {
+func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, configuration *configuration.Configuration) *SentinelManager {
+
 	events := make(chan SentinelEvent)
 	requests := make(chan TopologyRequest)
+
 	manager := &SentinelManager{eventsChannel: events,
 		topologyRequestChannel: requests,
 		switchmasterchannel:    switchmasterchannel,
 		redisConnection:        redis.RadixRedisConnection{}}
+
 	go loopEvents(events, requests, manager)
+
+	for _, sentinel := range configuration.Sentinels {
+		manager.Notify(&SentinelAdded{Sentinel: sentinel})
+	}
+
 	return manager
 }
 
@@ -56,20 +64,18 @@ func (m *SentinelManager) ClearState() {
 	topologyState = SentinelTopology{Sentinels: map[string]*SentinelInfo{}}
 }
 
-func (m *SentinelManager) Start(stateChannel chan types.MasterDetailsCollection, configuration *configuration.Configuration) {
+func (m *SentinelManager) GetTopology(stateChannel chan types.MasterDetailsCollection, configuration *configuration.Configuration) {
 
-	detailcollection := types.NewMasterDetailsCollection()
+	topology := types.NewMasterDetailsCollection()
 
-	for _, configuredSentinel := range configuration.Sentinels {
+	for _, sentinel := range configuration.Sentinels {
 
-		client, err := m.newSentinelClient(configuredSentinel)
+		client, err := NewSentinelClient(sentinel, m.redisConnection)
 
 		if err != nil {
-			logger.Info.Printf("Error starting sentinel (%s) client : %s", configuredSentinel.GetLocation(), err.Error())
+			logger.Info.Printf("Error starting sentinel (%s) client : %s", sentinel.GetLocation(), err.Error())
 			continue
 		}
-
-		go m.newMonitor(configuredSentinel)
 
 		for _, clusterDetails := range configuration.Clusters {
 
@@ -78,38 +84,38 @@ func (m *SentinelManager) Start(stateChannel chan types.MasterDetailsCollection,
 			if err != nil {
 				continue
 			}
+
 			details.ExternalPort = clusterDetails.MasterPort
 			// TODO : last one wins?
-			detailcollection.AddOrReplace(details)
+			topology.AddOrReplace(details)
 
-			// explore the cluster
-			client.FindConnectedSentinels(clusterDetails.Name)
-
+			m.exploreSentinelTopology(client, clusterDetails.Name)
 		}
 	}
-
-	stateChannel <- detailcollection
-
+	stateChannel <- topology
 }
 
-func (m *SentinelManager) newSentinelClient(sentinel types.Sentinel) (*SentinelClient, error) {
+func (m *SentinelManager) exploreSentinelTopology(client *SentinelClient, clustername string) {
 
-	m.Notify(&SentinelAdded{Sentinel: sentinel})
-	client, err := NewSentinelClient(sentinel, m, m.redisConnection)
-
-	if err != nil {
-		logger.Error.Printf("Error starting sentinel client (%s) : %s", sentinel.GetLocation(), err.Error())
-		return nil, err
+	sentinels := client.FindConnectedSentinels(clustername)
+	if len(sentinels) > 0 {
+		m.notifySentinelsAreConnected(sentinels)
 	}
-	return client, err
 }
 
-func (m *SentinelManager) newMonitor(sentinel types.Sentinel) (*Monitor, error) {
+func (m *SentinelManager) notifySentinelsAreConnected(sentinels []types.Sentinel) {
+	for _, sentinel := range sentinels {
+		m.Notify(&SentinelAdded{Sentinel: sentinel})
+	}
+}
+
+func (m *SentinelManager) startNewMonitor(sentinel types.Sentinel) (*Monitor, error) {
 
 	monitor, err := NewMonitor(sentinel, m, m.redisConnection)
 
 	if err != nil {
 		logger.Error.Printf("Error starting monitor %s : %s", sentinel.GetLocation(), err.Error())
+		m.Notify(&SentinelLost{Sentinel: sentinel})
 		return nil, err
 	}
 
@@ -141,7 +147,7 @@ func updateState(event interface{}, m *SentinelManager) {
 		uid := topologyState.createKey(sentinel)
 
 		//if we don't know about the sentinel start monitoring it
-		if _, ok := topologyState.Sentinels[uid]; !ok {
+		if _, exists := topologyState.Sentinels[uid]; !exists {
 
 			info := &SentinelInfo{SentinelLocation: uid,
 				LastUpdated:   time.Now().UTC(),
@@ -150,7 +156,7 @@ func updateState(event interface{}, m *SentinelManager) {
 
 			topologyState.Sentinels[uid] = info
 
-			go m.newMonitor(sentinel)
+			go m.startNewMonitor(sentinel)
 
 			logger.Trace.Printf("Sentinel added : %s", util.String(topologyState))
 		}
@@ -166,14 +172,8 @@ func updateState(event interface{}, m *SentinelManager) {
 			currentInfo.LastUpdated = time.Now().UTC()
 		}
 
-		util.Schedule(func() { 
-					_,err := m.newMonitor(sentinel) 
-					if err != nil {
-						m.Notify(&SentinelLost{Sentinel: sentinel})
-					}
+		util.Schedule(func() { m.startNewMonitor(sentinel) }, time.Second*5)
 
-				}, time.Second * 5)
-		
 		logger.Trace.Printf("Sentinel lost : %s (scheduling new client and monitor).", util.String(topologyState))
 
 	case *SentinelPing:

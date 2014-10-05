@@ -15,13 +15,31 @@ func NewRedisHappyEngine(flipper types.FlipperClient, configuration *configurati
 	logger.InitLogging(logPath)
 	logger.Info.Printf("Configuration : %s\n", util.String(configuration))
 
-	switchmasterchannel := make(chan types.MasterSwitchedEvent)
-	sentinelManager := sentinel.NewManager(switchmasterchannel)
+	masterEvents := make(chan types.MasterSwitchedEvent)
+	sentinelManager := sentinel.NewManager(masterEvents, configuration)
 
-	go loopSentinelEvents(flipper, switchmasterchannel)
-	go startMonitoring(flipper, sentinelManager, configuration)
+	go loopSentinelEvents(flipper, masterEvents)
+	go intiliseTopology(flipper, sentinelManager, configuration)
 
 	initApiServer(sentinelManager)
+}
+
+func loopSentinelEvents(flipper types.FlipperClient, masterEvents chan types.MasterSwitchedEvent) {
+
+	for event := range masterEvents {
+		flipper.Orchestrate(event)
+	}
+}
+
+func intiliseTopology(flipper types.FlipperClient, sentinelManager *sentinel.SentinelManager, configuration *configuration.Configuration) {
+
+	stateChannel := make(chan types.MasterDetailsCollection)
+
+	go sentinelManager.GetTopology(stateChannel, configuration)
+
+	topology := <-stateChannel
+
+	flipper.InitialiseRunningState(&topology)
 }
 
 func initApiServer(manager *sentinel.SentinelManager) {
@@ -34,22 +52,4 @@ func initApiServer(manager *sentinel.SentinelManager) {
 	goji.Get("/api/ping", pongApi.Get)
 	goji.Get("/api/sentinel", sentinelApi.Get)
 	goji.Serve()
-}
-
-func startMonitoring(flipper types.FlipperClient, sentinelManager *sentinel.SentinelManager, configuration *configuration.Configuration) {
-
-	detailsCollectionChannel := make(chan types.MasterDetailsCollection, 1)
-
-	go sentinelManager.Start(detailsCollectionChannel, configuration)
-
-	detailcollection := <-detailsCollectionChannel
-
-	flipper.InitialiseRunningState(&detailcollection)
-}
-
-func loopSentinelEvents(flipper types.FlipperClient, switchmasterchannel chan types.MasterSwitchedEvent) {
-
-	for switchEvent := range switchmasterchannel {
-		flipper.Orchestrate(switchEvent)
-	}
 }

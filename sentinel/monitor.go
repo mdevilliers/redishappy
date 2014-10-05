@@ -47,18 +47,19 @@ func (m *Monitor) StartMonitoringMasterEvents(switchmasterchannel chan types.Mas
 }
 
 func (m *Monitor) loop(switchmasterchannel chan types.MasterSwitchedEvent) {
-	L : for {
-			select {
-			case message := <-m.channel:
-				shutdown := m.dealWithSentinelMessage(message, switchmasterchannel)
-				if shutdown {
-					logger.Info.Print("SHUTDOWN")
-					break L
-				}
-
-			case <-time.After(time.Duration(1) * time.Second):
-				m.manager.Notify(&SentinelPing{Sentinel: m.sentinel})
+L:
+	for {
+		select {
+		case message := <-m.channel:
+			shutdown := m.dealWithSentinelMessage(message, switchmasterchannel)
+			if shutdown {
+				logger.Info.Printf("Shutting down monitor %s", m.sentinel)
+				break L
 			}
+
+		case <-time.After(time.Duration(1) * time.Second):
+			m.manager.Notify(&SentinelPing{Sentinel: m.sentinel})
+		}
 	}
 }
 

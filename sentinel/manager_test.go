@@ -1,6 +1,7 @@
 package sentinel
 
 import (
+	"github.com/mdevilliers/redishappy/configuration"
 	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/types"
 	"testing"
@@ -9,7 +10,7 @@ import (
 func TestBasicEventChannel(t *testing.T) {
 	logger.InitLogging("../log")
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
-	manager := NewManager(switchmasterchannel)
+	manager := NewManager(switchmasterchannel, &configuration.Configuration{})
 	defer manager.ClearState()
 	manager.Notify(&SentinelAdded{Sentinel: types.Sentinel{Host: "10.1.1.1", Port: 12345}})
 
@@ -22,7 +23,7 @@ func TestBasicEventChannel(t *testing.T) {
 		t.Error("Topology count should be 1")
 	}
 
-	manager2 := NewManager(switchmasterchannel)
+	manager2 := NewManager(switchmasterchannel, &configuration.Configuration{})
 	manager2.Notify(&SentinelAdded{Sentinel: types.Sentinel{Host: "10.1.1.2", Port: 12345}})
 
 	manager2.GetState(TopologyRequest{ReplyChannel: responseChannel})
@@ -39,7 +40,7 @@ func TestBasicEventChannel(t *testing.T) {
 func TestAddingAndLoseingASentinel(t *testing.T) {
 	logger.InitLogging("../log")
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
-	manager := NewManager(switchmasterchannel)
+	manager := NewManager(switchmasterchannel, &configuration.Configuration{})
 	defer manager.ClearState()
 
 	sentinel := types.Sentinel{Host: "10.1.1.5", Port: 12345}
@@ -62,7 +63,7 @@ func TestAddingAndLoseingASentinel(t *testing.T) {
 func TestAddingInfoToADiscoveredSentinel(t *testing.T) {
 	logger.InitLogging("../log")
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
-	manager := NewManager(switchmasterchannel)
+	manager := NewManager(switchmasterchannel, &configuration.Configuration{})
 	defer manager.ClearState()
 
 	sentinel := types.Sentinel{Host: "10.1.1.6", Port: 12345}
