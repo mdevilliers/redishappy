@@ -71,12 +71,12 @@ func (m *SentinelManager) GetTopology(stateChannel chan types.MasterDetailsColle
 	for _, sentinel := range configuration.Sentinels {
 
 		client, err := NewSentinelClient(sentinel, m.redisConnection)
-		defer client.Close()
-		
+
 		if err != nil {
 			logger.Info.Printf("Error starting sentinel (%s) client : %s", sentinel.GetLocation(), err.Error())
 			continue
 		}
+		defer client.Close()
 
 		for _, clusterDetails := range configuration.Clusters {
 
