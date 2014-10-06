@@ -11,5 +11,5 @@ before_install:
   - go get github.com/mattn/goveralls
   - go get code.google.com/p/go.tools/cmd/cover
 script:
-	- go test -v ./...
-    - $HOME/gopath/bin/goveralls -repotoken GFAKouaGRD1lIQiGKd8NXg88L6ElPHKm4 
+  - go test -v -v -covermode=count -coverprofile=coverage.out ./...
+  - $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken GFAKouaGRD1lIQiGKd8NXg88L6ElPHKm4 
