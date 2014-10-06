@@ -6,3 +6,9 @@ go:
   - 1.3.2
   - 1.3.3
   - tip
+before_install:
+  - go get github.com/axw/gocov/gocov
+  - go get github.com/mattn/goveralls
+  - go get code.google.com/p/go.tools/cmd/cover
+script:
+    - $HOME/gopath/bin/goveralls -repotoken GFAKouaGRD1lIQiGKd8NXg88L6ElPHKm4 
