@@ -1,15 +1,18 @@
 language: go
-go:
-  - 1.2
-  - 1.3
-  - 1.3.1
-  - 1.3.2
-  - 1.3.3
-  - tip
-before_install:
-  - go get github.com/axw/gocov/gocov
-  - go get github.com/mattn/goveralls
-  - go get code.google.com/p/go.tools/cmd/cover
-script:
-  - go test -v -covermode=count -coverprofile=coverage.out ./...
-  - $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken GFAKouaGRD1lIQiGKd8NXg88L6ElPHKm4 
+go: 
+- 1.2
+- 1.3
+- 1.3.1
+- 1.3.2
+- 1.3.3
+- tip
+before_install: 
+- go get github.com/axw/gocov/gocov
+- go get github.com/mattn/goveralls
+- go get code.google.com/p/go.tools/cmd/cover
+script: 
+- go test ./...
+- $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $GOVERALLS_TOKEN
+env: 
+  matrix: 
+    secure: K6NrIoCvu0WDkZb28QXMLrUseN+eNBlwhU4tAzTXIOYVPMFRTE/6sC8QygsZZisDWqOZKqkOJoZMmS6znUe2NFNIiXX4eztwvwx0HcRezJmcXHWuyi68auYSNNFFgTqyKRAoU9n06pxM9kD9C6G6+T5ssvMor2GOo7g0qYpkirI=
