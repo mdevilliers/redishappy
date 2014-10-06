@@ -53,7 +53,7 @@ L:
 		case message := <-m.channel:
 			shutdown := m.dealWithSentinelMessage(message, switchmasterchannel)
 			if shutdown {
-				logger.Info.Printf("Shutting down monitor %s", m.sentinel)
+				logger.Info.Printf("Shutting down monitor %s", m.sentinel.GetLocation())
 				break L
 			}
 

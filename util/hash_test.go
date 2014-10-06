@@ -22,3 +22,12 @@ func TestHashFile(t *testing.T) {
 
 	fmt.Printf("%s", result)
 }
+
+func TestHashFileWhenFileDoesNotExist(t *testing.T) {
+
+	_, err := HashFile("DOESNOTEXIST")
+
+	if err == nil {
+		t.Error("Hash should error when file doesnot exist.")
+	}
+}
