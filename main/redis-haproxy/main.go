@@ -19,12 +19,23 @@ func main() {
 
 	flag.Parse()
 
-	configuration, err := configuration.LoadFromFile(configFile)
+	config, err := configuration.LoadFromFile(configFile)
 
 	if err != nil {
 		log.Panicf("Error opening config file : %s", err.Error())
 	}
 
-	flipper := NewHAProxyFlipper(configuration)
-	redishappy.NewRedisHappyEngine(flipper, configuration, logPath)
+	ok, errors := config.SanityCheckConfiguration(&configuration.ConfigContainsRequiredSections{}, &configuration.HAProxyConfigContainsRequiredSections{}, &configuration.CheckPermissionToWriteToHAProxyConfigFile{})
+
+	if !ok {
+
+		for _, errorAsStr := range errors {
+			log.Print(errorAsStr)
+		}
+
+		log.Panic("Configuration fails checks")
+	}
+
+	flipper := NewHAProxyFlipper(config)
+	redishappy.NewRedisHappyEngine(flipper, config, logPath)
 }

@@ -32,17 +32,14 @@ func ParseConfiguration(configurationAsJson []byte) (*Configuration, error) {
 	return configuration, nil
 }
 
-func SenseCheckConfiguration(config *Configuration) (bool, []string) {
+func (c *Configuration) SanityCheckConfiguration(tests ...SanityCheck) (bool, []string) {
 
 	errorlist := []string{}
 	hasError := false
 
-	tests := []SanityCheck{&ConfigContainsRequiredSections{},
-		&CheckPermissionToWriteToHAProxyConfigFile{}}
-
 	for _, test := range tests {
 
-		ok, err := test.Check(config)
+		ok, err := test.Check(c)
 		if !ok {
 			errorlist = append(errorlist, err.Error())
 			hasError = true

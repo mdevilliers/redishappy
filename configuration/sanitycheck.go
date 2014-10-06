@@ -23,9 +23,17 @@ func (c *ConfigContainsRequiredSections) Check(config *Configuration) (bool, err
 	if config.Sentinels == nil {
 		return false, errors.New("Configuration doesn't contain a 'Sentinels' configuration.")
 	}
-	if len(config.Sentinels) >= 1 {
+	if len(config.Sentinels) == 0 {
 		return false, errors.New("Configuration needs to contain at least one Sentinel.")
 	}
+
+	return true, nil
+}
+
+type HAProxyConfigContainsRequiredSections struct{}
+
+func (c *HAProxyConfigContainsRequiredSections) Check(config *Configuration) (bool, error) {
+
 	if config.HAProxy.TemplatePath == "" {
 		return false, errors.New("Configuration doesn't contain a 'HAProxy.TemplatePath' configuration.")
 	}

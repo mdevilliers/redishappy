@@ -2,6 +2,7 @@ package configuration
 
 import (
 	"github.com/mdevilliers/redishappy/services/logger"
+	"github.com/mdevilliers/redishappy/types"
 	"testing"
 )
 
@@ -71,5 +72,40 @@ func TestNonExistentFile(t *testing.T) {
 
 	if err == nil {
 		t.Error("File doesn't exist and no error thrown")
+	}
+}
+
+func TestSanityCheckBasicUsage(t *testing.T) {
+
+	logger.InitLogging("../log")
+	config := `{
+				  "Clusters" :[
+				  {
+				    "Name" : "cluster one",
+				    "MasterPort" : 6379
+				  },
+				  {
+				    "Name" : "cluster two",
+				    "MasterPort" : 6380
+				  }],
+				  "Sentinels" : [ 
+				      {"Host" : "192.168.0.20", "Port" : 26379},
+				      {"Host" : "192.168.0.21", "Port" : 26379}
+				  ]
+			}`
+
+	parsedconfig, _ := ParseConfiguration([]byte(config))
+	hasError, errors := parsedconfig.SanityCheckConfiguration(&ConfigContainsRequiredSections{})
+
+	if hasError {
+		t.Errorf("This is a valid sanity checked configuration : %t, %d", hasError, len(errors))
+	}
+
+	parsedconfig.Sentinels = []types.Sentinel{}
+
+	hasError, errors = parsedconfig.SanityCheckConfiguration(&ConfigContainsRequiredSections{})
+
+	if !hasError {
+		t.Errorf("Configuration has no sentinels configured : %t, %d", hasError, len(errors))
 	}
 }
