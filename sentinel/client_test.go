@@ -2,11 +2,11 @@ package sentinel
 
 import (
 	"errors"
-	// "github.com/mdevilliers/redishappy/services/logger"
+	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/services/redis"
-	// "github.com/mdevilliers/redishappy/types"
+	"github.com/mdevilliers/redishappy/types"
 	"reflect"
-	// "testing"
+	"testing"
 	// "time"
 )
 
@@ -16,8 +16,9 @@ type TestRedisConnection struct {
 }
 
 type TestRedisClient struct {
-	RedisReply   *TestRedisReply
-	PubSubClient *TestPubSubClient
+	RedisReply       *TestRedisReply
+	PubSubClient     *TestPubSubClient
+	isConnectionOpen bool
 }
 
 type TestRedisReply struct {
@@ -51,7 +52,7 @@ func (c *TestRedisClient) Cmd(cmd string, args ...interface{}) redis.RedisReply 
 }
 
 func (c *TestRedisClient) Close() {
-	// do nothing
+	c.isConnectionOpen = false
 }
 
 func (c *TestRedisClient) NewPubSubClient() redis.RedisPubSubClient {
@@ -124,67 +125,30 @@ func (tm *TestManager) GetState(request TopologyRequest) {
 
 }
 
-// func TestNewSentinelClientClientWillGetASuccessfulPing(t *testing.T) {
-// 	logger.InitLogging("../log")
+func TestNewSentinelClientWillWillSignalSentinelLostIfCanNotConnect(t *testing.T) {
+	logger.InitLogging("../log")
 
-// 	sentinel := types.Sentinel{}
-// 	sentinelManager := &TestManager{}
-// 	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{RedisReply: &TestRedisReply{Reply: "PONG"}}}
+	sentinel := types.Sentinel{Host: "DOESNOTEXIST", Port: 1234} // mock coded to not connect
+	redisConnection := &TestRedisConnection{}
 
-// 	client, _ := NewSentinelClient(sentinel, sentinelManager, redisConnection)
-// 	client.Start()
+	_, err := NewSentinelClient(sentinel, redisConnection)
 
-// 	time.Sleep(time.Second)
+	if err == nil {
+		t.Error("Client should signal error if unable to connect!")
+	}
+}
 
-// 	if sentinelManager.NotifyCalledWithSentinelPing != 1 {
-// 		t.Error("Notify should have been called with a SentinelPing event!")
-// 	}
-// }
+func TestClosingSentinelClientWillCloseUnderlyingConnection(t *testing.T) {
+	logger.InitLogging("../log")
 
-// func TestNewSentinelClientWillFailWhenPingUnsucessful(t *testing.T) {
-// 	logger.InitLogging("../log")
+	sentinel := types.Sentinel{Host: "1.2.3.4", Port: 1234}
+	mockClient := &TestRedisClient{isConnectionOpen: true}
+	redisConnection := &TestRedisConnection{RedisClient: mockClient}
 
-// 	sentinel := types.Sentinel{}
-// 	sentinelManager := &TestManager{}
-// 	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{RedisReply: &TestRedisReply{Reply: "ERROR"}}}
+	client, _ := NewSentinelClient(sentinel, redisConnection)
+	client.Close()
 
-// 	client, _ := NewSentinelClient(sentinel, sentinelManager, redisConnection)
-// 	client.Start()
-
-// 	time.Sleep(time.Second)
-
-// 	if sentinelManager.NotifyCalledWithSentinelLost != 1 {
-// 		t.Error("Notify should have been called with a SentinelPing event!")
-// 	}
-// }
-
-// func TestNewSentinelClientWillFailWhenErrorOnPing(t *testing.T) {
-// 	logger.InitLogging("../log")
-
-// 	sentinel := types.Sentinel{}
-// 	sentinelManager := &TestManager{}
-// 	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{RedisReply: &TestRedisReply{Error: errors.New("BOOYAH!")}}}
-
-// 	client, _ := NewSentinelClient(sentinel, sentinelManager, redisConnection)
-// 	client.Start()
-
-// 	time.Sleep(time.Second)
-
-// 	if sentinelManager.NotifyCalledWithSentinelLost != 1 {
-// 		t.Error("Notify should have been called with a SentinelPing event!")
-// 	}
-// }
-
-// func TestNewSentinelClientWillWillSignalSentinelLostIfCanNotConnect(t *testing.T) {
-// 	logger.InitLogging("../log")
-
-// 	sentinel := types.Sentinel{Host: "DOESNOTEXIST", Port: 1234} // mock coded to not connect
-
-// 	redisConnection := &TestRedisConnection{}
-
-// 	_, _ = NewSentinelClient(sentinel, redisConnection)
-
-// 	if sentinelManager.NotifyCalledWithSentinelLost != 1 {
-// 		t.Error("Notify should have been called!")
-// 	}
-// }
+	if mockClient.isConnectionOpen != false {
+		t.Error("Sentinel client should have closed underlying connection.")
+	}
+}
