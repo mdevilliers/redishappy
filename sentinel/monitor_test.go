@@ -104,3 +104,16 @@ func TestParseMasterMessage(t *testing.T) {
 		t.Error("Error parsing new master port")
 	}
 }
+
+func TestParseInstanceDetailsForIpAndPortMessage(t *testing.T) {
+
+	input := "type name 1.1.1.1 1234 @ mastername 2.2.2.2 5678"
+	host, port := parseInstanceDetailsForIpAndPortMessage(input)
+
+	if host != "1.1.1.1" {
+		t.Error("Error parsing ip")
+	}
+	if port != 1234 {
+		t.Error("Error parsing port")
+	}
+}

@@ -10,6 +10,7 @@ before_install:
 - go get github.com/axw/gocov/gocov
 - go get github.com/mattn/goveralls
 - go get code.google.com/p/go.tools/cmd/cover
+- go get code.google.com/p/go.tools/cmd/vet
 script: 
 - build/ci_script.sh
 - $HOME/gopath/bin/goveralls -coverprofile=profile.cov -service=travis-ci -repotoken $GOVERALLS_TOKEN
