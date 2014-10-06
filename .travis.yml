@@ -12,7 +12,8 @@ before_install:
 - go get code.google.com/p/go.tools/cmd/cover
 script: 
 - go test ./...
-- $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $GOVERALLS_TOKEN
+- build/go_test_recursive.sh
+- $HOME/gopath/bin/goveralls -coverprofile=profile.cov -service=travis-ci -repotoken $GOVERALLS_TOKEN
 env: 
   matrix: 
     secure: K6NrIoCvu0WDkZb28QXMLrUseN+eNBlwhU4tAzTXIOYVPMFRTE/6sC8QygsZZisDWqOZKqkOJoZMmS6znUe2NFNIiXX4eztwvwx0HcRezJmcXHWuyi68auYSNNFFgTqyKRAoU9n06pxM9kD9C6G6+T5ssvMor2GOo7g0qYpkirI=
