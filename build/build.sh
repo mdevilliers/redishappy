@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 set -u
-name=redishappy
+name=redis-haproxy
 version=${_REDISHAPPY_VERSION:-"1.0.0"}
 description="RedisHappy is an automated Redis failover daemon using HaProxy and Sentinel"
 url="https://github.com/mdevilliers/redishappy"
@@ -33,13 +33,11 @@ function bootstrap() {
 
 function build() {
 
-    # Prepare binary at /opt/redishappy/redishappy
-    cp ${origdir}/redishappy ${name}/${installdir}/redishappy/redishappy
-    chmod 755 ${name}/${installdir}/redishappy/redishappy
+    cp ${origdir}/main/redis-haproxy/redis-haproxy ${name}/${installdir}/redishappy/redis-haproxy
+    chmod 755 ${name}/${installdir}/redishappy/redis-haproxy
 
-    # Link default configuration file
-    cp ${origdir}/config.json ${name}/${installdir}/redishappy/config/config.json
-    cp ${origdir}/example_haproxy_template.cfg ${name}/${installdir}/redishappy/config/example_haproxy_template.cfg
+    cp ${origdir}/main/redis-haproxy/config.json ${name}/${installdir}/redishappy/config/config.json
+    cp ${origdir}/main/redis-haproxy/example_haproxy_template.cfg ${name}/${installdir}/redishappy/config/example_haproxy_template.cfg
 
     # Versioning
     echo ${version} > ${name}/${installdir}/redishappy/VERSION
@@ -48,6 +46,7 @@ function build() {
 
 function mkdeb() {
   # rubygem: fpm
+  #  --deb-upstart ../../redishappy-server \
   fpm -t ${pkgtype} \
     -n ${name} \
     -v ${version}${package_version} \
@@ -57,7 +56,6 @@ function mkdeb() {
     --category ${section} \
     --vendor ${vendor} \
     -m "${USER}@${HOSTNAME}" \
-    --deb-upstart ../../redishappy-server \
     --license "${license}" \
     --prefix=/ \
     -s dir \
@@ -65,6 +63,7 @@ function mkdeb() {
   mv ${name}*.${pkgtype} ${origdir}/${workspace}/
   popd
 }
+
 
 function main() {
     cleanup
