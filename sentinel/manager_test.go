@@ -88,3 +88,23 @@ func TestAddingSentinelMultipleTimes(t *testing.T) {
 
 	// fmt.Printf("%s\n",util.String(topologyState))
 }
+
+func TestAllSentinelsFromTheConfigurationAreAddedToTheTopology(t *testing.T) {
+	logger.InitLogging("../log")
+
+	sentinels := []types.Sentinel{types.Sentinel{Host: "1.2.3.4"}, types.Sentinel{Host: "2.3.4.5"}}
+	config := &configuration.Configuration{Sentinels: sentinels}
+
+	switchmasterchannel := make(chan types.MasterSwitchedEvent)
+	manager := NewManager(switchmasterchannel, config)
+	defer manager.ClearState()
+
+	responseChannel := make(chan SentinelTopology)
+	manager.GetState(TopologyRequest{ReplyChannel: responseChannel})
+	topologyState := <-responseChannel
+
+	if len(topologyState.Sentinels) != 2 {
+		t.Errorf("Two sentinels should have been added %d", len(topologyState.Sentinels))
+	}
+
+}
