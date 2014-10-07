@@ -95,17 +95,17 @@ func TestSanityCheckBasicUsage(t *testing.T) {
 			}`
 
 	parsedconfig, _ := ParseConfiguration([]byte(config))
-	hasError, errors := parsedconfig.SanityCheckConfiguration(&ConfigContainsRequiredSections{})
+	sane, errors := parsedconfig.SanityCheckConfiguration(&ConfigContainsRequiredSections{})
 
-	if hasError {
-		t.Errorf("This is a valid sanity checked configuration : %t, %d", hasError, len(errors))
+	if !sane {
+		t.Errorf("This is a valid sanity checked configuration : %t, %d", sane, len(errors))
 	}
 
 	parsedconfig.Sentinels = []types.Sentinel{}
 
-	hasError, errors = parsedconfig.SanityCheckConfiguration(&ConfigContainsRequiredSections{})
+	sane, errors = parsedconfig.SanityCheckConfiguration(&ConfigContainsRequiredSections{})
 
-	if !hasError {
-		t.Errorf("Configuration has no sentinels configured : %t, %d", hasError, len(errors))
+	if sane {
+		t.Errorf("Configuration has no sentinels configured : %t, %d", sane, len(errors))
 	}
 }

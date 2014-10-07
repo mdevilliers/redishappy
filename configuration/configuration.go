@@ -35,18 +35,18 @@ func ParseConfiguration(configurationAsJson []byte) (*Configuration, error) {
 func (c *Configuration) SanityCheckConfiguration(tests ...SanityCheck) (bool, []string) {
 
 	errorlist := []string{}
-	hasError := false
+	isSane := true
 
 	for _, test := range tests {
 
 		ok, err := test.Check(c)
 		if !ok {
 			errorlist = append(errorlist, err.Error())
-			hasError = true
+			isSane = false
 		}
 	}
 
-	return hasError, errorlist
+	return isSane, errorlist
 }
 
 func (config *Configuration) FindClusterByName(name string) (*types.Cluster, error) {

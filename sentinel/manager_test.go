@@ -92,7 +92,7 @@ func TestAddingSentinelMultipleTimes(t *testing.T) {
 func TestAllSentinelsFromTheConfigurationAreAddedToTheTopology(t *testing.T) {
 	logger.InitLogging("../log")
 
-	sentinels := []types.Sentinel{types.Sentinel{Host: "1.2.3.4"}, types.Sentinel{Host: "2.3.4.5"}}
+	sentinels := []types.Sentinel{{Host: "1.2.3.4"}, {Host: "2.3.4.5"}}
 	config := &configuration.Configuration{Sentinels: sentinels}
 
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
