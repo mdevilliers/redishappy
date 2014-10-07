@@ -30,3 +30,7 @@ fi
 done
  
 go tool cover -func profile.cov
+
+go build github.com/mdevilliers/redishappy/main/noop
+go build github.com/mdevilliers/redishappy/main/redis-haproxy
+
