@@ -6,7 +6,6 @@ import (
 	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
 	"github.com/mdevilliers/redishappy/util"
-	"sync"
 	"time"
 )
 
@@ -29,7 +28,6 @@ type SentinelManager struct {
 }
 
 var topologyState = SentinelTopology{Sentinels: map[string]*SentinelInfo{}}
-var statelock = &sync.Mutex{}
 
 func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, configuration *configuration.Configuration) *SentinelManager {
 
@@ -59,8 +57,6 @@ func (m *SentinelManager) GetState(request TopologyRequest) {
 }
 
 func (m *SentinelManager) ClearState() {
-	statelock.Lock()
-	defer statelock.Unlock()
 	topologyState = SentinelTopology{Sentinels: map[string]*SentinelInfo{}}
 }
 
@@ -100,13 +96,14 @@ func (m *SentinelManager) exploreSentinelTopology(client *SentinelClient, cluste
 
 	sentinels := client.FindConnectedSentinels(clustername)
 	if len(sentinels) > 0 {
-		m.notifySentinelsAreConnected(sentinels)
+		m.notifySentinelsAreConnected(client, sentinels)
 	}
 }
 
-func (m *SentinelManager) notifySentinelsAreConnected(sentinels []types.Sentinel) {
+func (m *SentinelManager) notifySentinelsAreConnected(client *SentinelClient, sentinels []types.Sentinel) {
 	for _, sentinel := range sentinels {
-		m.Notify(&SentinelAdded{Sentinel: sentinel})
+		knownClusters := client.FindKnownClusters()
+		m.Notify(&SentinelAdded{Sentinel: sentinel, Clusters: knownClusters})
 	}
 }
 
@@ -138,9 +135,6 @@ func loopEvents(events chan SentinelEvent, topology chan TopologyRequest, m *Sen
 
 func updateState(event interface{}, m *SentinelManager) {
 
-	statelock.Lock()
-	defer statelock.Unlock()
-
 	switch e := event.(type) {
 	case *SentinelAdded:
 
@@ -152,7 +146,7 @@ func updateState(event interface{}, m *SentinelManager) {
 
 			info := &SentinelInfo{SentinelLocation: uid,
 				LastUpdated:   time.Now().UTC(),
-				KnownClusters: []ClusterInfo{},
+				KnownClusters: e.Clusters,
 				State:         SentinelMarkedUp}
 
 			topologyState.Sentinels[uid] = info
