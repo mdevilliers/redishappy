@@ -2,12 +2,10 @@ package sentinel
 
 import (
 	"errors"
-	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
 	"reflect"
 	"testing"
-	// "time"
 )
 
 // MOCKS
@@ -126,7 +124,6 @@ func (tm *TestManager) GetState(request TopologyRequest) {
 }
 
 func TestNewSentinelClientWillWillSignalSentinelLostIfCanNotConnect(t *testing.T) {
-	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{Host: "DOESNOTEXIST", Port: 1234} // mock coded to not connect
 	redisConnection := &TestRedisConnection{}
@@ -139,7 +136,6 @@ func TestNewSentinelClientWillWillSignalSentinelLostIfCanNotConnect(t *testing.T
 }
 
 func TestClosingSentinelClientWillCloseUnderlyingConnection(t *testing.T) {
-	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{Host: "1.2.3.4", Port: 1234}
 	mockClient := &TestRedisClient{isConnectionOpen: true}

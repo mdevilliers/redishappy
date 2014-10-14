@@ -1,13 +1,11 @@
 package configuration
 
 import (
-	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/types"
 	"testing"
 )
 
 func TestParseValidConfiguration(t *testing.T) {
-	logger.InitLogging("../log")
 	config := `{
 				  "Clusters" :[
 				  {
@@ -76,8 +74,6 @@ func TestNonExistentFile(t *testing.T) {
 }
 
 func TestSanityCheckBasicUsage(t *testing.T) {
-
-	logger.InitLogging("../log")
 
 	clusters := []types.Cluster{types.Cluster{Name: "one", MasterPort: 1234}}
 	sentinels := []types.Sentinel{types.Sentinel{Host: "192.168.0.20", Port: 26379}}

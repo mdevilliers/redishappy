@@ -2,13 +2,12 @@ package sentinel
 
 import (
 	"github.com/mdevilliers/redishappy/configuration"
-	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/types"
 	"testing"
 )
 
 func TestBasicEventChannel(t *testing.T) {
-	logger.InitLogging("../log")
+
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
 	manager := NewManager(switchmasterchannel, &configuration.Configuration{})
 	defer manager.ClearState()
@@ -38,7 +37,7 @@ func TestBasicEventChannel(t *testing.T) {
 }
 
 func TestAddingAndLoseingASentinel(t *testing.T) {
-	logger.InitLogging("../log")
+
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
 	manager := NewManager(switchmasterchannel, &configuration.Configuration{})
 	defer manager.ClearState()
@@ -61,7 +60,7 @@ func TestAddingAndLoseingASentinel(t *testing.T) {
 }
 
 func TestAddingSentinelMultipleTimes(t *testing.T) {
-	logger.InitLogging("../log")
+
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
 	manager := NewManager(switchmasterchannel, &configuration.Configuration{})
 	defer manager.ClearState()
@@ -90,7 +89,6 @@ func TestAddingSentinelMultipleTimes(t *testing.T) {
 }
 
 func TestAllSentinelsFromTheConfigurationAreAddedToTheTopology(t *testing.T) {
-	logger.InitLogging("../log")
 
 	sentinels := []types.Sentinel{{Host: "1.2.3.4"}, {Host: "2.3.4.5"}}
 	config := &configuration.Configuration{Sentinels: sentinels}

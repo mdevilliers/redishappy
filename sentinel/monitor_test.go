@@ -2,14 +2,12 @@ package sentinel
 
 import (
 	"errors"
-	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/types"
 	"testing"
 )
 
 // see monitor for mocks used
 func TestMonitorWillErrorWhenCanConnect(t *testing.T) {
-	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{}
 	manager := &TestManager{}
@@ -23,7 +21,6 @@ func TestMonitorWillErrorWhenCanConnect(t *testing.T) {
 }
 
 func TestMonitorWillThrowErrorWhenCanNotConnect(t *testing.T) {
-	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{Host: "DOESNOTEXIST", Port: 1234} // mock coded to not connect
 	manager := &TestManager{}
@@ -37,7 +34,6 @@ func TestMonitorWillThrowErrorWhenCanNotConnect(t *testing.T) {
 }
 
 func TestMonitorReturnsMasterSwitchEventToTheCorrectChannel(t *testing.T) {
-	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{}
 	manager := &TestManager{}
@@ -62,7 +58,6 @@ func TestMonitorReturnsMasterSwitchEventToTheCorrectChannel(t *testing.T) {
 }
 
 func TestMonitorReturnsErrorWhenConnectionDisappears(t *testing.T) {
-	logger.InitLogging("../log")
 
 	sentinel := types.Sentinel{}
 	manager := &TestManager{}

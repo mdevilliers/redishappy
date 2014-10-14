@@ -16,19 +16,27 @@ var (
 )
 
 func InitLogging(logPath string) {
-	syslog.Openlog("redis-happy", syslog.LOG_PID, syslog.LOG_USER)
-	syslogWriter := &syslog.Writer{LogPriority: syslog.LOG_INFO}
 
-	alloutputs := io.MultiWriter(&lumberjack.Logger{
+	syslog.Openlog("redis-happy", syslog.LOG_PID, syslog.LOG_USER)
+	syslogWriter := &syslog.Writer{LogPriority: syslog.LOG_ERR}
+
+	logFileWriter := &lumberjack.Logger{
 		Dir:        logPath,
 		NameFormat: "redis-happy.log",
-		MaxSize:    lumberjack.Gigabyte,
+		MaxSize:    lumberjack.Megabyte,
 		MaxBackups: 3,
 		MaxAge:     28,
-	}, os.Stdout, syslogWriter)
+	}
 
-	Trace = log.New(alloutputs, "TRACE: ", log.Ldate|log.Ltime|log.Lshortfile)
-	Info = log.New(alloutputs, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	Warning = log.New(alloutputs, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
-	Error = log.New(alloutputs, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	allOutputs := io.MultiWriter(logFileWriter, os.Stdout, syslogWriter)
+
+	Warning = log.New(allOutputs, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
+	Error = log.New(allOutputs, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+}
+
+func init() {
+	Trace = log.New(os.Stdout, "TRACE: ", log.Ldate|log.Ltime|log.Lshortfile)
+	Info = log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	Warning = log.New(os.Stdout, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
+	Error = log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 }
