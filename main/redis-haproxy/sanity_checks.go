@@ -3,8 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/mdevilliers/redishappy/configuration"
 	"os"
+
+	"github.com/mdevilliers/redishappy/configuration"
 )
 
 type HAProxyConfigContainsRequiredSections struct{}

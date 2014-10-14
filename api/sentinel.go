@@ -2,8 +2,9 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/mdevilliers/redishappy/sentinel"
 	"net/http"
+
+	"github.com/mdevilliers/redishappy/sentinel"
 )
 
 type SentinelApi struct {
@@ -14,8 +15,8 @@ func (s *SentinelApi) Get(w http.ResponseWriter, r *http.Request) {
 
 	responseChannel := make(chan sentinel.SentinelTopology)
 	s.Manager.GetState(sentinel.TopologyRequest{ReplyChannel: responseChannel})
-	topologyState := <-responseChannel
-	responseJSON(w, topologyState)
+	sentinelState := <-responseChannel
+	responseJSON(w, sentinelState)
 }
 
 func responseJSON(w http.ResponseWriter, data interface{}) {

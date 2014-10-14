@@ -51,5 +51,6 @@ func initApiServer(manager *sentinel.SentinelManager) {
 
 	goji.Get("/api/ping", pongApi.Get)
 	goji.Get("/api/sentinel", sentinelApi.Get)
+
 	goji.Serve()
 }

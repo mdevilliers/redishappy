@@ -2,10 +2,11 @@ package sentinel
 
 import (
 	"errors"
-	"github.com/mdevilliers/redishappy/services/redis"
-	"github.com/mdevilliers/redishappy/types"
 	"reflect"
 	"testing"
+
+	"github.com/mdevilliers/redishappy/services/redis"
+	"github.com/mdevilliers/redishappy/types"
 )
 
 // MOCKS

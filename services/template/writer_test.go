@@ -2,8 +2,9 @@ package template
 
 import (
 	"fmt"
-	"github.com/mdevilliers/redishappy/types"
 	"testing"
+
+	"github.com/mdevilliers/redishappy/types"
 )
 
 func TestLoadTempate(t *testing.T) {

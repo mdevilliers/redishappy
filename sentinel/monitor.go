@@ -1,12 +1,13 @@
 package sentinel
 
 import (
-	"github.com/mdevilliers/redishappy/services/logger"
-	"github.com/mdevilliers/redishappy/services/redis"
-	"github.com/mdevilliers/redishappy/types"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/mdevilliers/redishappy/services/logger"
+	"github.com/mdevilliers/redishappy/services/redis"
+	"github.com/mdevilliers/redishappy/types"
 )
 
 type Monitor struct {
@@ -34,7 +35,7 @@ func NewMonitor(sentinel types.Sentinel, manager Manager, redisConnection redis.
 
 func (m *Monitor) StartMonitoringMasterEvents(switchmasterchannel chan types.MasterSwitchedEvent) error {
 
-	keys := []string{"+switch-master", "+sentinel"}
+	keys := []string{"+switch-master"}
 	err := m.client.Start(keys)
 
 	if err != nil {

@@ -1,11 +1,12 @@
 package logger
 
 import (
-	"github.com/blackjack/syslog"
-	"github.com/natefinch/lumberjack"
 	"io"
 	"log"
 	"os"
+
+	"github.com/blackjack/syslog"
+	"github.com/natefinch/lumberjack"
 )
 
 var (

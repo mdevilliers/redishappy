@@ -2,8 +2,9 @@ package sentinel
 
 import (
 	"errors"
-	"github.com/mdevilliers/redishappy/types"
 	"testing"
+
+	"github.com/mdevilliers/redishappy/types"
 )
 
 // see monitor for mocks used

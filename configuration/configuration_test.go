@@ -1,8 +1,9 @@
 package configuration
 
 import (
-	"github.com/mdevilliers/redishappy/types"
 	"testing"
+
+	"github.com/mdevilliers/redishappy/types"
 )
 
 func TestParseValidConfiguration(t *testing.T) {

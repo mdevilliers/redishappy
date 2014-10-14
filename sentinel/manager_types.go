@@ -1,8 +1,9 @@
 package sentinel
 
 import (
-	"github.com/mdevilliers/redishappy/types"
 	"time"
+
+	"github.com/mdevilliers/redishappy/types"
 )
 
 type SentinelTopology struct {
@@ -19,11 +20,6 @@ type SentinelInfo struct {
 type TopologyRequest struct {
 	ReplyChannel chan SentinelTopology
 }
-
-// type ClusterInfo struct {
-// 	Name  string `json:"name"`
-// 	Flags string `json:"flags"`
-// }
 
 type SentinelEvent interface {
 	GetSentinel() types.Sentinel

@@ -3,8 +3,9 @@ package configuration
 import (
 	"encoding/json"
 	"errors"
-	"github.com/mdevilliers/redishappy/types"
 	"io/ioutil"
+
+	"github.com/mdevilliers/redishappy/types"
 )
 
 type Configuration struct {
@@ -23,6 +24,7 @@ func LoadFromFile(filePath string) (*Configuration, error) {
 }
 
 func ParseConfiguration(configurationAsJson []byte) (*Configuration, error) {
+
 	configuration := new(Configuration)
 	err := json.Unmarshal(configurationAsJson, &configuration)
 	if err != nil {

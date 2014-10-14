@@ -1,14 +1,17 @@
 #!/bin/bash
 # The script does automatic checking on a Go package and its sub-packages, including:
 # 1. gofmt (http://golang.org/cmd/gofmt/)
-# 2. go vet (http://golang.org/cmd/vet)
-# 3. race detector (http://blog.golang.org/race-detector)
-# 4. test coverage (http://blog.golang.org/cover)
+# 2. goimports (http://golang.org/cmd/goimports/)
+# 3. go vet (http://golang.org/cmd/vet)
+# 4. race detector (http://blog.golang.org/race-detector)
+# 5. test coverage (http://blog.golang.org/cover)
+# 6. build the main entry points
 
 set -e
 
 # Automatic checks
 test -z "$(gofmt -l -w .     | tee /dev/stderr)"
+test -z "$(goimports -w .    | tee /dev/stderr)"
 go vet ./...
 go test -race ./...
 
@@ -31,6 +34,10 @@ done
  
 go tool cover -func profile.cov
 
+echo "building main applications"
+echo "building noop"
 go build github.com/mdevilliers/redishappy/main/noop
-go build github.com/mdevilliers/redishappy/main/redis-haproxy
 
+echo "building redis-haproxy"
+go build github.com/mdevilliers/redishappy/main/redis-haproxy
+echo "finished"

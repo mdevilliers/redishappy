@@ -2,10 +2,11 @@ package template
 
 import (
 	"bytes"
-	"github.com/mdevilliers/redishappy/types"
 	"io/ioutil"
 	"sort"
 	"text/template"
+
+	"github.com/mdevilliers/redishappy/types"
 )
 
 type TemplateData struct {

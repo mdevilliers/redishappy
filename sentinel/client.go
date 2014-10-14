@@ -1,10 +1,11 @@
 package sentinel
 
 import (
+	"strconv"
+
 	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
-	"strconv"
 )
 
 type SentinelClient struct {

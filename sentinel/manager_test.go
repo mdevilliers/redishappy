@@ -1,9 +1,10 @@
 package sentinel
 
 import (
+	"testing"
+
 	"github.com/mdevilliers/redishappy/configuration"
 	"github.com/mdevilliers/redishappy/types"
-	"testing"
 )
 
 func TestBasicEventChannel(t *testing.T) {

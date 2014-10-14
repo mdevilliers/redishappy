@@ -1,12 +1,13 @@
 package sentinel
 
 import (
+	"time"
+
 	"github.com/mdevilliers/redishappy/configuration"
 	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
 	"github.com/mdevilliers/redishappy/util"
-	"time"
 )
 
 const (

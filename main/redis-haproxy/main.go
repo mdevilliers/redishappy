@@ -2,9 +2,10 @@ package main
 
 import (
 	"flag"
+	"log"
+
 	"github.com/mdevilliers/redishappy"
 	"github.com/mdevilliers/redishappy/configuration"
-	"log"
 )
 
 var configFile string
