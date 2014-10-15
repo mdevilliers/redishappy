@@ -40,6 +40,15 @@ func NewConfigurationManager(config Configuration) *ConfigurationManager {
 	return cm
 }
 
+func (cm *ConfigurationManager) loop(get chan GetConfigCommand) {
+	for {
+		select {
+		case getMessage := <-get:
+			getMessage.returnChannel <- cm.config
+		}
+	}
+}
+
 func LoadFromFile(filePath string) (*ConfigurationManager, error) {
 
 	content, err := ioutil.ReadFile(filePath)
@@ -56,15 +65,6 @@ func LoadFromFile(filePath string) (*ConfigurationManager, error) {
 	cm.pathToOriginalFile = filePath
 
 	return cm, nil
-}
-
-func (cm *ConfigurationManager) loop(get chan GetConfigCommand) {
-	for {
-		select {
-		case getMessage := <-get:
-			getMessage.returnChannel <- cm.config
-		}
-	}
 }
 
 func parseConfiguration(configurationAsJson []byte) (Configuration, error) {
