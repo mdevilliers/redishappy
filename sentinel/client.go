@@ -9,9 +9,8 @@ import (
 )
 
 type SentinelClient struct {
-	sentinel       types.Sentinel
-	redisClient    redis.RedisClient
-	sleepInSeconds int
+	sentinel    types.Sentinel
+	redisClient redis.RedisClient
 }
 
 func NewSentinelClient(sentinel types.Sentinel, redisConnection redis.RedisConnection) (*SentinelClient, error) {
@@ -29,8 +28,7 @@ func NewSentinelClient(sentinel types.Sentinel, redisConnection redis.RedisConne
 	logger.Info.Printf("SentinelClient : connected to %s", uri)
 
 	client := &SentinelClient{redisClient: redisclient,
-		sentinel:       sentinel,
-		sleepInSeconds: 1}
+		sentinel: sentinel}
 	return client, nil
 }
 
