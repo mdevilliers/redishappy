@@ -5,12 +5,12 @@ import (
 )
 
 type SanityCheck interface {
-	Check(config *Configuration) (bool, error)
+	Check(config Configuration) (bool, error)
 }
 
 type ConfigContainsRequiredSections struct{}
 
-func (c *ConfigContainsRequiredSections) Check(config *Configuration) (bool, error) {
+func (c *ConfigContainsRequiredSections) Check(config Configuration) (bool, error) {
 
 	if config.Clusters == nil {
 		return false, errors.New("Configuration doesn't contain a 'Clusters' configuration.")

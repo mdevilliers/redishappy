@@ -30,7 +30,7 @@ type SentinelManager struct {
 
 var topologyState = SentinelTopology{Sentinels: map[string]*SentinelInfo{}}
 
-func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, configuration *configuration.Configuration) *SentinelManager {
+func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, configuration configuration.Configuration) *SentinelManager {
 
 	events := make(chan SentinelEvent)
 	requests := make(chan TopologyRequest)
@@ -61,7 +61,7 @@ func (m *SentinelManager) ClearState() {
 	topologyState = SentinelTopology{Sentinels: map[string]*SentinelInfo{}}
 }
 
-func (m *SentinelManager) GetTopology(stateChannel chan types.MasterDetailsCollection, configuration *configuration.Configuration) {
+func (m *SentinelManager) GetTopology(stateChannel chan types.MasterDetailsCollection, configuration configuration.Configuration) {
 
 	topology := types.NewMasterDetailsCollection()
 

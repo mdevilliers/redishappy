@@ -8,33 +8,77 @@ import (
 	"github.com/mdevilliers/redishappy/types"
 )
 
-type Configuration struct {
-	Clusters  []types.Cluster
-	HAProxy   types.HAProxy
-	Sentinels []types.Sentinel
+type ConfigurationManager struct {
+	config             Configuration
+	getChannel         chan GetConfigCommand
+	pathToOriginalFile string
 }
 
-func LoadFromFile(filePath string) (*Configuration, error) {
+type Configuration struct {
+	Clusters  []types.Cluster  `json:"clusters"`
+	HAProxy   types.HAProxy    `json:"haProxy"`
+	Sentinels []types.Sentinel `json:"sentinels"`
+}
+
+type GetConfigCommand struct {
+	returnChannel chan Configuration
+}
+
+func (c *ConfigurationManager) GetCurrentConfiguration() Configuration {
+
+	returnChannel := make(chan Configuration)
+	c.getChannel <- GetConfigCommand{returnChannel: returnChannel}
+
+	return <-returnChannel
+}
+
+func NewConfigurationManager(config Configuration) *ConfigurationManager {
+	get := make(chan GetConfigCommand)
+	cm := &ConfigurationManager{config: config, getChannel: get}
+
+	go cm.loop(get)
+	return cm
+}
+
+func LoadFromFile(filePath string) (*ConfigurationManager, error) {
 
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		return &Configuration{}, err
+		return nil, err
 	}
-	return ParseConfiguration(content)
-}
 
-func ParseConfiguration(configurationAsJson []byte) (*Configuration, error) {
-
-	configuration := new(Configuration)
-	err := json.Unmarshal(configurationAsJson, &configuration)
+	configuration, err := parseConfiguration(content)
 	if err != nil {
 		return nil, err
+	}
+
+	cm := NewConfigurationManager(configuration)
+	cm.pathToOriginalFile = filePath
+
+	return cm, nil
+}
+
+func (cm *ConfigurationManager) loop(get chan GetConfigCommand) {
+	for {
+		select {
+		case getMessage := <-get:
+			getMessage.returnChannel <- cm.config
+		}
+	}
+}
+
+func parseConfiguration(configurationAsJson []byte) (Configuration, error) {
+
+	configuration := Configuration{}
+	err := json.Unmarshal(configurationAsJson, &configuration)
+	if err != nil {
+		return configuration, err
 	}
 
 	return configuration, nil
 }
 
-func (c *Configuration) SanityCheckConfiguration(tests ...SanityCheck) (bool, []string) {
+func (c Configuration) SanityCheckConfiguration(tests ...SanityCheck) (bool, []string) {
 
 	errorlist := []string{}
 	isSane := true
@@ -51,7 +95,7 @@ func (c *Configuration) SanityCheckConfiguration(tests ...SanityCheck) (bool, []
 	return isSane, errorlist
 }
 
-func (config *Configuration) FindClusterByName(name string) (*types.Cluster, error) {
+func (config Configuration) FindClusterByName(name string) (*types.Cluster, error) {
 
 	for _, cluster := range config.Clusters {
 		if cluster.Name == name {

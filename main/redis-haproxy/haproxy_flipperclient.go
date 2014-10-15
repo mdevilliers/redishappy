@@ -11,19 +11,20 @@ import (
 )
 
 type HAProxyFlipperClient struct {
-	configuration *configuration.Configuration
-	lock          *sync.Mutex
-	state         *types.MasterDetailsCollection
+	configurationManager *configuration.ConfigurationManager
+	lock                 *sync.Mutex
+	state                *types.MasterDetailsCollection
 }
 
-func NewHAProxyFlipper(configuration *configuration.Configuration) *HAProxyFlipperClient {
-	return &HAProxyFlipperClient{configuration: configuration, lock: &sync.Mutex{}}
+func NewHAProxyFlipper(configuration *configuration.ConfigurationManager) *HAProxyFlipperClient {
+	return &HAProxyFlipperClient{configurationManager: configuration, lock: &sync.Mutex{}}
 }
 
 func (flipper *HAProxyFlipperClient) InitialiseRunningState(details *types.MasterDetailsCollection) {
 	flipper.lock.Lock()
 	defer flipper.lock.Unlock()
-	_, err := flipper.renderAndReload(details)
+	configuration := flipper.configurationManager.GetCurrentConfiguration()
+	_, err := flipper.renderAndReload(configuration, details)
 
 	if err != nil {
 		logger.Error.Panicf("Unable to initilise and write state : %s", err.Error())
@@ -38,9 +39,10 @@ func (flipper *HAProxyFlipperClient) Orchestrate(switchEvent types.MasterSwitche
 
 	logger.Info.Printf("Redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", switchEvent.Name, switchEvent.OldMasterIp, switchEvent.OldMasterPort, switchEvent.NewMasterIp, switchEvent.NewMasterPort)
 	logger.Info.Printf("Master Switched : %s", util.String(switchEvent))
-	logger.Info.Printf("Current Configuration : %s", util.String(flipper.configuration.Clusters))
 
-	configuration := flipper.configuration
+	configuration := flipper.configurationManager.GetCurrentConfiguration()
+	logger.Info.Printf("Current Configuration : %s", util.String(configuration.Clusters))
+
 	cluster, err := configuration.FindClusterByName(switchEvent.Name)
 
 	if err != nil {
@@ -58,15 +60,14 @@ func (flipper *HAProxyFlipperClient) Orchestrate(switchEvent types.MasterSwitche
 
 	flipper.state.AddOrReplace(detail)
 
-	flipper.renderAndReload(flipper.state)
+	flipper.renderAndReload(configuration, flipper.state)
 }
 
-func (flipper *HAProxyFlipperClient) renderAndReload(details *types.MasterDetailsCollection) (bool, error) {
+func (flipper *HAProxyFlipperClient) renderAndReload(config configuration.Configuration, details *types.MasterDetailsCollection) (bool, error) {
 
-	configuration := flipper.configuration
-	outputPath := configuration.HAProxy.OutputPath
-	templatepath := configuration.HAProxy.TemplatePath
-	reloadCommand := configuration.HAProxy.ReloadCommand
+	outputPath := config.HAProxy.OutputPath
+	templatepath := config.HAProxy.TemplatePath
+	reloadCommand := config.HAProxy.ReloadCommand
 
 	ok, err := renderTemplate(details, outputPath, templatepath)
 

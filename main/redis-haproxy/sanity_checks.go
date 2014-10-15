@@ -10,7 +10,7 @@ import (
 
 type HAProxyConfigContainsRequiredSections struct{}
 
-func (c *HAProxyConfigContainsRequiredSections) Check(config *configuration.Configuration) (bool, error) {
+func (c *HAProxyConfigContainsRequiredSections) Check(config configuration.Configuration) (bool, error) {
 
 	if config.HAProxy.TemplatePath == "" {
 		return false, errors.New("Configuration doesn't contain a 'HAProxy.TemplatePath' configuration.")
@@ -26,7 +26,7 @@ func (c *HAProxyConfigContainsRequiredSections) Check(config *configuration.Conf
 
 type CheckPermissionToWriteToHAProxyConfigFile struct{}
 
-func (c *CheckPermissionToWriteToHAProxyConfigFile) Check(config *configuration.Configuration) (bool, error) {
+func (c *CheckPermissionToWriteToHAProxyConfigFile) Check(config configuration.Configuration) (bool, error) {
 
 	file, err := os.OpenFile(config.HAProxy.OutputPath, os.O_RDWR|os.O_APPEND, 0660)
 

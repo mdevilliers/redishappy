@@ -23,7 +23,7 @@ func TestParseValidConfiguration(t *testing.T) {
 				  ]
 			}`
 
-	configuration, err := ParseConfiguration([]byte(config))
+	configuration, err := parseConfiguration([]byte(config))
 
 	if err != nil {
 		t.Error("This is a valid configuration and shouldn't error : ", err.Error())
@@ -52,13 +52,42 @@ func TestParseValidConfiguration(t *testing.T) {
 		t.Error("This should error - the cluster does not exist : ", err.Error())
 		return
 	}
+}
 
+func TestConfigurationManagerGivesCorrectConfig(t *testing.T) {
+	config := `{
+				  "Clusters" :[
+				  {
+				    "Name" : "cluster one",
+				    "MasterPort" : 6379
+				  },
+				  {
+				    "Name" : "cluster two",
+				    "MasterPort" : 6380
+				  }],
+				  "Sentinels" : [ 
+				      {"Host" : "192.168.0.20", "Port" : 26379},
+				      {"Host" : "192.168.0.21", "Port" : 26379}
+				  ]
+				}`
+	configuration, _ := parseConfiguration([]byte(config))
+	cm := NewConfigurationManager(configuration)
+	parsedConfig := cm.GetCurrentConfiguration()
+
+	if len(parsedConfig.Clusters) != 2 {
+		t.Error("There should be two clusters.")
+		return
+	}
+	if len(parsedConfig.Sentinels) != 2 {
+		t.Error("There should be two sentinels.")
+		return
+	}
 }
 
 func TestParseInValidConfiguration(t *testing.T) {
 	config := "{ xxx : 1 }"
 
-	_, err := ParseConfiguration([]byte(config))
+	_, err := parseConfiguration([]byte(config))
 
 	if err == nil {
 		t.Error("This is an invalid configuration and should fail.")

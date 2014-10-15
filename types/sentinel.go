@@ -5,8 +5,8 @@ import (
 )
 
 type Sentinel struct {
-	Host string
-	Port int
+	Host string `json:"host"`
+	Port int    `json:"port"`
 }
 
 func (s *Sentinel) GetLocation() string {
