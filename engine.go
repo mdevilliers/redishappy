@@ -12,13 +12,12 @@ import (
 func NewRedisHappyEngine(flipper types.FlipperClient, cm *configuration.ConfigurationManager, logPath string) {
 
 	logger.InitLogging(logPath)
-	config := cm.GetCurrentConfiguration()
 
 	masterEvents := make(chan types.MasterSwitchedEvent)
-	sentinelManager := sentinel.NewManager(masterEvents, config)
+	sentinelManager := sentinel.NewManager(masterEvents, cm)
 
 	go loopSentinelEvents(flipper, masterEvents)
-	go intiliseTopology(flipper, sentinelManager, config)
+	go intiliseTopology(flipper, sentinelManager)
 
 	initApiServer(sentinelManager, cm)
 }
@@ -30,11 +29,11 @@ func loopSentinelEvents(flipper types.FlipperClient, masterEvents chan types.Mas
 	}
 }
 
-func intiliseTopology(flipper types.FlipperClient, sentinelManager *sentinel.SentinelManager, configuration configuration.Configuration) {
+func intiliseTopology(flipper types.FlipperClient, sentinelManager *sentinel.SentinelManager) {
 
 	stateChannel := make(chan types.MasterDetailsCollection)
 
-	go sentinelManager.GetTopology(stateChannel, configuration)
+	go sentinelManager.GetTopology(stateChannel)
 
 	topology := <-stateChannel
 

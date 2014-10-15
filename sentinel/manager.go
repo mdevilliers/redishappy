@@ -26,11 +26,12 @@ type SentinelManager struct {
 	topologyRequestChannel chan TopologyRequest
 	switchmasterchannel    chan types.MasterSwitchedEvent
 	redisConnection        redis.RedisConnection
+	configurationManager   *configuration.ConfigurationManager
 }
 
 var topologyState = SentinelTopology{Sentinels: map[string]*SentinelInfo{}}
 
-func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, configuration configuration.Configuration) *SentinelManager {
+func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, cm *configuration.ConfigurationManager) *SentinelManager {
 
 	events := make(chan SentinelEvent)
 	requests := make(chan TopologyRequest)
@@ -38,14 +39,11 @@ func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, configuratio
 	manager := &SentinelManager{eventsChannel: events,
 		topologyRequestChannel: requests,
 		switchmasterchannel:    switchmasterchannel,
-		redisConnection:        redis.RadixRedisConnection{}}
-
-	go loopEvents(events, requests, manager)
-
-	for _, sentinel := range configuration.Sentinels {
-		manager.Notify(&SentinelAdded{Sentinel: sentinel})
+		redisConnection:        redis.RadixRedisConnection{},
+		configurationManager:   cm,
 	}
 
+	go loopEvents(events, requests, manager)
 	return manager
 }
 
@@ -61,9 +59,10 @@ func (m *SentinelManager) ClearState() {
 	topologyState = SentinelTopology{Sentinels: map[string]*SentinelInfo{}}
 }
 
-func (m *SentinelManager) GetTopology(stateChannel chan types.MasterDetailsCollection, configuration configuration.Configuration) {
+func (m *SentinelManager) GetTopology(stateChannel chan types.MasterDetailsCollection) {
 
 	topology := types.NewMasterDetailsCollection()
+	configuration := m.configurationManager.GetCurrentConfiguration()
 
 	for _, sentinel := range configuration.Sentinels {
 
@@ -87,15 +86,16 @@ func (m *SentinelManager) GetTopology(stateChannel chan types.MasterDetailsColle
 			// TODO : last one wins?
 			topology.AddOrReplace(details)
 
-			m.exploreSentinelTopology(client, clusterDetails.Name)
+			m.exploreSentinelTopology(client, clusterDetails.Name, sentinel)
 		}
 	}
 	stateChannel <- topology
 }
 
-func (m *SentinelManager) exploreSentinelTopology(client *SentinelClient, clustername string) {
+func (m *SentinelManager) exploreSentinelTopology(client *SentinelClient, clustername string, sentinel types.Sentinel) {
 
 	sentinels := client.FindConnectedSentinels(clustername)
+	sentinels = append(sentinels, sentinel)
 	if len(sentinels) > 0 {
 		m.notifySentinelsAreConnected(client, sentinels)
 	}
