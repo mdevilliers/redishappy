@@ -7,35 +7,19 @@ Automated Redis Failover using HaProxy and Sentinel
 [![Build Status](https://drone.io/github.com/mdevilliers/redishappy/status.png)](https://drone.io/github.com/mdevilliers/redishappy/latest)
 [![Coverage Status](https://coveralls.io/repos/mdevilliers/redishappy/badge.png)](https://coveralls.io/r/mdevilliers/redishappy)
 
-
-```
-go test -v ./...
-```
-
-```
-go install
-```
-
-```
-redishappy
-```
-
-
-Testing
--------
-
-```
-go test -cover -test.coverprofile=redishappy-test-coverage.out
-
-go tool cover -html=redishappy-test-coverage.out
-
-```
+Api
+---
+GET /api/pingpong - healthcheck
+GET /api/configuration - start up configurations
+GET /api/sentinels - sentinels being monitored with cluster information
+GET /api/topology - masters of the clusters and host/ip addresses exposed
 
 PreCheckin
 ----------
 
 ```
-gofmt -l -s -w .
+build/ci_script.sh
+
 ```
 
 Testing with Docker

@@ -9,10 +9,10 @@ type MasterSwitchedEvent struct {
 }
 
 type MasterDetails struct {
-	ExternalPort int
-	Name         string
-	Ip           string
-	Port         int
+	ExternalPort int    `json:"externalPort"`
+	Name         string `json:"name"`
+	Ip           string `json:"ip"`
+	Port         int    `json:"port"`
 }
 
 type FlipperClient interface {

@@ -71,7 +71,6 @@ func (m *SentinelManager) getTopology(stateChannel chan types.MasterDetailsColle
 	configuration := m.configurationManager.GetCurrentConfiguration()
 
 	for _, sentinel := range configuration.Sentinels {
-
 		client, err := NewSentinelClient(sentinel, m.redisConnection)
 
 		if err != nil {
@@ -83,7 +82,6 @@ func (m *SentinelManager) getTopology(stateChannel chan types.MasterDetailsColle
 		for _, clusterDetails := range configuration.Clusters {
 
 			details, err := client.DiscoverMasterForCluster(clusterDetails.Name)
-
 			if err != nil {
 				continue
 			}
