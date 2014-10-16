@@ -72,7 +72,6 @@ func TestNonExistentFile(t *testing.T) {
 }
 
 func TestExistingFile(t *testing.T) {
-	//func TempFile(dir, prefix string) (f *os.File, err error)
 
 	file, err := ioutil.TempFile("", "")
 	defer file.Close()
