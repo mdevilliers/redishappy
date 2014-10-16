@@ -16,7 +16,7 @@ type ConfigurationManager struct {
 
 type Configuration struct {
 	Clusters  []types.Cluster  `json:"clusters"`
-	HAProxy   types.HAProxy    `json:"haProxy"`
+	HAProxy   types.HAProxy    `json:"HAProxy"`
 	Sentinels []types.Sentinel `json:"sentinels"`
 }
 
@@ -33,11 +33,21 @@ func (c *ConfigurationManager) GetCurrentConfiguration() Configuration {
 }
 
 func NewConfigurationManager(config Configuration) *ConfigurationManager {
+
 	get := make(chan GetConfigCommand)
 	cm := &ConfigurationManager{config: config, getChannel: get}
 
 	go cm.loop(get)
 	return cm
+}
+
+func (cm *ConfigurationManager) loop(get chan GetConfigCommand) {
+	for {
+		select {
+		case getMessage := <-get:
+			getMessage.returnChannel <- cm.config
+		}
+	}
 }
 
 func LoadFromFile(filePath string) (*ConfigurationManager, error) {
@@ -56,15 +66,6 @@ func LoadFromFile(filePath string) (*ConfigurationManager, error) {
 	cm.pathToOriginalFile = filePath
 
 	return cm, nil
-}
-
-func (cm *ConfigurationManager) loop(get chan GetConfigCommand) {
-	for {
-		select {
-		case getMessage := <-get:
-			getMessage.returnChannel <- cm.config
-		}
-	}
 }
 
 func parseConfiguration(configurationAsJson []byte) (Configuration, error) {

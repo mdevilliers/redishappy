@@ -38,7 +38,3 @@ func RenderTemplate(templatePath string, updates *types.MasterDetailsCollection)
 	}
 	return strBuffer.String(), nil
 }
-
-func WriteFile(outputFilePath string, content string) error {
-	return ioutil.WriteFile(outputFilePath, []byte(content), 0666)
-}

@@ -31,12 +31,7 @@ func loopSentinelEvents(flipper types.FlipperClient, masterEvents chan types.Mas
 
 func intiliseTopology(flipper types.FlipperClient, sentinelManager *sentinel.SentinelManager) {
 
-	stateChannel := make(chan types.MasterDetailsCollection)
-
-	go sentinelManager.GetTopology(stateChannel)
-
-	topology := <-stateChannel
-
+	topology := sentinelManager.GetCurrentTopology()
 	flipper.InitialiseRunningState(&topology)
 }
 
@@ -47,10 +42,12 @@ func initApiServer(manager *sentinel.SentinelManager, cm *configuration.Configur
 	pongApi := api.PingApi{}
 	sentinelApi := api.SentinelApi{Manager: manager}
 	configurationApi := api.ConfigurationApi{ConfigurationManager: cm}
+	topologyApi := api.TopologyApi{Manager: manager}
 
 	goji.Get("/api/ping", pongApi.Get)
-	goji.Get("/api/sentinel", sentinelApi.Get)
+	goji.Get("/api/sentinels", sentinelApi.Get)
 	goji.Get("/api/configuration", configurationApi.Get)
+	goji.Get("/api/topology", topologyApi.Get)
 
 	goji.Serve()
 }

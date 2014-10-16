@@ -9,9 +9,8 @@ import (
 )
 
 type SentinelClient struct {
-	sentinel       types.Sentinel
-	redisClient    redis.RedisClient
-	sleepInSeconds int
+	sentinel    types.Sentinel
+	redisClient redis.RedisClient
 }
 
 func NewSentinelClient(sentinel types.Sentinel, redisConnection redis.RedisConnection) (*SentinelClient, error) {
@@ -29,8 +28,7 @@ func NewSentinelClient(sentinel types.Sentinel, redisConnection redis.RedisConne
 	logger.Info.Printf("SentinelClient : connected to %s", uri)
 
 	client := &SentinelClient{redisClient: redisclient,
-		sentinel:       sentinel,
-		sleepInSeconds: 1}
+		sentinel: sentinel}
 	return client, nil
 }
 
@@ -49,7 +47,7 @@ func (m *SentinelClient) DiscoverMasterForCluster(clusterName string) (*types.Ma
 		return &types.MasterDetails{Name: clusterName, Ip: bits[0], Port: port}, nil
 	}
 
-	return &types.MasterDetails{}, err
+	return nil, err
 }
 
 func (client *SentinelClient) FindConnectedSentinels(clustername string) []types.Sentinel {

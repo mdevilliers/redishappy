@@ -1,6 +1,7 @@
 package util
 
 import (
+	"io/ioutil"
 	"os"
 )
 
@@ -11,4 +12,8 @@ func FileExists(name string) bool {
 		}
 	}
 	return true
+}
+
+func WriteFile(outputFilePath string, content string) error {
+	return ioutil.WriteFile(outputFilePath, []byte(content), 0666)
 }

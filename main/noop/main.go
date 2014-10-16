@@ -20,12 +20,23 @@ func main() {
 
 	flag.Parse()
 
-	configuration, err := configuration.LoadFromFile(configFile)
+	config, err := configuration.LoadFromFile(configFile)
 
 	if err != nil {
 		log.Panicf("Error opening config file : %s", err.Error())
 	}
 
+	sane, errors := config.GetCurrentConfiguration().SanityCheckConfiguration(&configuration.ConfigContainsRequiredSections{})
+
+	if !sane {
+
+		for _, errorAsStr := range errors {
+			log.Print(errorAsStr)
+		}
+
+		log.Panic("Configuration fails checks")
+	}
+
 	flipper := NewNoOpFlipper()
-	redishappy.NewRedisHappyEngine(flipper, configuration, logPath)
+	redishappy.NewRedisHappyEngine(flipper, config, logPath)
 }

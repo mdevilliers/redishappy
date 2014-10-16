@@ -2,10 +2,10 @@
   "Clusters" :[
   {
     "Name" : "testing",
-    "MasterPort" : 6379
+    "ExternalPort" : 6379
   }],
   "Sentinels" : [ 
-      {"Host" : "0.0.0.0", "Port" : 26377}
+      {"Host" : "172.17.42.1", "Port" : 26377}
   ],
   "HAProxy" :
     {
