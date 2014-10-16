@@ -47,7 +47,7 @@ func (m *SentinelClient) DiscoverMasterForCluster(clusterName string) (*types.Ma
 		return &types.MasterDetails{Name: clusterName, Ip: bits[0], Port: port}, nil
 	}
 
-	return &types.MasterDetails{}, err
+	return nil, err
 }
 
 func (client *SentinelClient) FindConnectedSentinels(clustername string) []types.Sentinel {
