@@ -10,6 +10,7 @@ import (
 func TestBasicEventChannel(t *testing.T) {
 
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
+
 	manager := NewManager(switchmasterchannel, configuration.NewConfigurationManager(configuration.Configuration{}))
 	defer manager.ClearState()
 	manager.Notify(&SentinelAdded{Sentinel: types.Sentinel{Host: "10.1.1.1", Port: 12345}})
@@ -33,8 +34,6 @@ func TestBasicEventChannel(t *testing.T) {
 	if len(topologyState.Sentinels) != 2 {
 		t.Errorf("Topology count should be 2 : it is %d", len(topologyState.Sentinels))
 	}
-
-	// fmt.Printf("%s\n",util.String(topologyState))
 }
 
 func TestAddingAndLoseingASentinel(t *testing.T) {
@@ -56,8 +55,6 @@ func TestAddingAndLoseingASentinel(t *testing.T) {
 	if len(topologyState.Sentinels) != 1 {
 		t.Error("Topology count should be 1")
 	}
-
-	// fmt.Printf("%s\n",util.String(topologyState))
 }
 
 func TestAddingSentinelMultipleTimes(t *testing.T) {
@@ -85,25 +82,4 @@ func TestAddingSentinelMultipleTimes(t *testing.T) {
 	if !ok {
 		t.Error("Added sentinel not found")
 	}
-
-	// fmt.Printf("%s\n",util.String(topologyState))
 }
-
-// func TestAllSentinelsFromTheConfigurationAreAddedToTheTopology(t *testing.T) {
-
-// 	sentinels := []types.Sentinel{{Host: "1.2.3.4"}, {Host: "2.3.4.5"}}
-// 	config := configuration.Configuration{Sentinels: sentinels}
-
-// 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
-// 	manager := NewManager(switchmasterchannel, configuration.NewConfigurationManager(config))
-// 	defer manager.ClearState()
-
-// 	responseChannel := make(chan SentinelTopology)
-// 	manager.GetState(TopologyRequest{ReplyChannel: responseChannel})
-// 	topologyState := <-responseChannel
-
-// 	if len(topologyState.Sentinels) != 2 {
-// 		t.Errorf("Two sentinels should have been added %d", len(topologyState.Sentinels))
-// 	}
-
-// }

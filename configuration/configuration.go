@@ -33,6 +33,7 @@ func (c *ConfigurationManager) GetCurrentConfiguration() Configuration {
 }
 
 func NewConfigurationManager(config Configuration) *ConfigurationManager {
+
 	get := make(chan GetConfigCommand)
 	cm := &ConfigurationManager{config: config, getChannel: get}
 

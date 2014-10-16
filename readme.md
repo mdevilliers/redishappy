@@ -28,3 +28,29 @@ Testing with Docker
 https://github.com/mdevilliers/docker-rediscluster
 
 Will start up a master/slave, 3 sentinel redis cluster for testing.
+
+Logging
+-------
+
+By default -
+
+Trace - stdout
+Info - stdout
+Warning - syslog, file, stdout
+Error - syslog, file, stdout
+
+The log path is configurable.
+
+
+Proposed configuration
+
+  "Logging" :{
+
+  	// values are none, all, errorsonly
+  	"Level" : "none",
+  	// values are none, stdout, file, syslog
+  	"Trace" :"none",
+	"Info" :"stdout",
+	"Warning" : "file",
+	"Error" : "syslog,file"
+  }
