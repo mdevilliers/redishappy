@@ -59,7 +59,13 @@ func (m *SentinelManager) ClearState() {
 	topologyState = SentinelTopology{Sentinels: map[string]*SentinelInfo{}}
 }
 
-func (m *SentinelManager) GetTopology(stateChannel chan types.MasterDetailsCollection) {
+func (m *SentinelManager) GetCurrentTopology() types.MasterDetailsCollection {
+	stateChannel := make(chan types.MasterDetailsCollection)
+	go m.getTopology(stateChannel)
+	return <-stateChannel
+}
+
+func (m *SentinelManager) getTopology(stateChannel chan types.MasterDetailsCollection) {
 
 	topology := types.NewMasterDetailsCollection()
 	configuration := m.configurationManager.GetCurrentConfiguration()

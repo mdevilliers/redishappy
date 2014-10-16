@@ -31,12 +31,7 @@ func loopSentinelEvents(flipper types.FlipperClient, masterEvents chan types.Mas
 
 func intiliseTopology(flipper types.FlipperClient, sentinelManager *sentinel.SentinelManager) {
 
-	stateChannel := make(chan types.MasterDetailsCollection)
-
-	go sentinelManager.GetTopology(stateChannel)
-
-	topology := <-stateChannel
-
+	topology := sentinelManager.GetCurrentTopology()
 	flipper.InitialiseRunningState(&topology)
 }
 
