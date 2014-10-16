@@ -86,11 +86,9 @@ func (m *SentinelManager) getTopology(stateChannel chan types.MasterDetailsColle
 				continue
 			}
 
-			details.ExternalPort = clusterDetails.MasterPort
+			details.ExternalPort = clusterDetails.ExternalPort
 			// TODO : last one wins?
 			topology.AddOrReplace(details)
-
-			m.exploreSentinelTopology(client, clusterDetails.Name, sentinel)
 		}
 	}
 	stateChannel <- topology
@@ -157,6 +155,14 @@ func updateState(event interface{}, m *SentinelManager) {
 			topologyState.Sentinels[uid] = info
 
 			go m.startNewMonitor(sentinel)
+
+			// client, err := NewSentinelClient(sentinel, m.redisConnection)
+
+			// if err != nil {
+			// 	logger.Info.Printf("Error starting sentinel (%s) client : %s", sentinel.GetLocation(), err.Error())
+			// }
+			//    defer client.Close()
+			// m.exploreSentinelTopology(client, clusterDetails.Namel)
 
 			logger.Trace.Printf("Sentinel added : %s", util.String(topologyState))
 		}

@@ -53,7 +53,7 @@ func (flipper *HAProxyFlipperClient) Orchestrate(switchEvent types.MasterSwitche
 	logger.Info.Printf("Cluster found : %s", util.String(cluster))
 
 	detail := &types.MasterDetails{
-		ExternalPort: cluster.MasterPort,
+		ExternalPort: cluster.ExternalPort,
 		Name:         switchEvent.Name,
 		Ip:           switchEvent.NewMasterIp,
 		Port:         switchEvent.NewMasterPort}

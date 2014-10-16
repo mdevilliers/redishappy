@@ -11,11 +11,11 @@ func TestParseValidConfiguration(t *testing.T) {
 				  "Clusters" :[
 				  {
 				    "Name" : "cluster one",
-				    "MasterPort" : 6379
+				    "ExternalPort" : 6379
 				  },
 				  {
 				    "Name" : "cluster two",
-				    "MasterPort" : 6380
+				    "ExternalPort" : 6380
 				  }],
 				  "Sentinels" : [ 
 				      {"Host" : "192.168.0.20", "Port" : 26379},
@@ -59,11 +59,11 @@ func TestConfigurationManagerGivesCorrectConfig(t *testing.T) {
 				  "Clusters" :[
 				  {
 				    "Name" : "cluster one",
-				    "MasterPort" : 6379
+				    "ExternalPort" : 6379
 				  },
 				  {
 				    "Name" : "cluster two",
-				    "MasterPort" : 6380
+				    "ExternalPort" : 6380
 				  }],
 				  "Sentinels" : [ 
 				      {"Host" : "192.168.0.20", "Port" : 26379},
@@ -105,7 +105,7 @@ func TestNonExistentFile(t *testing.T) {
 
 func TestSanityCheckBasicUsage(t *testing.T) {
 
-	clusters := []types.Cluster{types.Cluster{Name: "one", MasterPort: 1234}}
+	clusters := []types.Cluster{types.Cluster{Name: "one", ExternalPort: 1234}}
 	sentinels := []types.Sentinel{types.Sentinel{Host: "192.168.0.20", Port: 26379}}
 
 	config := &Configuration{Clusters: clusters, Sentinels: sentinels}

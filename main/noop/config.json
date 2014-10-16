@@ -2,7 +2,7 @@
   "Clusters" :[
   {
     "Name" : "testing",
-    "MasterPort" : 6379
+    "ExternalPort" : 6379
   }],
   "Sentinels" : [ 
       {"Host" : "0.0.0.0", "Port" : 26377}
