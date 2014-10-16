@@ -44,6 +44,7 @@ func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, cm *configur
 	}
 
 	go loopEvents(events, requests, manager)
+	go manager.bootstrap()
 	return manager
 }
 
@@ -94,19 +95,37 @@ func (m *SentinelManager) getTopology(stateChannel chan types.MasterDetailsColle
 	stateChannel <- topology
 }
 
-func (m *SentinelManager) exploreSentinelTopology(client *SentinelClient, clustername string, sentinel types.Sentinel) {
+func (m *SentinelManager) bootstrap() {
 
-	sentinels := client.FindConnectedSentinels(clustername)
-	sentinels = append(sentinels, sentinel)
-	if len(sentinels) > 0 {
-		m.notifySentinelsAreConnected(client, sentinels)
+	configuration := m.configurationManager.GetCurrentConfiguration()
+
+	for _, sentinel := range configuration.Sentinels {
+		m.Notify(&SentinelAdded{Sentinel: sentinel})
 	}
+
+	util.Schedule(func() { m.bootstrap() }, time.Second*60)
 }
 
-func (m *SentinelManager) notifySentinelsAreConnected(client *SentinelClient, sentinels []types.Sentinel) {
-	for _, sentinel := range sentinels {
-		knownClusters := client.FindKnownClusters()
-		m.Notify(&SentinelAdded{Sentinel: sentinel, Clusters: knownClusters})
+func (m *SentinelManager) exploreSentinelTopology(sentinel types.Sentinel) {
+
+	client, err := NewSentinelClient(sentinel, m.redisConnection)
+
+	if err != nil {
+		logger.Info.Printf("Error starting sentinel (%s) client : %s", sentinel.GetLocation(), err.Error())
+	}
+	defer client.Close()
+
+	knownClusters := client.FindKnownClusters()
+
+	m.Notify(&SentinelClustersMonitoredUpdate{Sentinel: sentinel, Clusters: knownClusters})
+
+	for _, clustername := range knownClusters {
+
+		sentinels := client.FindConnectedSentinels(clustername)
+
+		for _, connectedsentinel := range sentinels {
+			m.Notify(&SentinelAdded{Sentinel: connectedsentinel})
+		}
 	}
 }
 
@@ -148,21 +167,14 @@ func updateState(event interface{}, m *SentinelManager) {
 		if _, exists := topologyState.Sentinels[uid]; !exists {
 
 			info := &SentinelInfo{SentinelLocation: uid,
-				LastUpdated:   time.Now().UTC(),
-				KnownClusters: e.Clusters,
-				State:         SentinelMarkedUp}
+				LastUpdated: time.Now().UTC(),
+				//KnownClusters: e.Clusters,
+				State: SentinelMarkedUp}
 
 			topologyState.Sentinels[uid] = info
 
 			go m.startNewMonitor(sentinel)
-
-			// client, err := NewSentinelClient(sentinel, m.redisConnection)
-
-			// if err != nil {
-			// 	logger.Info.Printf("Error starting sentinel (%s) client : %s", sentinel.GetLocation(), err.Error())
-			// }
-			//    defer client.Close()
-			// m.exploreSentinelTopology(client, clusterDetails.Namel)
+			go m.exploreSentinelTopology(sentinel)
 
 			logger.Trace.Printf("Sentinel added : %s", util.String(topologyState))
 		}
@@ -190,7 +202,15 @@ func updateState(event interface{}, m *SentinelManager) {
 		if ok {
 			currentInfo.State = SentinelMarkedAlive
 			currentInfo.LastUpdated = time.Now().UTC()
-			// currentInfo.KnownClusters = e.Clusters
+		}
+
+	case *SentinelClustersMonitoredUpdate:
+		sentinel := e.GetSentinel()
+		uid := topologyState.createKey(sentinel)
+
+		if info, exists := topologyState.Sentinels[uid]; exists {
+
+			info.Clusters = e.Clusters
 		}
 
 	default:

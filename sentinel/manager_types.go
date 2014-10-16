@@ -13,7 +13,7 @@ type SentinelTopology struct {
 type SentinelInfo struct {
 	SentinelLocation string    `json:"sentinelLocation"`
 	LastUpdated      time.Time `json:"lastUpdated"`
-	KnownClusters    []string  `json:"clusters"`
+	Clusters         []string  `json:"clusters"`
 	State            int       `json:"state"`
 }
 
@@ -27,7 +27,6 @@ type SentinelEvent interface {
 
 type SentinelAdded struct {
 	Sentinel types.Sentinel
-	Clusters []string
 }
 
 type SentinelLost struct {
@@ -38,8 +37,11 @@ type SentinelPing struct {
 	Sentinel types.Sentinel
 }
 
-// TODO : find a better way to implement
-// base type functionality
+type SentinelClustersMonitoredUpdate struct {
+	Sentinel types.Sentinel
+	Clusters []string
+}
+
 func (s SentinelAdded) GetSentinel() types.Sentinel {
 	return s.Sentinel
 }
@@ -49,6 +51,10 @@ func (s SentinelLost) GetSentinel() types.Sentinel {
 }
 
 func (s SentinelPing) GetSentinel() types.Sentinel {
+	return s.Sentinel
+}
+
+func (s SentinelClustersMonitoredUpdate) GetSentinel() types.Sentinel {
 	return s.Sentinel
 }
 
