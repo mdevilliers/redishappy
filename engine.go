@@ -49,7 +49,7 @@ func initApiServer(manager *sentinel.SentinelManager, cm *configuration.Configur
 	configurationApi := api.ConfigurationApi{ConfigurationManager: cm}
 
 	goji.Get("/api/ping", pongApi.Get)
-	goji.Get("/api/sentinel", sentinelApi.Get)
+	goji.Get("/api/sentinels", sentinelApi.Get)
 	goji.Get("/api/configuration", configurationApi.Get)
 
 	goji.Serve()
