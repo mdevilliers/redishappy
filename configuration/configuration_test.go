@@ -1,27 +1,15 @@
 package configuration
 
 import (
+	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/mdevilliers/redishappy/types"
 )
 
 func TestParseValidConfiguration(t *testing.T) {
-	config := `{
-				  "Clusters" :[
-				  {
-				    "Name" : "cluster one",
-				    "ExternalPort" : 6379
-				  },
-				  {
-				    "Name" : "cluster two",
-				    "ExternalPort" : 6380
-				  }],
-				  "Sentinels" : [ 
-				      {"Host" : "192.168.0.20", "Port" : 26379},
-				      {"Host" : "192.168.0.21", "Port" : 26379}
-				  ]
-			}`
+	config := GetTestConfigFile()
 
 	configuration, err := parseConfiguration([]byte(config))
 
@@ -55,33 +43,13 @@ func TestParseValidConfiguration(t *testing.T) {
 }
 
 func TestConfigurationManagerGivesCorrectConfig(t *testing.T) {
-	config := `{
-				  "Clusters" :[
-				  {
-				    "Name" : "cluster one",
-				    "ExternalPort" : 6379
-				  },
-				  {
-				    "Name" : "cluster two",
-				    "ExternalPort" : 6380
-				  }],
-				  "Sentinels" : [ 
-				      {"Host" : "192.168.0.20", "Port" : 26379},
-				      {"Host" : "192.168.0.21", "Port" : 26379}
-				  ]
-				}`
+	config := GetTestConfigFile()
+
 	configuration, _ := parseConfiguration([]byte(config))
 	cm := NewConfigurationManager(configuration)
 	parsedConfig := cm.GetCurrentConfiguration()
 
-	if len(parsedConfig.Clusters) != 2 {
-		t.Error("There should be two clusters.")
-		return
-	}
-	if len(parsedConfig.Sentinels) != 2 {
-		t.Error("There should be two sentinels.")
-		return
-	}
+	RunTestConfigFileChecks(parsedConfig, t)
 }
 
 func TestParseInValidConfiguration(t *testing.T) {
@@ -103,6 +71,57 @@ func TestNonExistentFile(t *testing.T) {
 	}
 }
 
+func TestExistingFile(t *testing.T) {
+	//func TempFile(dir, prefix string) (f *os.File, err error)
+
+	file, err := ioutil.TempFile("", "")
+	defer file.Close()
+	defer os.Remove(file.Name())
+
+	if err != nil {
+		t.Error("Error creating temp file")
+	}
+
+	config := GetTestConfigFile()
+
+	file.Write([]byte(config))
+	cm, err := LoadFromFile(file.Name())
+
+	if err != nil {
+		t.Error("Error reading configuration")
+	}
+	parsedConfig := cm.GetCurrentConfiguration()
+	RunTestConfigFileChecks(parsedConfig, t)
+}
+
+func GetTestConfigFile() string {
+	return `{
+				  "Clusters" :[
+				  {
+				    "Name" : "cluster one",
+				    "ExternalPort" : 6379
+				  },
+				  {
+				    "Name" : "cluster two",
+				    "ExternalPort" : 6380
+				  }],
+				  "Sentinels" : [ 
+				      {"Host" : "192.168.0.20", "Port" : 26379},
+				      {"Host" : "192.168.0.21", "Port" : 26379}
+				  ]
+			}`
+}
+
+func RunTestConfigFileChecks(parsedConfig Configuration, t *testing.T) {
+	if len(parsedConfig.Clusters) != 2 {
+		t.Error("There should be two clusters.")
+		return
+	}
+	if len(parsedConfig.Sentinels) != 2 {
+		t.Error("There should be two sentinels.")
+		return
+	}
+}
 func TestSanityCheckBasicUsage(t *testing.T) {
 
 	clusters := []types.Cluster{types.Cluster{Name: "one", ExternalPort: 1234}}
