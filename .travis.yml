@@ -5,7 +5,7 @@ go:
 before_install: 
 - sudo apt-get update -qq
 - sudo apt-get install -y ruby-dev gcc
-- sudo apt-get install -y fpm
+- sudo gem install fpm
 - go get github.com/axw/gocov/gocov
 - go get github.com/mattn/goveralls
 - go get code.google.com/p/go.tools/cmd/cover
