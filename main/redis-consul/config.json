@@ -1,0 +1,10 @@
+{
+  "Clusters" :[
+  {
+    "Name" : "testing",
+    "ExternalPort" : 6379
+  }],
+  "Sentinels" : [ 
+      {"Host" : "172.17.42.1", "Port" : 26377}
+    ]
+}
