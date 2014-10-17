@@ -43,7 +43,7 @@ func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, cm *configur
 		configurationManager:   cm,
 	}
 
-	go loopEvents(events, requests, manager)
+	go manager.loopEvents(events, requests)
 	go manager.bootstrap()
 	return manager
 }
@@ -144,18 +144,18 @@ func (m *SentinelManager) startNewMonitor(sentinel types.Sentinel) (*Monitor, er
 	return monitor, nil
 }
 
-func loopEvents(events chan SentinelEvent, topology chan TopologyRequest, m *SentinelManager) {
+func (m *SentinelManager) loopEvents(events chan SentinelEvent, topology chan TopologyRequest) {
 	for {
 		select {
 		case event := <-events:
-			updateState(event, m)
+			m.updateState(event)
 		case read := <-topology:
 			read.ReplyChannel <- topologyState
 		}
 	}
 }
 
-func updateState(event interface{}, m *SentinelManager) {
+func (m *SentinelManager) updateState(event interface{}) {
 
 	switch e := event.(type) {
 	case *SentinelAdded:
