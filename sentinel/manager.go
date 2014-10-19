@@ -27,6 +27,7 @@ type SentinelManager struct {
 	switchmasterchannel    chan types.MasterSwitchedEvent
 	redisConnection        redis.RedisConnection
 	configurationManager   *configuration.ConfigurationManager
+	throttle               *Throttle
 }
 
 var topologyState = SentinelTopology{Sentinels: map[string]*SentinelInfo{}}
@@ -35,13 +36,16 @@ func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, cm *configur
 
 	events := make(chan SentinelEvent)
 	requests := make(chan TopologyRequest)
+	unthrottled := make(chan types.MasterSwitchedEvent)
+
+	throttle := NewThrottle(unthrottled, switchmasterchannel)
 
 	manager := &SentinelManager{eventsChannel: events,
 		topologyRequestChannel: requests,
-		switchmasterchannel:    switchmasterchannel,
+		switchmasterchannel:    unthrottled,
 		redisConnection:        redis.RadixRedisConnection{},
 		configurationManager:   cm,
-	}
+		throttle:               throttle}
 
 	go manager.loopEvents(events, requests)
 	go manager.bootstrap()
@@ -168,8 +172,7 @@ func (m *SentinelManager) updateState(event interface{}) {
 
 			info := &SentinelInfo{SentinelLocation: uid,
 				LastUpdated: time.Now().UTC(),
-				//KnownClusters: e.Clusters,
-				State: SentinelMarkedUp}
+				State:       SentinelMarkedUp}
 
 			topologyState.Sentinels[uid] = info
 
