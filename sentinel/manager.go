@@ -27,6 +27,7 @@ type SentinelManager struct {
 	switchmasterchannel    chan types.MasterSwitchedEvent
 	redisConnection        redis.RedisConnection
 	configurationManager   *configuration.ConfigurationManager
+	throttle               *Throttle
 }
 
 var topologyState = SentinelTopology{Sentinels: map[string]*SentinelInfo{}}
@@ -35,15 +36,18 @@ func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, cm *configur
 
 	events := make(chan SentinelEvent)
 	requests := make(chan TopologyRequest)
+	unthrottled := make(chan types.MasterSwitchedEvent)
+
+	throttle := NewThrottle(unthrottled, switchmasterchannel)
 
 	manager := &SentinelManager{eventsChannel: events,
 		topologyRequestChannel: requests,
-		switchmasterchannel:    switchmasterchannel,
+		switchmasterchannel:    unthrottled,
 		redisConnection:        redis.RadixRedisConnection{},
 		configurationManager:   cm,
-	}
+		throttle:               throttle}
 
-	go loopEvents(events, requests, manager)
+	go manager.loopEvents(events, requests)
 	go manager.bootstrap()
 	return manager
 }
@@ -144,18 +148,18 @@ func (m *SentinelManager) startNewMonitor(sentinel types.Sentinel) (*Monitor, er
 	return monitor, nil
 }
 
-func loopEvents(events chan SentinelEvent, topology chan TopologyRequest, m *SentinelManager) {
+func (m *SentinelManager) loopEvents(events chan SentinelEvent, topology chan TopologyRequest) {
 	for {
 		select {
 		case event := <-events:
-			updateState(event, m)
+			m.updateState(event)
 		case read := <-topology:
 			read.ReplyChannel <- topologyState
 		}
 	}
 }
 
-func updateState(event interface{}, m *SentinelManager) {
+func (m *SentinelManager) updateState(event interface{}) {
 
 	switch e := event.(type) {
 	case *SentinelAdded:
@@ -168,8 +172,7 @@ func updateState(event interface{}, m *SentinelManager) {
 
 			info := &SentinelInfo{SentinelLocation: uid,
 				LastUpdated: time.Now().UTC(),
-				//KnownClusters: e.Clusters,
-				State: SentinelMarkedUp}
+				State:       SentinelMarkedUp}
 
 			topologyState.Sentinels[uid] = info
 

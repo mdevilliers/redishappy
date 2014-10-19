@@ -40,4 +40,8 @@ go build github.com/mdevilliers/redishappy/main/noop
 
 echo "building redis-haproxy"
 go build github.com/mdevilliers/redishappy/main/redis-haproxy
+
+echo "building redis-consul"
+go build github.com/mdevilliers/redishappy/main/redis-consul
+
 echo "finished"

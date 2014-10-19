@@ -26,3 +26,4 @@ _testmain.go
 # executables in the main folder
 main/noop/noop
 main/redis-haproxy/redis-haproxy
+main/redis-consul/redis-consul
