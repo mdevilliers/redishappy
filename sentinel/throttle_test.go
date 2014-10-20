@@ -23,7 +23,7 @@ func TestPassThrough(t *testing.T) {
 }
 
 func TestDuplicateMessagesDropped(t *testing.T) {
-	in := make(chan types.MasterSwitchedEvent, 5)
+	in := make(chan types.MasterSwitchedEvent)
 	out := make(chan types.MasterSwitchedEvent)
 
 	_ = NewThrottle(in, out)
@@ -33,10 +33,9 @@ func TestDuplicateMessagesDropped(t *testing.T) {
 	two := types.MasterSwitchedEvent{Name: "XXX", NewMasterIp: "9.9.9.9", NewMasterPort: 9999}
 
 	in <- one
+	oneOut := <-out
 	in <- sameAsOne
 	in <- two
-
-	oneOut := <-out
 	twoOut := <-out
 
 	if oneOut.NewMasterIp == twoOut.NewMasterIp {
