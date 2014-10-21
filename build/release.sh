@@ -36,7 +36,7 @@ function build() {
     cp ${origdir}/redis-haproxy ${name}/${installdir}/redishappy/redis-haproxy
     chmod 755 ${name}/${installdir}/redishappy/redis-haproxy
 
-    cp ${origdir}/main/redis-haproxy/config.json ${name}/${installdir}/redishappy/config/config.json
+    cp ${origdir}/main/redis-haproxy/config.json ${name}/${installdir}/redishappy/config.json
     cp ${origdir}/main/redis-haproxy/example_haproxy_template.cfg ${name}/${installdir}/redishappy/example_haproxy_template.cfg
 
     # Versioning
