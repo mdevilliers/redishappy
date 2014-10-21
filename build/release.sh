@@ -15,16 +15,14 @@ builddir="output"
 installdir="opt"
 vendor="mdevilliers"
 
-function cleanup() {
-    cd ${origdir}/${workspace}
-    rm -rf ${name}*.{deb,rpm}
-    rm -rf ${builddir}
-}
-
 function makeRedisHAProxyPackage() {
 
     name=redishappy-haproxy
     description="RedisHappy HAProxy is an automated Redis failover daemon integrating Redis Sentinel with HAProxy"
+
+    cd ${origdir}/${workspace}
+    rm -rf ${name}*.{deb,rpm}
+    rm -rf ${builddir}
 
     cp ${origdir}/redis-haproxy ${name}/${installdir}/redishappy/redis-haproxy
     chmod 755 ${name}/${installdir}/redishappy/redis-haproxy
@@ -63,6 +61,10 @@ function makeRedisConsulPackage() {
     name=redishappy-consul
     description="RedisHappy Consul is an automated Redis failover daemon integrating Redis Sentinel with Consul"
 
+    cd ${origdir}/${workspace}
+    rm -rf ${name}*.{deb,rpm}
+    rm -rf ${builddir}
+
     cp ${origdir}/redis-haproxy ${name}/${installdir}/redishappy/redis-consul
     chmod 755 ${name}/${installdir}/redishappy/redis-consul
 
@@ -95,7 +97,6 @@ function makeRedisConsulPackage() {
 
 
 function main() {
-    cleanup
     makeRedisHAProxyPackage
     makeRedisConsulPackage
 }
