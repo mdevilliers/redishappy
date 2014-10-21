@@ -1,9 +1,8 @@
 #!/bin/bash
 set -e
 set -u
-name=redis-haproxy
+
 version=${_REDISHAPPY_VERSION:-"1.0.0"}
-description="RedisHappy is an automated Redis failover daemon using HaProxy and Sentinel"
 url="https://github.com/mdevilliers/redishappy"
 arch="all"
 section="misc"
@@ -22,16 +21,10 @@ function cleanup() {
     rm -rf ${builddir}
 }
 
-function bootstrap() {
-    cd ${origdir}/${workspace}
+function makeRedisHAProxyPackage() {
 
-    # configuration directory
-    mkdir -p ${builddir}/${name}/${installdir}/redishappy/config
-
-    pushd ${builddir}
-}
-
-function build() {
+    name=redishappy-haproxy
+    description="RedisHappy HAProxy is an automated Redis failover daemon integrating Redis Sentinel with HAProxy"
 
     cp ${origdir}/redis-haproxy ${name}/${installdir}/redishappy/redis-haproxy
     chmod 755 ${name}/${installdir}/redishappy/redis-haproxy
@@ -42,34 +35,69 @@ function build() {
     # Versioning
     echo ${version} > ${name}/${installdir}/redishappy/VERSION
     pushd ${name}
-}
 
-function mkdeb() {
-  # rubygem: fpm
+      # rubygem: fpm
   #  --deb-upstart ../../redishappy-server \
-  fpm -t ${pkgtype} \
-    -n ${name} \
-    -v ${version}${package_version} \
-    --description "${description}" \
-    --url="${url}" \
-    -a ${arch} \
-    --category ${section} \
-    --vendor ${vendor} \
-    -m "${USER}@${HOSTNAME}" \
-    --license "${license}" \
-    --prefix=/ \
-    -s dir \
-    -- .
+    fpm -t ${pkgtype} \
+        -n ${name} \
+        -v ${version}${package_version} \
+        --description "${description}" \
+        --url="${url}" \
+        -a ${arch} \
+        --category ${section} \
+        --vendor ${vendor} \
+        -m "${USER}@${HOSTNAME}" \
+        --license "${license}" \
+        --prefix=/ \
+        -s dir \
+        -- .
+
   mv ${name}*.${pkgtype} ${origdir}/${workspace}/
+
   popd
 }
 
+
+function makeRedisConsulPackage() {
+
+    name=redishappy-consul
+    description="RedisHappy Consul is an automated Redis failover daemon integrating Redis Sentinel with Consul"
+
+    cp ${origdir}/redis-haproxy ${name}/${installdir}/redishappy/redis-consul
+    chmod 755 ${name}/${installdir}/redishappy/redis-consul
+
+    cp ${origdir}/main/redis-consul/config.json ${name}/${installdir}/redishappy-consul/config.json
+
+    # Versioning
+    echo ${version} > ${name}/${installdir}/redishappy/VERSION
+    pushd ${name}
+
+      # rubygem: fpm
+  #  --deb-upstart ../../redishappy-server \
+    fpm -t ${pkgtype} \
+        -n ${name} \
+        -v ${version}${package_version} \
+        --description "${description}" \
+        --url="${url}" \
+        -a ${arch} \
+        --category ${section} \
+        --vendor ${vendor} \
+        -m "${USER}@${HOSTNAME}" \
+        --license "${license}" \
+        --prefix=/ \
+        -s dir \
+        -- .
+
+  mv ${name}*.${pkgtype} ${origdir}/${workspace}/
+
+  popd
+}
+
+
 function main() {
     cleanup
-    bootstrap
-    build
-    mkdeb
-
+    makeRedisHAProxyPackage
+    makeRedisConsulPackage
 }
 
 main
