@@ -69,10 +69,10 @@ function makeRedisConsulPackage() {
 
     mkdir -p ${name}/${installdir}/redishappy
 
-    cp ${origdir}/redis-haproxy ${name}/${installdir}/redishappy/redis-consul
+    cp ${origdir}/redis-consul ${name}/${installdir}/redishappy/redis-consul
     chmod 755 ${name}/${installdir}/redishappy/redis-consul
 
-    cp ${origdir}/main/redis-consul/config.json ${name}/${installdir}/redishappy-consul/config.json
+    cp ${origdir}/main/redis-consul/config.json ${name}/${installdir}/redishappy/config.json
 
     # Versioning
     echo ${version} > ${name}/${installdir}/redishappy/VERSION
