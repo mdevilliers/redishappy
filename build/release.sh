@@ -24,6 +24,8 @@ function makeRedisHAProxyPackage() {
     rm -rf ${name}*.{deb,rpm}
     rm -rf ${builddir}
 
+    mkdir -p ${name}/${installdir}/redishappy
+
     cp ${origdir}/redis-haproxy ${name}/${installdir}/redishappy/redis-haproxy
     chmod 755 ${name}/${installdir}/redishappy/redis-haproxy
 
@@ -64,6 +66,8 @@ function makeRedisConsulPackage() {
     cd ${origdir}/${workspace}
     rm -rf ${name}*.{deb,rpm}
     rm -rf ${builddir}
+
+    mkdir -p ${name}/${installdir}/redishappy
 
     cp ${origdir}/redis-haproxy ${name}/${installdir}/redishappy/redis-consul
     chmod 755 ${name}/${installdir}/redishappy/redis-consul
