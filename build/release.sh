@@ -15,53 +15,10 @@ builddir="output"
 installdir="opt"
 vendor="mdevilliers"
 
-function makeRedisHAProxyPackage() {
+function buildPackage() {
 
-    name=redishappy-haproxy
-    description="RedisHappy HAProxy is an automated Redis failover daemon integrating Redis Sentinel with HAProxy"
-
-    cd ${origdir}/${workspace}
-    rm -rf ${name}*.{deb,rpm}
-    rm -rf ${builddir}
-
-    mkdir -p ${name}/${installdir}/redishappy
-
-    cp ${origdir}/redis-haproxy ${name}/${installdir}/redishappy/redis-haproxy
-    chmod 755 ${name}/${installdir}/redishappy/redis-haproxy
-
-    cp ${origdir}/main/redis-haproxy/config.json ${name}/${installdir}/redishappy/config.json
-    cp ${origdir}/main/redis-haproxy/example_haproxy_template.cfg ${name}/${installdir}/redishappy/example_haproxy_template.cfg
-
-    # Versioning
-    echo ${version} > ${name}/${installdir}/redishappy/VERSION
-    pushd ${name}
-
-      # rubygem: fpm
-  #  --deb-upstart ../../redishappy-server \
-    fpm -t ${pkgtype} \
-        -n ${name} \
-        -v ${version}${package_version} \
-        --description "${description}" \
-        --url="${url}" \
-        -a ${arch} \
-        --category ${section} \
-        --vendor ${vendor} \
-        -m "${USER}@${HOSTNAME}" \
-        --license "${license}" \
-        --prefix=/ \
-        -s dir \
-        -- .
-
-  mv ${name}*.${pkgtype} ${origdir}/${workspace}/
-
-  popd
-}
-
-
-function makeRedisConsulPackage() {
-
-    name=redishappy-consul
-    description="RedisHappy Consul is an automated Redis failover daemon integrating Redis Sentinel with Consul"
+    name=$1
+    description=$2
 
     cd ${origdir}/${workspace}
     rm -rf ${name}*.{deb,rpm}
@@ -99,10 +56,11 @@ function makeRedisConsulPackage() {
   popd
 }
 
-
 function main() {
-    makeRedisHAProxyPackage
-    makeRedisConsulPackage
+
+    buildPackage "redishappy-haproxy" "RedisHappy HAProxy is an automated Redis failover daemon integrating Redis Sentinel with HAProxy"
+    buildPackage "redishappy-consul" "RedisHappy Consul is an automated Redis failover daemon integrating Redis Sentinel with Consul"
+
 }
 
 main
