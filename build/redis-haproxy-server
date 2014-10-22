@@ -4,6 +4,9 @@ author      "mdevilliers"
 start on filesystem or runlevel [2345]
 stop on [!12345]
 
+setuid haproxy
+setgid haproxy
+
 script
 
     export HOME="/opt/redishappy"

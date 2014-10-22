@@ -7,9 +7,6 @@ goLangZip = "go1.3.3.linux-amd64.tar.gz"
 
 script = <<SCRIPT
 
-export _REDISHAPPY_VERSION="1.0.0"
-export _REDISHAPPY_PKGVERSION="1"
-
 add-apt-repository ppa:vbernat/haproxy-1.5
 add-apt-repository ppa:bzr/ppa
 apt-get update -y
@@ -43,10 +40,14 @@ go get code.google.com/p/go.tools/cmd/goimports
 
 cd $GOPATH/src/github.com/mdevilliers/redishappy
 
+export _REDISHAPPY_VERSION="1.0.0"
+export _REDISHAPPY_PKGVERSION="1"
+
 build/ci.sh
 build/release.sh
 
-dpkg -i build/redis_haproxy_${version}${package_version}
+dpkg -i build/redishappy_haproxy_${version}${package_version}
+# dpkg -i build/redishappy_consul_${version}${package_version}
 
 SCRIPT
 
