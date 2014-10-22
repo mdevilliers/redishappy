@@ -49,7 +49,7 @@ function makeRedisHAProxyPackage() {
         --vendor ${vendor} \
         -m "${USER}@${HOSTNAME}" \
         --license "${license}" \
-        --deb-upstart redis-haproxy-server \
+        --deb-upstart ../../redis-haproxy-server \
         --prefix=/ \
         -s dir \
         -- .
@@ -92,7 +92,7 @@ function makeRedisConsulPackage() {
         --vendor ${vendor} \
         -m "${USER}@${HOSTNAME}" \
         --license "${license}" \
-        --deb-upstart redis-consul-server \
+        --deb-upstart ../../redis-consul-server \
         --prefix=/ \
         -s dir \
         -- .
