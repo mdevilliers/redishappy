@@ -1,0 +1,14 @@
+description "RedisHappy. Automated Redis failover daemon"
+author      "mdevilliers"
+
+start on filesystem or runlevel [2345]
+stop on [!12345]
+
+script
+
+    export HOME="/opt/redishappy"
+    echo $$ > /var/run/redishappy.pid
+    cd $HOME
+    exec ./redis-haproxy -config /var/redishappy/config.json -log /var/redishappy/logs
+
+end script
