@@ -49,7 +49,7 @@ function makeRedisHAProxyPackage() {
         --vendor ${vendor} \
         -m "${USER}@${HOSTNAME}" \
         --license "${license}" \
-        --deb-upstart ../redis-haproxy-service \
+        --deb-upstart ../redishappy-haproxy-service \
         --prefix=/ \
         -s dir \
         -- .
@@ -92,7 +92,7 @@ function makeRedisConsulPackage() {
         --vendor ${vendor} \
         -m "${USER}@${HOSTNAME}" \
         --license "${license}" \
-        --deb-upstart ../redis-consul-service \
+        --deb-upstart ../redishappy-consul-service \
         --prefix=/ \
         -s dir \
         -- .
@@ -101,7 +101,6 @@ function makeRedisConsulPackage() {
 
   popd
 }
-
 
 function main() {
     makeRedisHAProxyPackage

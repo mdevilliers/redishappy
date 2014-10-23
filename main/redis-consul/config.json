@@ -6,5 +6,12 @@
   }],
   "Sentinels" : [ 
       {"Host" : "172.17.42.1", "Port" : 26377}
-    ]
+    ],
+  "Consul" : {
+  	"Datacenter": "dc1", 
+  	"Services" : [
+		{"Cluster" : "testing", "Node" : "redis-1", "tags" : [ "redis", "master", "anothertag"]},
+		{"Cluster" : "other",   "Node" : "redis-2"}
+  	]
+  }
 }

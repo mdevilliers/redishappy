@@ -37,7 +37,7 @@ func main() {
 		log.Panic("Configuration fails checks")
 	}
 
-	flipper := NewConsulFlipperClient()
+	flipper := NewConsulFlipperClient(config)
 
 	redishappy.NewRedisHappyEngine(flipper, config, logPath)
 }

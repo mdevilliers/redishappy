@@ -1,25 +1,29 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/armon/consul-api"
+	"github.com/mdevilliers/redishappy/configuration"
 	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/types"
 	"github.com/mdevilliers/redishappy/util"
 )
 
 type ConsulFlipperClient struct {
-	consulClient *consulapi.Client
+	consulClient         *consulapi.Client
+	configurationManager *configuration.ConfigurationManager
 }
 
-func NewConsulFlipperClient() *ConsulFlipperClient {
+func NewConsulFlipperClient(cm *configuration.ConfigurationManager) *ConsulFlipperClient {
 
 	client, err := consulapi.NewClient(consulapi.DefaultConfig())
 
 	if err != nil {
-		logger.Error.Printf("Error connecting to consul : %s", err.Error())
+		logger.Error.Panicf("Error connecting to consul : %s", err.Error())
 	}
 
-	return &ConsulFlipperClient{consulClient: client}
+	return &ConsulFlipperClient{consulClient: client, configurationManager: cm}
 }
 
 func (c *ConsulFlipperClient) InitialiseRunningState(state *types.MasterDetailsCollection) {
@@ -39,23 +43,33 @@ func (c *ConsulFlipperClient) Orchestrate(switchEvent types.MasterSwitchedEvent)
 
 func (c *ConsulFlipperClient) UpdateConsul(name string, ip string, port int) {
 
+	configuration := c.configurationManager.GetCurrentConfiguration()
+	consulDetails := configuration.Consul
+
+	service, err := consulDetails.FindByClusterName(name)
+
+	if err != nil {
+		logger.Error.Printf("Error locating service %s, %s", name, err.Error())
+	}
+
 	//dig @127.0.0.1 -p 8600 testing.service.consul SRV
 	catalog := c.consulClient.Catalog()
 
-	service := &consulapi.AgentService{
-		ID:      "redis-ha-example",
+	consulService := &consulapi.AgentService{
+		ID:      fmt.Sprintf("redishappy-consol-%s", name),
 		Service: name,
-		Tags:    []string{"redis", "master"},
+		Tags:    service.Tags,
 		Port:    port,
 	}
 
 	reg := &consulapi.CatalogRegistration{
-		Node:    "redis",
-		Address: ip,
-		Service: service,
+		Datacenter: consulDetails.Datacenter,
+		Node:       service.Node,
+		Address:    ip,
+		Service:    consulService,
 	}
 
-	_, err := catalog.Register(reg, nil)
+	_, err = catalog.Register(reg, nil)
 
 	if err != nil {
 		logger.Error.Printf("Error updating consul : %s", err.Error())
