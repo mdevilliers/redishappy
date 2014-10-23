@@ -7,7 +7,7 @@ import (
 	"github.com/mdevilliers/redishappy/types"
 )
 
-// see monitor for mocks used
+// see client_test for mocks used
 func TestMonitorWillErrorWhenCanConnect(t *testing.T) {
 
 	sentinel := types.Sentinel{}

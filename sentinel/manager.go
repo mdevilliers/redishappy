@@ -18,7 +18,6 @@ const (
 
 type Manager interface {
 	Notify(event SentinelEvent)
-	GetState(request TopologyRequest)
 }
 
 type SentinelManager struct {

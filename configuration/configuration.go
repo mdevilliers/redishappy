@@ -16,8 +16,9 @@ type ConfigurationManager struct {
 
 type Configuration struct {
 	Clusters  []types.Cluster  `json:"clusters"`
-	HAProxy   types.HAProxy    `json:"HAProxy"`
 	Sentinels []types.Sentinel `json:"sentinels"`
+	Consul    types.Consul     `json:"consul,omitempty"`
+	HAProxy   types.HAProxy    `json:"HAProxy,omitempty"`
 }
 
 type GetConfigCommand struct {

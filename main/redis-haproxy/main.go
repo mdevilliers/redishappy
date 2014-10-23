@@ -26,7 +26,10 @@ func main() {
 		log.Panicf("Error opening config file : %s", err.Error())
 	}
 
-	sane, errors := config.GetCurrentConfiguration().SanityCheckConfiguration(&configuration.ConfigContainsRequiredSections{}, &HAProxyConfigContainsRequiredSections{}, &CheckPermissionToWriteToHAProxyConfigFile{})
+	sane, errors := config.GetCurrentConfiguration().SanityCheckConfiguration(&configuration.ConfigContainsRequiredSections{},
+		&HAProxyConfigContainsRequiredSections{},
+		&CheckPermissionToWriteToHAProxyConfigFile{},
+		&CheckHAProxyTemplateFileExists{})
 
 	if !sane {
 

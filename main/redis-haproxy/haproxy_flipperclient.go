@@ -65,9 +65,11 @@ func (flipper *HAProxyFlipperClient) Orchestrate(switchEvent types.MasterSwitche
 
 func (flipper *HAProxyFlipperClient) renderAndReload(config configuration.Configuration, details *types.MasterDetailsCollection) (bool, error) {
 
-	outputPath := config.HAProxy.OutputPath
-	templatepath := config.HAProxy.TemplatePath
-	reloadCommand := config.HAProxy.ReloadCommand
+	configDetails := config.HAProxy
+
+	outputPath := configDetails.OutputPath
+	templatepath := configDetails.TemplatePath
+	reloadCommand := configDetails.ReloadCommand
 
 	ok, err := renderTemplate(details, outputPath, templatepath)
 
@@ -83,11 +85,11 @@ func executeHAproxyCommand(reloadCommand string) (bool, error) {
 	output, err := util.ExecuteCommand(reloadCommand)
 
 	if err != nil {
+		logger.Info.Printf("HAProxy output : %s", string(output))
 		logger.Error.Printf("Error reloading haproxy with command %s : %s\n", reloadCommand, err.Error())
 		return false, err
 	}
 
-	logger.Info.Printf("HAProxy output : %s", string(output))
 	logger.Info.Printf("HAProxy reload completed.")
 
 	return true, nil

@@ -31,8 +31,8 @@ function makeRedisHAProxyPackage() {
     cp ${origdir}/redis-haproxy ${name}/${installdir}/redishappy/redis-haproxy
     chmod 755 ${name}/${installdir}/redishappy/redis-haproxy
 
-    cp ${origdir}/main/redis-haproxy/config.json ${name}/${configdir}/redishappy/config.json
-    cp ${origdir}/main/redis-haproxy/example_haproxy_template.cfg ${name}/${configdir}/redishappy/example_haproxy_template.cfg
+    cp ${origdir}/${workspace}/configs/redis-haproxy/config.json ${name}/${configdir}/redishappy/config.json
+    cp ${origdir}/${workspace}/configs/redis-haproxy/haproxy_template.cfg ${name}/${configdir}/redishappy/haproxy_template.cfg
 
     # Versioning
     echo ${version} > ${name}/${installdir}/redishappy/VERSION
@@ -49,7 +49,7 @@ function makeRedisHAProxyPackage() {
         --vendor ${vendor} \
         -m "${USER}@${HOSTNAME}" \
         --license "${license}" \
-        --deb-upstart ../redis-haproxy-service \
+        --deb-upstart ../redishappy-haproxy-service \
         --prefix=/ \
         -s dir \
         -- .
@@ -92,7 +92,7 @@ function makeRedisConsulPackage() {
         --vendor ${vendor} \
         -m "${USER}@${HOSTNAME}" \
         --license "${license}" \
-        --deb-upstart ../redis-consul-service \
+        --deb-upstart ../redishappy-consul-service \
         --prefix=/ \
         -s dir \
         -- .
@@ -101,7 +101,6 @@ function makeRedisConsulPackage() {
 
   popd
 }
-
 
 function main() {
     makeRedisHAProxyPackage

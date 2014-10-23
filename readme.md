@@ -1,18 +1,29 @@
 Redis Happy
 -----------
 
-Automated Redis Failover using HaProxy and Sentinel
-
 [![Build Status](https://travis-ci.org/mdevilliers/redishappy.svg?branch=master)](https://travis-ci.org/mdevilliers/redishappy)
-[![Build Status](https://drone.io/github.com/mdevilliers/redishappy/status.png)](https://drone.io/github.com/mdevilliers/redishappy/latest)
+
 [![Coverage Status](https://coveralls.io/repos/mdevilliers/redishappy/badge.png)](https://coveralls.io/r/mdevilliers/redishappy)
+
+One method of providing a highly available Redis service is to deploy using [Redis Sentinel](http://redis.io/topics/sentinel).
+
+Redis Sentinel monitors your Redis cluster and on detecting failure promotes a slave to become the new master. RedisHappy provides a daemon to monitor for this promotion and to tell the outside world that this has happened.
+
+Currently we support [HAProxy](http://www.haproxy.org/) and [Consul](https://www.consul.io/).
 
 Api
 ---
-GET /api/pingpong - healthcheck
-GET /api/configuration - start up configurations
-GET /api/sentinels - sentinels being monitored with cluster information
-GET /api/topology - masters of the clusters and host/ip addresses exposed
+
+RedisHappy provides a readonly api at http://localhost:8000
+
+GET /api/pingpong - healthcheck - will reply "pong" if running
+
+GET /api/configuration - displays the start up configurations
+
+GET /api/sentinels - displays the sentinels being currently monitored
+
+GET /api/topology - displays the current view of the Redis clusters, their master and their host/ip addresses
+
 
 PreCheckin
 ----------
