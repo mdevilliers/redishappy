@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/mdevilliers/redishappy/configuration"
+	"github.com/mdevilliers/redishappy/util"
 )
 
 type HAProxyConfigContainsRequiredSections struct{}
@@ -43,4 +44,16 @@ func (c *CheckPermissionToWriteToHAProxyConfigFile) Check(config configuration.C
 	}
 
 	return true, nil
+}
+
+type CheckHAProxyTemplateFileExists struct{}
+
+func (c *CheckHAProxyTemplateFileExists) Check(config configuration.Configuration) (bool, error) {
+
+	exists := util.FileExists(config.HAProxy.TemplatePath)
+
+	if exists {
+		return true, nil
+	}
+	return false, fmt.Errorf("HAProxy Template file at %s : does not exist.", config.HAProxy.TemplatePath)
 }
