@@ -83,11 +83,11 @@ func executeHAproxyCommand(reloadCommand string) (bool, error) {
 	output, err := util.ExecuteCommand(reloadCommand)
 
 	if err != nil {
+		logger.Info.Printf("HAProxy output : %s", string(output))
 		logger.Error.Printf("Error reloading haproxy with command %s : %s\n", reloadCommand, err.Error())
 		return false, err
 	}
 
-	logger.Info.Printf("HAProxy output : %s", string(output))
 	logger.Info.Printf("HAProxy reload completed.")
 
 	return true, nil
