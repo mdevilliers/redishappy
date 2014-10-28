@@ -23,12 +23,15 @@ A. Yes. It can do. But not reliably... I'll explain.
 
 Suppose we have this setup. R1 and R2 are redis instances, S1,S2,S3 are Sentinel instances, H1 and H2 are HAProxy instances. 
 
+<pre>
 	R1,R2
 	S1, S2, S3
 	H1, H2
+</pre>
 
 1. Life is good - R1 and R2 are in a master slave configuration, H1 and H2 correctly identify R1 as the master
 
+<pre>
 	R1      R2
 	M <---- S
     ^
@@ -36,9 +39,11 @@ Suppose we have this setup. R1 and R2 are redis instances, S1,S2,S3 are Sentinel
     ---------
     |       |
 	H1      H2
+</pre>
 
 2. Disaster! - R1 dies or is partitioned but don't fear R2 is now the "master". Day saved! 
 
+<pre>
 	*       R2
 			M
     		^
@@ -46,10 +51,11 @@ Suppose we have this setup. R1 and R2 are redis instances, S1,S2,S3 are Sentinel
     ---------
     |       |
 	H1      H2
-
+</pre>
 
 3. Disaster! - R1 comes back online and announces itself as a "master". Both R1 and R2 are now accepting writes, as HAProxy's healthcheck identifies both as online.
 
+<pre>
 	R1		R2
 	M       M
     ^		^
@@ -57,9 +63,11 @@ Suppose we have this setup. R1 and R2 are redis instances, S1,S2,S3 are Sentinel
     ---------
     |       |       
 	H1      H2
+</pre>
 
 4. R1 is made the "slave" of R2. Everything is ok now, except for the writes that R1 accepted which are lost forever.
 
+<pre>
 	R1      R2
 	S ----->M
     		^
@@ -67,6 +75,7 @@ Suppose we have this setup. R1 and R2 are redis instances, S1,S2,S3 are Sentinel
     ---------
     |       |
 	H1      H2
+</pre>
 
 When a Redis instance is started and stopped it initially announces itself as a "master". It will some time later be made a "slave" but in the meantime accept writes which will be lost when it is correctly made a slave.
 
