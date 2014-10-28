@@ -52,16 +52,7 @@ Error - syslog, file, stdout
 
 The log path is configurable.
 
+ ## Copyright and license
 
-Proposed configuration
-
-  "Logging" :{
-
-  	// values are none, all, errorsonly
-  	"Level" : "none",
-  	// values are none, stdout, file, syslog
-  	"Trace" :"none",
-	"Info" :"stdout",
-	"Warning" : "file",
-	"Error" : "syslog,file"
-  }
+Code and documentation copyright 2014 Mark deVilliers. Code released under the Apache 2.0 license.
+Docs released under Creative commons.
