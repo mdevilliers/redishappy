@@ -33,7 +33,7 @@ Suppose we have this setup. R1 and R2 are redis instances, S1,S2,S3 are Sentinel
 
 <pre>
 	R1      R2
-	M <---- S
+	M  ---- S
     ^
     |
     ---------
@@ -69,7 +69,7 @@ Suppose we have this setup. R1 and R2 are redis instances, S1,S2,S3 are Sentinel
 
 <pre>
 	R1      R2
-	S ----->M
+	S ----- M
     		^
             |
     ---------
