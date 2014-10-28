@@ -2,10 +2,10 @@ package main
 
 import (
 	"flag"
-	"log"
 
 	"github.com/mdevilliers/redishappy"
 	"github.com/mdevilliers/redishappy/configuration"
+	"github.com/mdevilliers/redishappy/services/logger"
 )
 
 var configFile string
@@ -20,10 +20,12 @@ func main() {
 
 	flag.Parse()
 
+	logger.InitLogging(logPath)
+
 	config, err := configuration.LoadFromFile(configFile)
 
 	if err != nil {
-		log.Panicf("Error opening config file : %s", err.Error())
+		logger.Error.Panicf("Error opening config file : %s", err.Error())
 	}
 
 	sane, errors := config.GetCurrentConfiguration().SanityCheckConfiguration(&configuration.ConfigContainsRequiredSections{})
@@ -31,13 +33,13 @@ func main() {
 	if !sane {
 
 		for _, errorAsStr := range errors {
-			log.Print(errorAsStr)
+			logger.Error.Print(errorAsStr)
 		}
 
-		log.Panic("Configuration fails checks")
+		logger.Error.Panic("Configuration fails checks")
 	}
 
 	flipper := NewConsulFlipperClient(config)
 
-	redishappy.NewRedisHappyEngine(flipper, config, logPath)
+	redishappy.NewRedisHappyEngine(flipper, config)
 }

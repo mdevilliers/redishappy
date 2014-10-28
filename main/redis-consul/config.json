@@ -8,10 +8,17 @@
       {"Host" : "172.17.42.1", "Port" : 26377}
     ],
   "Consul" : {
-  	"Datacenter": "dc1", 
+    "Address" : "127.0.0.1:8500",
   	"Services" : [
-		{"Cluster" : "testing", "Node" : "redis-1", "tags" : [ "redis", "master", "anothertag"]},
-		{"Cluster" : "other",   "Node" : "redis-2"}
+		  { "Cluster" : "testing", 
+        "Node" : "redis-1",
+        "Datacenter": "dc1",
+        "tags" : [ "redis", "master", "anothertag"]
+      },
+		  { "Cluster" : "other",
+        "Datacenter": "dc1", 
+        "Node" : "redis-2"
+      }
   	]
   }
 }

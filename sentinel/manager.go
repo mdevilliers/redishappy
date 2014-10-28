@@ -16,6 +16,11 @@ const (
 	SentinelMarkedAlive = 3
 )
 
+const (
+	SentinelReconnectionPeriod        = time.Second * 5
+	SentinelTopologyExplorationPeriod = time.Second * 60
+)
+
 type Manager interface {
 	Notify(event SentinelEvent)
 }
@@ -106,7 +111,7 @@ func (m *SentinelManager) bootstrap() {
 		m.Notify(&SentinelAdded{Sentinel: sentinel})
 	}
 
-	util.Schedule(func() { m.bootstrap() }, time.Second*60)
+	util.Schedule(func() { m.bootstrap() }, SentinelTopologyExplorationPeriod)
 }
 
 func (m *SentinelManager) exploreSentinelTopology(sentinel types.Sentinel) {
@@ -192,7 +197,7 @@ func (m *SentinelManager) updateState(event interface{}) {
 			currentInfo.LastUpdated = time.Now().UTC()
 		}
 
-		util.Schedule(func() { m.startNewMonitor(sentinel) }, time.Second*5)
+		util.Schedule(func() { m.startNewMonitor(sentinel) }, SentinelReconnectionPeriod)
 
 		logger.Trace.Printf("Sentinel lost : %s (scheduling new client and monitor).", util.String(topologyState))
 
