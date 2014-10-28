@@ -3,14 +3,15 @@ package types
 import "errors"
 
 type Consul struct {
-	Datacenter string    `json:"datacenter"`
-	Services   []Service `json:"services"`
+	Address  string    `json:"address"`
+	Services []Service `json:"services"`
 }
 
 type Service struct {
-	Cluster string   `json:"cluster"`
-	Node    string   `json:"node"`
-	Tags    []string `json:"tags"`
+	Cluster    string   `json:"cluster"`
+	Node       string   `json:"node"`
+	Tags       []string `json:"tags"`
+	Datacenter string   `json:"datacenter"`
 }
 
 func (c Consul) FindByClusterName(name string) (Service, error) {

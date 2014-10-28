@@ -17,7 +17,14 @@ type ConsulFlipperClient struct {
 
 func NewConsulFlipperClient(cm *configuration.ConfigurationManager) *ConsulFlipperClient {
 
-	client, err := consulapi.NewClient(consulapi.DefaultConfig())
+	configuration := cm.GetCurrentConfiguration()
+	connectionDetails := consulapi.DefaultConfig()
+
+	if configuration.Consul.Address != "" {
+		connectionDetails.Address = configuration.Consul.Address
+	}
+
+	client, err := consulapi.NewClient(connectionDetails)
 
 	if err != nil {
 		logger.Error.Panicf("Error connecting to consul : %s", err.Error())
@@ -27,16 +34,16 @@ func NewConsulFlipperClient(cm *configuration.ConfigurationManager) *ConsulFlipp
 }
 
 func (c *ConsulFlipperClient) InitialiseRunningState(state *types.MasterDetailsCollection) {
-	logger.Info.Printf("InitialiseRunningState called : %s", util.String(state.Items()))
 
+	logger.Info.Printf("InitialiseRunningState called : %s", util.String(state.Items()))
 	for _, md := range state.Items() {
 		c.UpdateConsul(md.Name, md.Ip, md.Port)
 	}
 }
 
 func (c *ConsulFlipperClient) Orchestrate(switchEvent types.MasterSwitchedEvent) {
-	logger.Info.Printf("Orchestrate called : %s", util.String(switchEvent))
 
+	logger.Info.Printf("Orchestrate called : %s", util.String(switchEvent))
 	c.UpdateConsul(switchEvent.Name, switchEvent.NewMasterIp, switchEvent.NewMasterPort)
 
 }
@@ -63,7 +70,7 @@ func (c *ConsulFlipperClient) UpdateConsul(name string, ip string, port int) {
 	}
 
 	reg := &consulapi.CatalogRegistration{
-		Datacenter: consulDetails.Datacenter,
+		Datacenter: service.Datacenter,
 		Node:       service.Node,
 		Address:    ip,
 		Service:    consulService,
