@@ -9,9 +9,7 @@ import (
 	"github.com/zenazn/goji"
 )
 
-func NewRedisHappyEngine(flipper types.FlipperClient, cm *configuration.ConfigurationManager, logPath string) {
-
-	logger.InitLogging(logPath)
+func NewRedisHappyEngine(flipper types.FlipperClient, cm *configuration.ConfigurationManager) {
 
 	masterEvents := make(chan types.MasterSwitchedEvent)
 	sentinelManager := sentinel.NewManager(masterEvents, cm)
