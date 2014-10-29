@@ -46,8 +46,8 @@ export _REDISHAPPY_PKGVERSION="1"
 build/ci.sh
 build/release.sh
 
-dpkg -i build/redishappy_haproxy_${version}${package_version}
-# dpkg -i build/redishappy_consul_${version}${package_version}
+dpkg -i build/redishappy-haproxy_${_REDISHAPPY_VERSION}${_REDISHAPPY_PKGVERSION}_all.deb
+# dpkg -i build/redishappy-consul_${_REDISHAPPY_VERSION}${_REDISHAPPY_PKGVERSION}_all.deb
 
 SCRIPT
 
