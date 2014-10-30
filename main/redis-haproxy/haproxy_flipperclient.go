@@ -18,7 +18,7 @@ type HAProxyFlipperClient struct {
 
 func NewHAProxyFlipper(configuration *configuration.ConfigurationManager) *HAProxyFlipperClient {
 	state := types.NewMasterDetailsCollection()
-	return &HAProxyFlipperClient{configurationManager: configuration, lock: &sync.Mutex{}, state : &state }
+	return &HAProxyFlipperClient{configurationManager: configuration, lock: &sync.Mutex{}, state: &state}
 }
 
 func (flipper *HAProxyFlipperClient) InitialiseRunningState(details *types.MasterDetailsCollection) {
