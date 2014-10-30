@@ -64,3 +64,19 @@ func TestSortMasterDetailsByName(t *testing.T) {
 		t.Error("Should return reference to details2")
 	}
 }
+
+func TestMasterDetailsIsEmpty(t *testing.T) {
+
+	collection := NewMasterDetailsCollection()
+
+	if collection.IsEmpty() == false {
+		t.Error("Collection should be empty")
+	}
+
+	detail := &MasterDetails{ExternalPort: 1111, Name: "a", Ip: "1.1.1.1.", Port: 2222}
+	collection.AddOrReplace(detail)
+
+	if collection.IsEmpty() {
+		t.Error("Collection should not be empty")
+	}
+}

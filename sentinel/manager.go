@@ -119,7 +119,11 @@ func (m *SentinelManager) exploreSentinelTopology(sentinel types.Sentinel) {
 	client, err := NewSentinelClient(sentinel, m.redisConnection)
 
 	if err != nil {
-		logger.Info.Printf("Error starting sentinel (%s) client : %s", sentinel.GetLocation(), err.Error())
+
+		logger.Error.Printf("Error starting sentinel (%s) client : %s", sentinel.GetLocation(), err.Error())
+		m.Notify(&SentinelLost{Sentinel: sentinel})
+
+		return
 	}
 	defer client.Close()
 
