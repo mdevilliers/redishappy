@@ -17,12 +17,19 @@ type HAProxyFlipperClient struct {
 }
 
 func NewHAProxyFlipper(configuration *configuration.ConfigurationManager) *HAProxyFlipperClient {
-	return &HAProxyFlipperClient{configurationManager: configuration, lock: &sync.Mutex{}}
+	state := types.NewMasterDetailsCollection()
+	return &HAProxyFlipperClient{configurationManager: configuration, lock: &sync.Mutex{}, state : &state }
 }
 
 func (flipper *HAProxyFlipperClient) InitialiseRunningState(details *types.MasterDetailsCollection) {
 	flipper.lock.Lock()
 	defer flipper.lock.Unlock()
+
+	if details.IsEmpty() {
+		logger.Info.Print("Empty initial state : Nothing to do")
+		return
+	}
+
 	configuration := flipper.configurationManager.GetCurrentConfiguration()
 	_, err := flipper.renderAndReload(configuration, details)
 

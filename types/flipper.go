@@ -41,6 +41,10 @@ func (m *MasterDetailsCollection) Items() []*MasterDetails {
 	return arr
 }
 
+func (m *MasterDetailsCollection) IsEmpty() bool {
+	return len(m.items) == 0
+}
+
 type ByName []*MasterDetails
 
 func (a ByName) Len() int           { return len(a) }
