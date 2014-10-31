@@ -100,6 +100,7 @@ func (m *SentinelManager) StartNewMonitor(sentinel types.Sentinel) {
 	if err != nil {
 		logger.Error.Printf("Error starting monitor %s : %s", sentinel.GetLocation(), err.Error())
 		m.Notify(&SentinelLost{Sentinel: sentinel})
+		return
 	}
 
 	go monitor.StartMonitoringMasterEvents(m.switchmasterchannel)
