@@ -29,7 +29,7 @@ echo "export PATH=$PATH:/usr/local/go/bin" >> /home/vagrant/.profile
 echo "export GOPATH=/home/vagrant/go" >> /home/vagrant/.profile
 
 # install fpm
-gem install fpm
+gem install --no-ri --no-rdoc fpm
 
 go get github.com/mdevilliers/redishappy
 go get -t -v ./...
@@ -54,11 +54,14 @@ SCRIPT
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   
   config.vm.box = 'ubuntu/trusty64'
+
+  config.vm.network :private_network, ip: "192.168.0.22"
+  config.vm.network :forwarded_port, guest: 8000, host: 8000
   
   config.vm.provider :virtualbox do |vb|
       vb.customize ["modifyvm", :id, "--memory", 2048,  "--cpus", "2"]
   end
 
-  config.vm.provision :shell, inline: script
+  config.vm.provision :shell, inline: script 
 
 end
