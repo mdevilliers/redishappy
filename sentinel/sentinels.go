@@ -4,25 +4,28 @@ import (
 	"time"
 
 	"github.com/mdevilliers/redishappy/services/logger"
+	"github.com/mdevilliers/redishappy/types"
 	"github.com/mdevilliers/redishappy/util"
 )
 
+type StartMonitoringSentinel func(types.Sentinel)
+
 type SentinelState struct {
-	notifyChannel chan SentinelEvent
-	readChannel   chan TopologyRequest
-	state         SentinelTopology
-	manager       Manager
+	notifyChannel           chan SentinelEvent
+	readChannel             chan TopologyRequest
+	state                   SentinelTopology
+	startMonitoringSentinel StartMonitoringSentinel
 }
 
-func NewSentinelState(manager Manager) SentinelState {
+func NewSentinelState(fn StartMonitoringSentinel) SentinelState {
 	events := make(chan SentinelEvent)
 	requests := make(chan TopologyRequest)
 
 	agent := SentinelState{
-		state:         SentinelTopology{Sentinels: map[string]*SentinelInfo{}},
-		notifyChannel: events,
-		readChannel:   requests,
-		manager:       manager,
+		state:                   SentinelTopology{Sentinels: map[string]*SentinelInfo{}},
+		notifyChannel:           events,
+		readChannel:             requests,
+		startMonitoringSentinel: fn,
 	}
 
 	go agent.loopEvents(events, requests)
@@ -66,8 +69,7 @@ func (s SentinelState) updateState(event interface{}) {
 
 			s.state.Sentinels[uid] = info
 
-			go s.manager.StartNewMonitor(sentinel)
-			go s.manager.ExploreSentinel(sentinel)
+			go s.startMonitoringSentinel(sentinel)
 
 			logger.Trace.Printf("Sentinel added : %s", util.String(s.state))
 		}
@@ -82,7 +84,8 @@ func (s SentinelState) updateState(event interface{}) {
 			currentInfo.State = SentinelMarkedDown
 			currentInfo.LastUpdated = time.Now().UTC()
 
-			util.Schedule(func() { s.manager.StartNewMonitor(sentinel) }, SentinelReconnectionPeriod)
+			util.Schedule(func() { go s.startMonitoringSentinel(sentinel) }, SentinelReconnectionPeriod)
+
 			logger.Trace.Printf("Sentinel lost : %s (scheduling new client and monitor).", util.String(s.state))
 
 		} else {

@@ -120,12 +120,6 @@ func (tm *TestManager) Notify(event SentinelEvent) {
 		tm.NotifyCalledWithSentinelAdded++
 	}
 }
-func (tm *TestManager) ExploreSentinel(sentinel types.Sentinel) {
-
-}
-func (tm *TestManager) StartNewMonitor(sentinel types.Sentinel) {
-
-}
 
 func TestNewSentinelClientWillWillSignalSentinelLostIfCanNotConnect(t *testing.T) {
 

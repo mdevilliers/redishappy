@@ -23,8 +23,6 @@ const (
 
 type Manager interface {
 	Notify(event SentinelEvent)
-	ExploreSentinel(sentinel types.Sentinel)
-	StartNewMonitor(sentinel types.Sentinel)
 }
 
 type SentinelManager struct {
@@ -46,7 +44,13 @@ func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, cm *configur
 		configurationManager: cm,
 		throttle:             throttle,
 	}
-	manager.state = NewSentinelState(manager)
+
+	startMonitoringCallback := func(sentinel types.Sentinel) {
+		go manager.exploreSentinel(sentinel)
+		go manager.startNewMonitor(sentinel)
+	}
+
+	manager.state = NewSentinelState(startMonitoringCallback)
 
 	go manager.bootstrap()
 	return manager
@@ -66,7 +70,7 @@ func (m *SentinelManager) GetCurrentTopology() types.MasterDetailsCollection {
 	return <-stateChannel
 }
 
-func (m *SentinelManager) ExploreSentinel(sentinel types.Sentinel) {
+func (m *SentinelManager) exploreSentinel(sentinel types.Sentinel) {
 
 	client, err := NewSentinelClient(sentinel, m.redisConnection)
 
@@ -93,7 +97,7 @@ func (m *SentinelManager) ExploreSentinel(sentinel types.Sentinel) {
 	}
 }
 
-func (m *SentinelManager) StartNewMonitor(sentinel types.Sentinel) {
+func (m *SentinelManager) startNewMonitor(sentinel types.Sentinel) {
 
 	monitor, err := NewMonitor(sentinel, m, m.redisConnection)
 
