@@ -10,7 +10,7 @@
   "HAProxy" :
     {
       "TemplatePath": "/var/redishappy/haproxy_template.cfg",
-      "OutputPath": "/etc/haproxy/haproxy.cfg",
-      "ReloadCommand": "haproxy -f /etc/haproxy/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid)"
+      "OutputPath": "/var/redishappy/haproxy.cfg",
+      "ReloadCommand": "haproxy -f /var/redishappy/haproxy.cfg -p /var/redishappy/haproxy.pid -sf $(cat /var/redishappy/haproxy.pid)"
     }
 }

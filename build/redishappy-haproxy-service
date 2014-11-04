@@ -4,8 +4,8 @@ author      "mdevilliers"
 start on filesystem or runlevel [2345]
 stop on [!12345]
 
-setuid root
-setgid root
+setuid haproxy
+setgid haproxy
 
 script
 

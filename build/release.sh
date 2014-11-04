@@ -33,6 +33,7 @@ function makeRedisHAProxyPackage() {
 
     cp ${origdir}/${workspace}/configs/redis-haproxy/config.json ${name}/${configdir}/redishappy/config.json
     cp ${origdir}/${workspace}/configs/redis-haproxy/haproxy_template.cfg ${name}/${configdir}/redishappy/haproxy_template.cfg
+    cp ${origdir}/${workspace}/configs/redis-haproxy/haproxy.cfg ${name}/${configdir}/redishappy/haproxy.cfg
 
     # Versioning
     echo ${version} > ${name}/${installdir}/redishappy/VERSION
