@@ -4,28 +4,28 @@ import (
 	"time"
 
 	"github.com/mdevilliers/redishappy/services/logger"
+	"github.com/mdevilliers/redishappy/types"
 	"github.com/mdevilliers/redishappy/util"
 )
 
-// get state changes -> sentinel added
-// make requests e.g. start monitoring
+type StartMonitoringSentinel func(types.Sentinel)
 
 type SentinelState struct {
-	notifyChannel chan SentinelEvent
-	readChannel   chan TopologyRequest
-	state         SentinelTopology
-	manager       Manager
+	notifyChannel           chan SentinelEvent
+	readChannel             chan TopologyRequest
+	state                   SentinelTopology
+	startMonitoringSentinel StartMonitoringSentinel
 }
 
-func NewSentinelState(manager Manager) SentinelState {
+func NewSentinelState(fn StartMonitoringSentinel) SentinelState {
 	events := make(chan SentinelEvent)
 	requests := make(chan TopologyRequest)
 
 	agent := SentinelState{
-		state:         SentinelTopology{Sentinels: map[string]*SentinelInfo{}},
-		notifyChannel: events,
-		readChannel:   requests,
-		manager:       manager,
+		state:                   SentinelTopology{Sentinels: map[string]*SentinelInfo{}},
+		notifyChannel:           events,
+		readChannel:             requests,
+		startMonitoringSentinel: fn,
 	}
 
 	go agent.loopEvents(events, requests)
@@ -69,8 +69,7 @@ func (s SentinelState) updateState(event interface{}) {
 
 			s.state.Sentinels[uid] = info
 
-			go s.manager.StartNewMonitor(sentinel)
-			go s.manager.ExploreSentinel(sentinel)
+			go s.startMonitoringSentinel(sentinel)
 
 			logger.Trace.Printf("Sentinel added : %s", util.String(s.state))
 		}
@@ -84,11 +83,14 @@ func (s SentinelState) updateState(event interface{}) {
 		if ok {
 			currentInfo.State = SentinelMarkedDown
 			currentInfo.LastUpdated = time.Now().UTC()
+
+			util.Schedule(func() { go s.startMonitoringSentinel(sentinel) }, SentinelReconnectionPeriod)
+
+			logger.Trace.Printf("Sentinel lost : %s (scheduling new client and monitor).", util.String(s.state))
+
+		} else {
+			logger.Trace.Printf("Unknown sentinel lost : %s.", util.String(s.state))
 		}
-
-		util.Schedule(func() { s.manager.StartNewMonitor(sentinel) }, SentinelReconnectionPeriod)
-
-		logger.Trace.Printf("Sentinel lost : %s (scheduling new client and monitor).", util.String(s.state))
 
 	case *SentinelPing:
 		sentinel := e.GetSentinel()
@@ -98,6 +100,8 @@ func (s SentinelState) updateState(event interface{}) {
 		if ok {
 			currentInfo.State = SentinelMarkedAlive
 			currentInfo.LastUpdated = time.Now().UTC()
+		} else {
+			logger.Trace.Printf("Unknown sentinel ping : %s.", util.String(s.state))
 		}
 
 	case *SentinelClustersMonitoredUpdate:
@@ -107,6 +111,8 @@ func (s SentinelState) updateState(event interface{}) {
 		if info, exists := s.state.Sentinels[uid]; exists {
 
 			info.Clusters = e.Clusters
+		} else {
+			logger.Trace.Printf("Unknown sentinel updated state : %s.", util.String(s.state))
 		}
 
 	default:

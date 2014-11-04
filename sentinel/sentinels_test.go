@@ -9,7 +9,7 @@ import (
 )
 
 func TestCanAddSentinels(t *testing.T) {
-	state := NewSentinelState(&TestManager{})
+	state := NewSentinelState(func(_ types.Sentinel) {})
 	sentinel := types.Sentinel{Host: "10.1.1.2", Port: 12345}
 	sentinelMessage := SentinelAdded{Sentinel: sentinel}
 	state.Notify(&sentinelMessage)
@@ -36,7 +36,7 @@ func TestCanAddSentinels(t *testing.T) {
 
 func TestCanMarkSentinelsDown(t *testing.T) {
 
-	state := NewSentinelState(&TestManager{})
+	state := NewSentinelState(func(_ types.Sentinel) {})
 	sentinel := types.Sentinel{Host: "10.1.1.2", Port: 12345}
 
 	sentinelAddedMessage := &SentinelAdded{Sentinel: sentinel}
@@ -67,7 +67,8 @@ func TestCanMarkSentinelsDown(t *testing.T) {
 }
 
 func TestCanMarkSentinelsAlive(t *testing.T) {
-	state := NewSentinelState(&TestManager{})
+
+	state := NewSentinelState(func(_ types.Sentinel) {})
 	sentinel := types.Sentinel{Host: "10.1.1.2", Port: 12345}
 	sentinelMessage := SentinelAdded{Sentinel: sentinel}
 	sentinelPingMessage := SentinelPing{Sentinel: sentinel}
@@ -95,7 +96,8 @@ func TestCanMarkSentinelsAlive(t *testing.T) {
 }
 
 func TestCanAddCLustersToSentinel(t *testing.T) {
-	state := NewSentinelState(&TestManager{})
+
+	state := NewSentinelState(func(_ types.Sentinel) {})
 	sentinel := types.Sentinel{Host: "10.1.1.2", Port: 12345}
 
 	sentinelMessage := SentinelAdded{Sentinel: sentinel}
