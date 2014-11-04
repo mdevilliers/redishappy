@@ -7,9 +7,6 @@ import (
 	"github.com/mdevilliers/redishappy/util"
 )
 
-// get state changes -> sentinel added
-// make requests e.g. start monitoring
-
 type SentinelState struct {
 	notifyChannel chan SentinelEvent
 	readChannel   chan TopologyRequest
@@ -84,11 +81,13 @@ func (s SentinelState) updateState(event interface{}) {
 		if ok {
 			currentInfo.State = SentinelMarkedDown
 			currentInfo.LastUpdated = time.Now().UTC()
+
+			util.Schedule(func() { s.manager.StartNewMonitor(sentinel) }, SentinelReconnectionPeriod)
+			logger.Trace.Printf("Sentinel lost : %s (scheduling new client and monitor).", util.String(s.state))
+
+		} else {
+			logger.Trace.Printf("Unknown sentinel lost : %s.", util.String(s.state))
 		}
-
-		util.Schedule(func() { s.manager.StartNewMonitor(sentinel) }, SentinelReconnectionPeriod)
-
-		logger.Trace.Printf("Sentinel lost : %s (scheduling new client and monitor).", util.String(s.state))
 
 	case *SentinelPing:
 		sentinel := e.GetSentinel()
@@ -98,6 +97,8 @@ func (s SentinelState) updateState(event interface{}) {
 		if ok {
 			currentInfo.State = SentinelMarkedAlive
 			currentInfo.LastUpdated = time.Now().UTC()
+		} else {
+			logger.Trace.Printf("Unknown sentinel ping : %s.", util.String(s.state))
 		}
 
 	case *SentinelClustersMonitoredUpdate:
@@ -107,6 +108,8 @@ func (s SentinelState) updateState(event interface{}) {
 		if info, exists := s.state.Sentinels[uid]; exists {
 
 			info.Clusters = e.Clusters
+		} else {
+			logger.Trace.Printf("Unknown sentinel updated state : %s.", util.String(s.state))
 		}
 
 	default:
