@@ -20,8 +20,8 @@ func InitLogging(logPath string) {
 
 	allOutputs := io.MultiWriter(logFileWriter, os.Stdout)
 
-	Trace = log.New(logFileWriter, "TRACE: ", log.Ldate|log.Ltime|log.Lshortfile)
-	Info = log.New(logFileWriter, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	Trace = log.New(allOutputs, "TRACE: ", log.Ldate|log.Ltime|log.Lshortfile)
+	Info = log.New(allOutputs, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	Warning = log.New(allOutputs, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
 	Error = log.New(allOutputs, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
