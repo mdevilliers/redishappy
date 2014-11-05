@@ -10,13 +10,9 @@ import (
 	"github.com/mdevilliers/redishappy/types"
 )
 
-const (
-	MonitorPingInterval = time.Second * 1
-)
-
 type Monitor struct {
 	pubSubClient    *redis.PubSubClient
-	pingClient      *SentinelClient
+	client          *SentinelClient
 	channel         chan redis.RedisPubSubReply
 	manager         Manager
 	sentinel        types.Sentinel
@@ -41,7 +37,7 @@ func NewMonitor(sentinel types.Sentinel, manager Manager, redisConnection redis.
 	}
 
 	monitor := &Monitor{pubSubClient: pubSubClient,
-		pingClient:      client,
+		client:          client,
 		channel:         channel,
 		manager:         manager,
 		sentinel:        sentinel,
@@ -72,24 +68,39 @@ L:
 		case message := <-m.channel:
 			shutdown := m.dealWithSentinelMessage(message, switchmasterchannel)
 			if shutdown {
+
 				m.manager.Notify(&SentinelLost{Sentinel: m.sentinel})
 				logger.Info.Printf("Shutting down monitor %s", m.sentinel.GetLocation())
+
 				break L
 			}
 
 		case <-time.After(MonitorPingInterval):
 
-			resp := m.pingClient.Ping()
-
+			resp := m.client.Ping()
 			if resp != "PONG" {
 
 				logger.Info.Printf("Error pinging client : %s, resonse : %s", m.sentinel.GetLocation(), resp)
 				m.manager.Notify(&SentinelLost{Sentinel: m.sentinel})
 				logger.Info.Printf("Shutting down monitor %s", m.sentinel.GetLocation())
+
 				break L
 			}
 
 			m.manager.Notify(&SentinelPing{Sentinel: m.sentinel})
+
+			knownClusters := m.client.FindKnownClusters()
+
+			m.manager.Notify(&SentinelClustersMonitoredUpdate{Sentinel: m.sentinel, Clusters: knownClusters})
+
+			for _, clustername := range knownClusters {
+
+				sentinels := m.client.FindConnectedSentinels(clustername)
+
+				for _, connectedsentinel := range sentinels {
+					m.manager.Notify(&SentinelAdded{Sentinel: connectedsentinel})
+				}
+			}
 		}
 	}
 }
