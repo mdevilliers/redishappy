@@ -16,7 +16,6 @@ type SentinelClient struct {
 func NewSentinelClient(sentinel types.Sentinel, redisConnection redis.RedisConnection) (*SentinelClient, error) {
 
 	uri := sentinel.GetLocation()
-	logger.Info.Printf("SentinelClient : connecting to %s", uri)
 
 	redisclient, err := redisConnection.GetConnection("tcp", uri)
 
@@ -25,15 +24,25 @@ func NewSentinelClient(sentinel types.Sentinel, redisConnection redis.RedisConne
 		return nil, err
 	}
 
-	logger.Info.Printf("SentinelClient : connected to %s", uri)
-
 	client := &SentinelClient{redisClient: redisclient,
 		sentinel: sentinel}
 	return client, nil
 }
 
 func (m *SentinelClient) Close() {
-	m.redisClient.Close()
+
+	err := m.redisClient.Close()
+
+	if err != nil {
+		logger.Error.Printf("Sentinel client : error closing connection %s", err.Error())
+	}
+}
+
+func (m *SentinelClient) Ping() string {
+
+	r := m.redisClient.Cmd("PING")
+
+	return r.String()
 }
 
 func (m *SentinelClient) DiscoverMasterForCluster(clusterName string) (*types.MasterDetails, error) {

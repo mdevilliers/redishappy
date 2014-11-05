@@ -33,6 +33,10 @@ type SentinelLost struct {
 	Sentinel types.Sentinel
 }
 
+type SentinelUnknown struct {
+	Sentinel types.Sentinel
+}
+
 type SentinelPing struct {
 	Sentinel types.Sentinel
 }
@@ -51,6 +55,10 @@ func (s SentinelLost) GetSentinel() types.Sentinel {
 }
 
 func (s SentinelPing) GetSentinel() types.Sentinel {
+	return s.Sentinel
+}
+
+func (s SentinelUnknown) GetSentinel() types.Sentinel {
 	return s.Sentinel
 }
 

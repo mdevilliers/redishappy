@@ -20,12 +20,13 @@ type RedisReply interface {
 type RedisClient interface {
 	Cmd(cmd string, args ...interface{}) RedisReply
 	NewPubSubClient() RedisPubSubClient
-	Close()
+	Close() error
 }
 
 type RedisPubSubClient interface {
 	Subscribe(channels ...interface{}) RedisPubSubReply
 	Receive() RedisPubSubReply
+	Close()
 }
 
 type RedisPubSubReply interface {
@@ -47,7 +48,8 @@ type RadixRedisReply struct {
 }
 
 type RadixPubSubClient struct {
-	client *pubsub.SubClient
+	client           *pubsub.SubClient
+	underlyingclient *redis.Client
 }
 
 type RadixPubSubReply struct {
@@ -64,8 +66,8 @@ func (c *RadixRedisClient) Cmd(cmd string, args ...interface{}) RedisReply {
 	return makeRedisReply(re)
 }
 
-func (c *RadixRedisClient) Close() {
-	c.client.Close()
+func (c *RadixRedisClient) Close() error {
+	return c.client.Close()
 }
 
 func (c *RadixRedisReply) String() string {
@@ -100,7 +102,7 @@ func (c *RadixRedisReply) List() ([]string, error) {
 
 func (c *RadixRedisClient) NewPubSubClient() RedisPubSubClient {
 	client := pubsub.NewSubClient(c.client)
-	return &RadixPubSubClient{client: client}
+	return &RadixPubSubClient{client: client, underlyingclient: c.client}
 }
 
 func (c *RadixPubSubClient) Subscribe(channels ...interface{}) RedisPubSubReply {
@@ -110,6 +112,10 @@ func (c *RadixPubSubClient) Subscribe(channels ...interface{}) RedisPubSubReply 
 func (c *RadixPubSubClient) Receive() RedisPubSubReply {
 	reply := c.client.Receive()
 	return &RadixPubSubReply{reply: reply}
+}
+
+func (c *RadixPubSubClient) Close() {
+	c.underlyingclient.Close()
 }
 
 func (r *RadixPubSubReply) Err() error {

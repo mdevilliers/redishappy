@@ -15,7 +15,7 @@ FAQ
 
 Q. Why - I thought in 2014 Redis clients should be Sentinel aware? They should connect to the correct Redis instance on failover.
 
-A. Some do, some don't. Some clients say they do but don't. Rather than fixing all of the clients we needed to work correctly with Sentinel, RedisHappy was built upon the fact that all of the clients I have tested are great at connecting to a single address. 
+A. Some do, some don't. Some it seems to be an eternal 'work in progress'. Rather than fixing all of the clients we needed to work correctly with Sentinel, RedisHappy was built upon the fact that all of the clients I have tested are great at connecting to a single address. 
 
 Q. Why - This [article](http://blog.haproxy.com/2014/01/02/haproxy-advanced-redis-health-check/) suggests that HAProxy can healthcheck Redis instances quite fine by itself. 
 
@@ -81,15 +81,25 @@ When a Redis instance is started and stopped it initially announces itself as a 
 
 RedisHappy attempts to avoid this failure mode by only presenting the correct server to HAProxy or any other service once it is confirmed as a "master". We assume clients will either block or fail until the master is online again.
 
+Defaults
+--------
+
+Installs to /opt/redishappy
+
+Configuration to /var/redishappy
+
+Logs to file in /var/redishappy/logs
+
+Warnings, Errors got to syslog
 
 Api
 ---
 
-RedisHappy provides a readonly api at http://localhost:8000
+RedisHappy provides a readonly api on port 8000
 
 GET /api/pingpong - healthcheck - will reply "pong" if running
 
-GET /api/configuration - displays the start up configurations
+GET /api/configuration - displays the start up configuration
 
 GET /api/sentinels - displays the sentinels being currently monitored
 

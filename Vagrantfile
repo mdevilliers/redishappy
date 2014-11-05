@@ -12,7 +12,7 @@ add-apt-repository ppa:bzr/ppa
 apt-get update -y
 
 # install dev tools
-apt-get install -y git mercurial ruby-dev gcc wget bzr
+apt-get install -y git mercurial ruby-dev gcc wget bzr lintian
 
 # install haproxy 1.5+
 apt-get install -y haproxy

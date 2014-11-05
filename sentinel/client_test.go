@@ -50,8 +50,9 @@ func (c *TestRedisClient) Cmd(cmd string, args ...interface{}) redis.RedisReply 
 	return c.RedisReply
 }
 
-func (c *TestRedisClient) Close() {
+func (c *TestRedisClient) Close() error {
 	c.isConnectionOpen = false
+	return nil
 }
 
 func (c *TestRedisClient) NewPubSubClient() redis.RedisPubSubClient {
@@ -61,8 +62,13 @@ func (c *TestRedisClient) NewPubSubClient() redis.RedisPubSubClient {
 func (c *TestPubSubClient) Subscribe(channels ...interface{}) redis.RedisPubSubReply {
 	return c.SubscribePubSubReply
 }
+
 func (c *TestPubSubClient) Receive() redis.RedisPubSubReply {
 	return c.ReceivePubSubReply
+}
+
+func (c *TestPubSubClient) Close() {
+
 }
 
 func (c *TestRedisReply) String() string {

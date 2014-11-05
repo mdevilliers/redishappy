@@ -7,18 +7,19 @@ import (
 	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
-	"github.com/mdevilliers/redishappy/util"
+	// "github.com/mdevilliers/redishappy/util"
 )
 
 const (
-	SentinelMarkedUp    = 1
-	SentinelMarkedDown  = 2
-	SentinelMarkedAlive = 3
+	SentinelMarkedUp      = 1
+	SentinelMarkedDown    = 2
+	SentinelMarkedAlive   = 3
+	SentinelMarkedUnknown = 4
 )
 
 const (
-	SentinelReconnectionPeriod        = time.Second * 5
-	SentinelTopologyExplorationPeriod = time.Second * 60
+	SentinelReconnectionPeriod = time.Second * 5
+	MonitorPingInterval        = time.Second * 1
 )
 
 type Manager interface {
@@ -46,7 +47,9 @@ func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, cm *configur
 	}
 
 	startMonitoringCallback := func(sentinel types.Sentinel) {
-		go manager.exploreSentinel(sentinel)
+
+		manager.Notify(&SentinelUnknown{Sentinel: sentinel})
+		// go manager.exploreSentinel(sentinel)
 		go manager.startNewMonitor(sentinel)
 	}
 
@@ -70,33 +73,6 @@ func (m *SentinelManager) GetCurrentTopology() types.MasterDetailsCollection {
 	return <-stateChannel
 }
 
-func (m *SentinelManager) exploreSentinel(sentinel types.Sentinel) {
-
-	client, err := NewSentinelClient(sentinel, m.redisConnection)
-
-	if err != nil {
-
-		logger.Error.Printf("Error starting sentinel (%s) client : %s", sentinel.GetLocation(), err.Error())
-		m.Notify(&SentinelLost{Sentinel: sentinel})
-
-		return
-	}
-	defer client.Close()
-
-	knownClusters := client.FindKnownClusters()
-
-	m.Notify(&SentinelClustersMonitoredUpdate{Sentinel: sentinel, Clusters: knownClusters})
-
-	for _, clustername := range knownClusters {
-
-		sentinels := client.FindConnectedSentinels(clustername)
-
-		for _, connectedsentinel := range sentinels {
-			m.Notify(&SentinelAdded{Sentinel: connectedsentinel})
-		}
-	}
-}
-
 func (m *SentinelManager) startNewMonitor(sentinel types.Sentinel) {
 
 	monitor, err := NewMonitor(sentinel, m, m.redisConnection)
@@ -107,7 +83,13 @@ func (m *SentinelManager) startNewMonitor(sentinel types.Sentinel) {
 		return
 	}
 
-	go monitor.StartMonitoringMasterEvents(m.switchmasterchannel)
+	err = monitor.StartMonitoringMasterEvents(m.switchmasterchannel)
+
+	if err != nil {
+		logger.Error.Printf("Error starting monitoring events %s : %s", sentinel.GetLocation(), err.Error())
+		m.Notify(&SentinelLost{Sentinel: sentinel})
+	}
+
 }
 
 func (m *SentinelManager) getTopology(stateChannel chan types.MasterDetailsCollection) {
@@ -146,6 +128,4 @@ func (m *SentinelManager) bootstrap() {
 	for _, sentinel := range configuration.Sentinels {
 		m.Notify(&SentinelAdded{Sentinel: sentinel})
 	}
-
-	util.Schedule(func() { m.bootstrap() }, SentinelTopologyExplorationPeriod)
 }
