@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	SentinelMarkedUp    = 1
-	SentinelMarkedDown  = 2
-	SentinelMarkedAlive = 3
+	SentinelMarkedUp      = 1
+	SentinelMarkedDown    = 2
+	SentinelMarkedAlive   = 3
+	SentinelMarkedUnknown = 4
 )
 
 const (
@@ -46,6 +47,8 @@ func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, cm *configur
 	}
 
 	startMonitoringCallback := func(sentinel types.Sentinel) {
+
+		manager.Notify(&SentinelUnknown{Sentinel: sentinel})
 		go manager.exploreSentinel(sentinel)
 		go manager.startNewMonitor(sentinel)
 	}
@@ -107,7 +110,13 @@ func (m *SentinelManager) startNewMonitor(sentinel types.Sentinel) {
 		return
 	}
 
-	go monitor.StartMonitoringMasterEvents(m.switchmasterchannel)
+	err = monitor.StartMonitoringMasterEvents(m.switchmasterchannel)
+
+	if err != nil {
+		logger.Error.Printf("Error starting monitoring events %s : %s", sentinel.GetLocation(), err.Error())
+		m.Notify(&SentinelLost{Sentinel: sentinel})
+	}
+
 }
 
 func (m *SentinelManager) getTopology(stateChannel chan types.MasterDetailsCollection) {
@@ -144,7 +153,7 @@ func (m *SentinelManager) bootstrap() {
 	configuration := m.configurationManager.GetCurrentConfiguration()
 
 	for _, sentinel := range configuration.Sentinels {
-		m.Notify(&SentinelAdded{Sentinel: sentinel})
+		m.exploreSentinel(sentinel)
 	}
 
 	util.Schedule(func() { m.bootstrap() }, SentinelTopologyExplorationPeriod)

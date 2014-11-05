@@ -10,35 +10,53 @@ import (
 	"github.com/mdevilliers/redishappy/types"
 )
 
+const (
+	MonitorPingInterval = time.Second * 1
+)
+
 type Monitor struct {
-	client   *redis.PubSubClient
-	channel  chan redis.RedisPubSubReply
-	manager  Manager
-	sentinel types.Sentinel
+	pubSubClient    *redis.PubSubClient
+	pingClient      *SentinelClient
+	channel         chan redis.RedisPubSubReply
+	manager         Manager
+	sentinel        types.Sentinel
+	redisConnection redis.RedisConnection
 }
 
 func NewMonitor(sentinel types.Sentinel, manager Manager, redisConnection redis.RedisConnection) (*Monitor, error) {
 
 	uri := sentinel.GetLocation()
-	logger.Info.Printf("Connecting to sentinel@%s", uri)
 
 	channel := make(chan redis.RedisPubSubReply)
-	client, err := redis.NewPubSubClient(uri, channel, redisConnection)
+	pubSubClient, err := redis.NewPubSubClient(uri, channel, redisConnection)
 
 	if err != nil {
 		return nil, err
 	}
 
-	monitor := &Monitor{client: client, channel: channel, manager: manager, sentinel: sentinel}
+	client, err := NewSentinelClient(sentinel, redisConnection)
+
+	if err != nil {
+		return nil, err
+	}
+
+	monitor := &Monitor{pubSubClient: pubSubClient,
+		pingClient:      client,
+		channel:         channel,
+		manager:         manager,
+		sentinel:        sentinel,
+		redisConnection: redisConnection}
 	return monitor, nil
 }
 
 func (m *Monitor) StartMonitoringMasterEvents(switchmasterchannel chan types.MasterSwitchedEvent) error {
 
 	keys := []string{"+switch-master", "+sentinel"}
-	err := m.client.Start(keys)
+	err := m.pubSubClient.Start(keys)
 
 	if err != nil {
+		logger.Error.Printf("Error StartMonitoringMasterEvents %s sentinel@%s", err.Error(), m.sentinel.GetLocation())
+		m.pubSubClient.Close()
 		return err
 	}
 
@@ -54,11 +72,23 @@ L:
 		case message := <-m.channel:
 			shutdown := m.dealWithSentinelMessage(message, switchmasterchannel)
 			if shutdown {
+				m.manager.Notify(&SentinelLost{Sentinel: m.sentinel})
 				logger.Info.Printf("Shutting down monitor %s", m.sentinel.GetLocation())
 				break L
 			}
 
-		case <-time.After(time.Duration(1) * time.Second):
+		case <-time.After(MonitorPingInterval):
+
+			resp := m.pingClient.Ping()
+
+			if resp != "PONG" {
+
+				logger.Info.Printf("Error pinging client : %s, resonse : %s", m.sentinel.GetLocation(), resp)
+				m.manager.Notify(&SentinelLost{Sentinel: m.sentinel})
+				logger.Info.Printf("Shutting down monitor %s", m.sentinel.GetLocation())
+				break L
+			}
+
 			m.manager.Notify(&SentinelPing{Sentinel: m.sentinel})
 		}
 	}
@@ -70,7 +100,6 @@ func (m *Monitor) dealWithSentinelMessage(message redis.RedisPubSubReply, switch
 		return true
 	}
 	if message.Err() != nil {
-		m.manager.Notify(&SentinelLost{Sentinel: m.sentinel})
 		logger.Info.Printf("Subscription Message : Channel : Error %s", message.Err())
 		return true
 	}

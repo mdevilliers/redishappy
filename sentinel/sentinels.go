@@ -71,7 +71,7 @@ func (s SentinelState) updateState(event interface{}) {
 
 			go s.startMonitoringSentinel(sentinel)
 
-			logger.Trace.Printf("Sentinel added : %s", util.String(s.state))
+			logger.Trace.Printf("Sentinel added : %s", util.String(sentinel))
 		}
 
 	case *SentinelLost:
@@ -81,27 +81,44 @@ func (s SentinelState) updateState(event interface{}) {
 		currentInfo, ok := s.state.Sentinels[uid]
 
 		if ok {
-			currentInfo.State = SentinelMarkedDown
+
 			currentInfo.LastUpdated = time.Now().UTC()
 
-			util.Schedule(func() { go s.startMonitoringSentinel(sentinel) }, SentinelReconnectionPeriod)
+			if currentInfo.State != SentinelMarkedDown {
 
-			logger.Trace.Printf("Sentinel lost : %s (scheduling new client and monitor).", util.String(s.state))
+				currentInfo.State = SentinelMarkedDown
+				util.Schedule(func() { go s.startMonitoringSentinel(sentinel) }, SentinelReconnectionPeriod)
+				logger.Trace.Printf("Sentinel lost : %s (scheduling new client and monitor).", util.String(sentinel))
+				logger.Trace.Printf("Sentinel state : %s.", util.String(s.state))
+			}
 
 		} else {
-			logger.Trace.Printf("Unknown sentinel lost : %s.", util.String(s.state))
+			logger.Trace.Printf("Unknown sentinel lost : %s.", util.String(sentinel))
 		}
 
 	case *SentinelPing:
 		sentinel := e.GetSentinel()
 		uid := s.state.createKey(sentinel)
-		currentInfo, ok := s.state.Sentinels[uid]
+		currentInfo, exists := s.state.Sentinels[uid]
 
-		if ok {
+		if exists {
 			currentInfo.State = SentinelMarkedAlive
 			currentInfo.LastUpdated = time.Now().UTC()
 		} else {
-			logger.Trace.Printf("Unknown sentinel ping : %s.", util.String(s.state))
+			logger.Trace.Printf("Unknown sentinel ping : %s.", util.String(sentinel))
+		}
+
+	case *SentinelUnknown:
+
+		sentinel := e.GetSentinel()
+		uid := s.state.createKey(sentinel)
+		currentInfo, exists := s.state.Sentinels[uid]
+
+		if exists {
+			currentInfo.State = SentinelMarkedUnknown
+			currentInfo.LastUpdated = time.Now().UTC()
+		} else {
+			logger.Trace.Printf("Unknown sentinel unknown{*} : %s.", util.String(sentinel))
 		}
 
 	case *SentinelClustersMonitoredUpdate:
@@ -112,7 +129,7 @@ func (s SentinelState) updateState(event interface{}) {
 
 			info.Clusters = e.Clusters
 		} else {
-			logger.Trace.Printf("Unknown sentinel updated state : %s.", util.String(s.state))
+			logger.Trace.Printf("Unknown sentinel updated state : %s.", util.String(sentinel))
 		}
 
 	default:
