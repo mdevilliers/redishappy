@@ -1,8 +1,14 @@
 package redis
 
 import (
+	"time"
+
 	"github.com/fzzy/radix/extra/pubsub"
 	"github.com/fzzy/radix/redis"
+)
+
+const (
+	RedisConnectionTimeoutPeriod = time.Second * 2
 )
 
 type RedisConnection interface {
@@ -57,7 +63,7 @@ type RadixPubSubReply struct {
 }
 
 func (c RadixRedisConnection) GetConnection(protocol, uri string) (RedisClient, error) {
-	redisclient, err := redis.Dial(protocol, uri)
+	redisclient, err := redis.DialTimeout(protocol, uri, RedisConnectionTimeoutPeriod)
 	return &RadixRedisClient{client: redisclient}, err
 }
 
