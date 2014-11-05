@@ -7,7 +7,6 @@ import (
 	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
-	// "github.com/mdevilliers/redishappy/util"
 )
 
 const (
@@ -49,7 +48,6 @@ func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, cm *configur
 	startMonitoringCallback := func(sentinel types.Sentinel) {
 
 		manager.Notify(&SentinelUnknown{Sentinel: sentinel})
-		// go manager.exploreSentinel(sentinel)
 		go manager.startNewMonitor(sentinel)
 	}
 

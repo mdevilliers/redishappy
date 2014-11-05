@@ -68,7 +68,6 @@ func (c *TestPubSubClient) Receive() redis.RedisPubSubReply {
 }
 
 func (c *TestPubSubClient) Close() {
-
 }
 
 func (c *TestRedisReply) String() string {

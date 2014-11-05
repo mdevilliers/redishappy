@@ -108,7 +108,7 @@ L:
 func (m *Monitor) dealWithSentinelMessage(message redis.RedisPubSubReply, switchmasterchannel chan types.MasterSwitchedEvent) bool {
 
 	if message.Timeout() {
-		return true
+		return false
 	}
 	if message.Err() != nil {
 		logger.Info.Printf("Subscription Message : Channel : Error %s", message.Err())

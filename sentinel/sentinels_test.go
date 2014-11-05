@@ -148,5 +148,4 @@ func TestUnknowSentinelsAreNoOps(t *testing.T) {
 	if len(topologyState.Sentinels) != 0 {
 		t.Error("No sentinel was added so the state should be empty")
 	}
-
 }
