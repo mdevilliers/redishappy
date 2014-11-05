@@ -129,3 +129,24 @@ func TestCanAddCLustersToSentinel(t *testing.T) {
 		t.Error("Wrong cluster found")
 	}
 }
+
+func TestUnknowSentinelsAreNoOps(t *testing.T) {
+
+	state := NewSentinelState(func(_ types.Sentinel) {})
+	sentinel := types.Sentinel{Host: "10.1.1.3", Port: 12345}
+
+	state.Notify(&SentinelClustersMonitoredUpdate{Sentinel: sentinel, Clusters: []string{"A"}})
+	state.Notify(&SentinelLost{Sentinel: sentinel})
+	state.Notify(&SentinelPing{Sentinel: sentinel})
+	state.Notify(&SentinelUnknown{Sentinel: sentinel})
+
+	responseChannel := make(chan SentinelTopology)
+	state.GetState(TopologyRequest{ReplyChannel: responseChannel})
+
+	topologyState := <-responseChannel
+
+	if len(topologyState.Sentinels) != 0 {
+		t.Error("No sentinel was added so the state should be empty")
+	}
+
+}
