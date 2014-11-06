@@ -22,10 +22,10 @@ sed -i 's/^ENABLED=.*/ENABLED=1/' /etc/default/haproxy
 
 wget https://storage.googleapis.com/golang/#{goLangZip}
 tar -C /usr/local -xzf #{goLangZip}
-export PATH=$PATH:/usr/local/go/bin
+export PATH=$PATH:/usr/local/go/bin:/home/vagrant/go/bin
 export GOPATH=/home/vagrant/go
 
-echo "export PATH=$PATH:/usr/local/go/bin" >> /home/vagrant/.profile
+echo "export PATH=$PATH:/usr/local/go/bin:/home/vagrant/go/bin" >> /home/vagrant/.profile
 echo "export GOPATH=/home/vagrant/go" >> /home/vagrant/.profile
 
 # install fpm
@@ -34,6 +34,9 @@ gem install --no-ri --no-rdoc fpm
 go get github.com/mdevilliers/redishappy
 
 go get github.com/tools/godep
+
+cd $GOPATH/src/github.com/mdevilliers/redishappy
+
 godep restore
 
 go get code.google.com/p/go.tools/cmd/cover
