@@ -43,8 +43,6 @@ go get code.google.com/p/go.tools/cmd/cover
 go get code.google.com/p/go.tools/cmd/vet
 go get code.google.com/p/go.tools/cmd/goimports
 
-cd $GOPATH/src/github.com/mdevilliers/redishappy
-
 export _REDISHAPPY_VERSION="1.0.0"
 export _REDISHAPPY_PKGVERSION="1"
 
