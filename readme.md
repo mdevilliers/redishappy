@@ -7,7 +7,7 @@ One method of providing a highly available Redis service is to deploy using [Red
 
 Redis Sentinel monitors your Redis cluster and on detecting failure, promotes a slave to become the new master. RedisHappy provides a daemon to monitor for this promotion and to tell the outside world that this has happened.
 
-Currently we support [HAProxy](http://www.haproxy.org/) and [Consul](https://www.consul.io/).
+Currently we support [HAProxy](http://www.haproxy.org/) with redishappy-haproxy and [Consul](https://www.consul.io/) with redishappy-consul.
 
 Features
 
@@ -16,6 +16,24 @@ Features
 * Developed in Golang, clean deployment with no additional dependencies.
 * Read-only RestAPI.
 * Syslog integration.
+
+### Deployment
+
+Redishappy ships in two forms redishappy-haproxy and redishappy-consul.
+
+####redishappy-haproxy
+
+redishappy-haproxy updates HAProxy's configuration file on Redis master promotion and then reloads the HAProxy configuration file. The reload maintains current connections.
+
+![redishappy_haproxy]( docs/redishappy-haproxy.png)
+
+The redishappy daemon is installed on the same machine as HAProxy and runs with correct user rights to interact with HAProxy. Multiple instance of HAProxy/redishappy-haproxy can be deployed and operate seperatly.
+
+####redishappy-consul
+
+redishappy-consul updates entries in a Consul instance on Redis master promotion.
+
+![redishappy_consul]( docs/redishappy-consul.png)
 
 
 ### FAQ
@@ -87,16 +105,6 @@ Suppose we have this setup. R1 and R2 are redis instances, S1,S2,S3 are Sentinel
 When a Redis instance is started and stopped it initially announces itself as a "master". It will some time later be made a "slave" but in the meantime accept writes which will be lost when it is correctly made a slave.
 
 RedisHappy attempts to avoid this failure mode by only presenting the correct server to HAProxy or any other service once it is confirmed as a "master". We assume clients will either block or fail until the master is online again.
-
-### Deployment
-
-Deploying redishappy_haproxy
-
-![redishappy_haproxy]( docs/redishappy-haproxy.png)
-
-Deploying redishappy_consul
-
-![redishappy_consul]( docs/redishappy-consul.png)
 
 ### Building
 
@@ -219,16 +227,6 @@ https://github.com/mdevilliers/docker-rediscluster
 
 Will start up a master/slave, 3 sentinel redis cluster for testing.
 
-### Logging
-
-By default -
-
-Trace - stdout
-Info - stdout
-Warning - syslog, file, stdout
-Error - syslog, file, stdout
-
-The log path is configurable.
 
 Copyright and license
 ---------------------
