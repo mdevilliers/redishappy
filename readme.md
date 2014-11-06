@@ -1,5 +1,4 @@
-Redis Happy
------------
+### redishappy
 
 [![Build Status](https://travis-ci.org/mdevilliers/redishappy.svg?branch=master)](https://travis-ci.org/mdevilliers/redishappy)
 [![Coverage Status](https://coveralls.io/repos/mdevilliers/redishappy/badge.png)](https://coveralls.io/r/mdevilliers/redishappy)
@@ -10,8 +9,16 @@ Redis Sentinel monitors your Redis cluster and on detecting failure, promotes a 
 
 Currently we support [HAProxy](http://www.haproxy.org/) and [Consul](https://www.consul.io/).
 
-FAQ
----
+Features
+
+* Automatic discovery and healthchecking of Redis Sentinels.
+* Extensible to support various service discovery mechanisims
+* Developed in Golang, clean deployment with no additional dependencies.
+* Read-only RestAPI.
+* Syslog integration.
+
+
+### FAQ
 
 Q. Why - I thought in 2014 Redis clients should be Sentinel aware? They should connect to the correct Redis instance on failover.
 
@@ -81,8 +88,45 @@ When a Redis instance is started and stopped it initially announces itself as a 
 
 RedisHappy attempts to avoid this failure mode by only presenting the correct server to HAProxy or any other service once it is confirmed as a "master". We assume clients will either block or fail until the master is online again.
 
-Defaults
---------
+### Deployment
+
+Deploying redishappy_haproxy
+
+TODO : add image
+
+Deploying redishappy_consul
+
+TODO : add image
+
+
+### Building
+
+Download and build
+
+```
+go get github.com/mdevilliers/redishappy
+
+cd $GOPATH/src/github.com/redishappy
+
+build/ci.sh
+build/release.sh
+```
+
+ci.sh - builds the code, runs the tests
+release.sh - builds the deb packages
+
+Using vagrant
+
+```
+vagrant up
+```
+
+The packages are then at - $GOPATH/src/github.com/redishappy/build
+
+The vagrant box also installs HAProxy for smoke testing.
+
+
+### Defaults
 
 Installs to /opt/redishappy
 
@@ -92,22 +136,76 @@ Logs to file in /var/redishappy/logs
 
 Warnings, Errors got to syslog
 
-Api
----
+### Configuration
+
+Example configurations can be found in the main folders
+
+[HAProxy](main/redis-haproxy)
+
+[Consul](main/redis-consul)
+
+Definitions for the elements
+
+```Javascript
+{
+  // REQUIRED - needs to contain at least one logical cluster
+  "Clusters" :[
+  {
+    "Name" : "testing", // logical name of Redis cluster
+    "ExternalPort" : 6379 // port to expose for the cluster via HAProxy
+  }],
+  // REQUIRED - needs to contain the details of at least one cluster
+  // redishappy will discover additional sentinels as they come online
+  "Sentinels" : [ 
+      {"Host" : "172.17.42.1", "Port" : 26377}
+  ],
+  // OPTIONAL for running redishappy-haproxy
+  "HAProxy" :
+    {
+      // REQUIRED - absolute path to the template file
+      "TemplatePath": "/var/redishappy/haproxy_template.cfg",
+      // REQUIRED - absolute path to HAProxy's config file
+      "OutputPath": "/etc/haproxy/haproxy.cfg",
+      // REQUIRED - command to run to reload the config file on changes
+      "ReloadCommand": "haproxy -f /etc/haproxy/haproxy.cfg -p /var/run/haproxy.pid -sf $(cat /var/run/haproxy.pid)"
+    },
+    // OPTIONAL for running redishappy-consul
+   "Consul" : {
+   	// REQUIRED - path to Consul instance
+    "Address" : "127.0.0.1:8500",
+    // REQUIRED - for each cluster in the main config there should be a defined service
+  	"Services" : [
+		{ 
+			// REQUIRED - should match a name of a Cluster in the main config
+			"Cluster" : "testing", 
+			// REQUIRED - logical name for the node
+        	"Node" : "redis-1",
+        	// REQUIRED - logical name for the data centre
+        	"Datacenter": "dc1",
+        	// REQUIRED - tags for the service
+        	"tags" : [ "redis", "master", "anothertag"]
+      	}
+  	]
+  }
+}
+
+```
+
+
+### Api
 
 RedisHappy provides a readonly api on port 8000
 
-GET /api/pingpong - healthcheck - will reply "pong" if running
+GET /api/ping - will reply "pong" if running
 
 GET /api/configuration - displays the start up configuration
 
-GET /api/sentinels - displays the sentinels being currently monitored
+GET /api/sentinels - displays the sentinels being currently monitored and their current states
 
 GET /api/topology - displays the current view of the Redis clusters, their master and their host/ip addresses
 
 
-Hacking
--------
+### Hacking
 
 Running the following script will gofmt, govet, rune the tests, build all of the executables.
 
@@ -116,15 +214,13 @@ build/ci_script.sh
 
 ```
 
-Testing with Docker
--------------------
+### Testing with Docker
 
 https://github.com/mdevilliers/docker-rediscluster
 
 Will start up a master/slave, 3 sentinel redis cluster for testing.
 
-Logging
--------
+### Logging
 
 By default -
 
