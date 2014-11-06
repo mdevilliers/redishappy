@@ -12,8 +12,8 @@ set -e
 # Automatic checks
 test -z "$(gofmt -l -w .     | tee /dev/stderr)"
 test -z "$(goimports -w .    | tee /dev/stderr)"
-go vet ./...
-go test -race ./...
+godep go vet ./...
+godep go test -race ./...
 
 # Run test coverage on each subdirectories and merge the coverage profile. 
 echo "mode: count" > profile.cov
@@ -22,7 +22,7 @@ echo "mode: count" > profile.cov
 for dir in $(find . -maxdepth 10 -not -path './.git*' -not -path '*/_*' -type d);
 do
 if ls $dir/*.go &> /dev/null; then
-go test -covermode=count -coverprofile=$dir/profile.tmp $dir
+godep go test -covermode=count -coverprofile=$dir/profile.tmp $dir
 if [ -f $dir/profile.tmp ]
 then
 
@@ -36,12 +36,12 @@ go tool cover -func profile.cov
 
 echo "building main applications"
 echo "building noop"
-go build github.com/mdevilliers/redishappy/main/noop
+godep go build github.com/mdevilliers/redishappy/main/noop
 
 echo "building redis-haproxy"
-go build github.com/mdevilliers/redishappy/main/redis-haproxy
+godep go build github.com/mdevilliers/redishappy/main/redis-haproxy
 
 echo "building redis-consul"
-go build github.com/mdevilliers/redishappy/main/redis-consul
+godep go build github.com/mdevilliers/redishappy/main/redis-consul
 
 echo "finished"

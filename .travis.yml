@@ -6,11 +6,13 @@ before_install:
 - sudo apt-get update -qq
 - sudo apt-get install -y ruby-dev gcc
 - gem install fpm
+- go get github.com/tools/godep
 - go get github.com/axw/gocov/gocov
 - go get github.com/mattn/goveralls
 - go get code.google.com/p/go.tools/cmd/cover
 - go get code.google.com/p/go.tools/cmd/vet
 - go get code.google.com/p/go.tools/cmd/goimports
+- godep restore
 script: 
 - build/ci.sh
 - $HOME/gopath/bin/goveralls -coverprofile=profile.cov -service=travis-ci -repotoken $GOVERALLS_TOKEN

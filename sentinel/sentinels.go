@@ -88,8 +88,8 @@ func (s SentinelState) updateState(event interface{}) {
 
 				currentInfo.State = SentinelMarkedDown
 				util.Schedule(func() { go s.startMonitoringSentinel(sentinel) }, SentinelReconnectionPeriod)
-				logger.Trace.Printf("Sentinel lost : %s (scheduling new client and monitor).", util.String(sentinel))
-				logger.Trace.Printf("Sentinel state : %s.", util.String(s.state))
+				logger.Trace.Printf("Sentinel lost : %s", util.String(sentinel))
+				logger.Trace.Printf("Sentinel state : %s", util.String(s.state))
 			}
 
 		} else {
@@ -102,7 +102,12 @@ func (s SentinelState) updateState(event interface{}) {
 		currentInfo, exists := s.state.Sentinels[uid]
 
 		if exists {
-			currentInfo.State = SentinelMarkedAlive
+
+			if currentInfo.State != SentinelMarkedAlive {
+				currentInfo.State = SentinelMarkedAlive
+				logger.Trace.Printf("Sentinel ping : %s", util.String(sentinel))
+				logger.Trace.Printf("Sentinel state : %s.", util.String(s.state))
+			}
 			currentInfo.LastUpdated = time.Now().UTC()
 		} else {
 			logger.Trace.Printf("Unknown sentinel ping : %s.", util.String(sentinel))

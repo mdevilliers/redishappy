@@ -1,0 +1,33 @@
+{
+	"ImportPath": "github.com/mdevilliers/redishappy",
+	"GoVersion": "go1.3.3",
+	"Deps": [
+		{
+			"ImportPath": "github.com/blackjack/syslog",
+			"Rev": "4ea3f32c1eb1115ad9e010eeff314fffc5fc8638"
+		},
+		{
+			"ImportPath": "github.com/fzzy/radix/extra/pubsub",
+			"Comment": "v0.4.5",
+			"Rev": "a0c550de042dfb76ff8cf285091e2fe7f3d48911"
+		},
+		{
+			"ImportPath": "github.com/fzzy/radix/redis",
+			"Comment": "v0.4.5",
+			"Rev": "a0c550de042dfb76ff8cf285091e2fe7f3d48911"
+		},
+		{
+			"ImportPath": "github.com/natefinch/lumberjack",
+			"Comment": "v1.0-2-ga6f35ba",
+			"Rev": "a6f35bab25c9df007f78aa90c441922062451979"
+		},
+		{
+			"ImportPath": "github.com/zenazn/goji",
+			"Rev": "90d355d3e1693435a6300da7d4e191126aced78e"
+		},
+		{
+			"ImportPath": "github.com/armon/consul-api",
+			"Rev": "1b81c8e0c4cbf1d382310e4c0dc11221632e79d1"
+		}
+	]
+}

@@ -32,7 +32,9 @@ echo "export GOPATH=/home/vagrant/go" >> /home/vagrant/.profile
 gem install --no-ri --no-rdoc fpm
 
 go get github.com/mdevilliers/redishappy
-go get -t -v ./...
+
+go get github.com/tools/godep
+godep restore
 
 go get code.google.com/p/go.tools/cmd/cover
 go get code.google.com/p/go.tools/cmd/vet
