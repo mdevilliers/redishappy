@@ -92,12 +92,11 @@ RedisHappy attempts to avoid this failure mode by only presenting the correct se
 
 Deploying redishappy_haproxy
 
-TODO : add image
+![redishappy_haproxy]( docs/redishappy-haproxy.png)
 
 Deploying redishappy_consul
 
-TODO : add image
-
+![redishappy_consul]( docs/redishappy-consul.png)
 
 ### Building
 
