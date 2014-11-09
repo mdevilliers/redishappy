@@ -119,3 +119,45 @@ func RunTestConfigFileChecks(parsedConfig Configuration, t *testing.T) {
 		return
 	}
 }
+
+func TestEnvironmentalVariablesSetInConfiguration(t *testing.T) {
+
+	os.Setenv("REDISHAPPY_HAPROXY_RELOAD_CMD", "abc")
+
+	config := GetTestConfigFile()
+	configuration, _ := parseConfiguration([]byte(config))
+
+	foldInEnvironmentalVariables(&configuration)
+
+	if configuration.HAProxy.ReloadCommand != "abc" {
+		t.Error("Environmental value - REDISHAPPY_HAPROXY_RELOAD_CMD not folded in.")
+	}
+}
+
+func TestEnvironmentalVariablesSentinelsSetInConfiguration(t *testing.T) {
+
+	os.Setenv("REDISHAPPY_SENTINELS", "172.17.42.1:26377;172.17.42.1:26378;172.17.42.1:26379")
+
+	config := GetTestConfigFile()
+	configuration, _ := parseConfiguration([]byte(config))
+
+	foldInEnvironmentalVariables(&configuration)
+
+	if len(configuration.Sentinels) != 3 {
+		t.Error("Environmental value - REDISHAPPY_SENTINELS not folded in.")
+	}
+}
+
+func TestEnvironmentalVariablesClustersSetInConfiguration(t *testing.T) {
+
+	os.Setenv("REDISHAPPY_CLUSTERS", "abc:1234;def:1234;ghi:1234;klm:1234")
+
+	config := GetTestConfigFile()
+	configuration, _ := parseConfiguration([]byte(config))
+
+	foldInEnvironmentalVariables(&configuration)
+
+	if len(configuration.Clusters) != 4 {
+		t.Error("Environmental value - REDISHAPPY_CLUSTERS not folded in.")
+	}
+}
