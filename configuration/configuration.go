@@ -120,26 +120,15 @@ func foldInEnvironmentalVariables(config *Configuration) {
 	config.HAProxy.ReloadCommand = getEnvironmentalVariable("REDISHAPPY_HAPROXY_RELOAD_CMD", config.HAProxy.ReloadCommand)
 	overrideClusterConfiguration(config)
 	overrideSentinelConfiguration(config)
-
-	// TODO : Document
-	// REDISHAPPY_CLUSTERS=testing:6379;abc:1111
-	// REDISHAPPY_SENTINELS=172.17.42.1:26377;172.17.42.1:26378;172.17.42.1:26379
-	// REDISHAPPY_HAPROXY_TEMPLATE_PATH=
-	// REDISHAPPY_HAPROXY_OUTPUT_PATH=
-	// REDISHAPPY_HAPROXY_RELOAD_CMD=
 }
 
 func getEnvironmentalVariable(name string, defaultValue string) string {
 	env := os.Getenv(name)
-
-	logger.Info.Printf("%s = %s", name, env)
-
 	if len(env) > 0 {
 		logger.Info.Printf("Overriding with environmental variable %s=%s", name, env)
 		return env
 	}
 	return defaultValue
-
 }
 
 func overrideClusterConfiguration(config *Configuration) {
@@ -153,15 +142,12 @@ func overrideClusterConfiguration(config *Configuration) {
 
 		for _, clusterConfig := range bits {
 
-			bits1 := strings.Split(clusterConfig, ":")
-			port, err := strconv.Atoi(bits1[1])
+			ok, host, port := fauxHostAndIpToBits(clusterConfig)
 
-			if err != nil {
-				logger.Error.Panicf("Error parsing port REDISHAPPY_CLUSTERS : %s ", env)
+			if !ok {
+				logger.Error.Panicf("Error parsing port REDISHAPPY_CLUSTERS : %s {%s}", env, clusterConfig)
 			}
-
-			config.Clusters = append(config.Clusters, types.Cluster{Name: bits1[0], ExternalPort: port})
-
+			config.Clusters = append(config.Clusters, types.Cluster{Name: host, ExternalPort: port})
 		}
 		logger.Info.Printf("Using environment override for cluster configuration REDISHAPPY_CLUSTERS : %s", env)
 	}
@@ -178,15 +164,30 @@ func overrideSentinelConfiguration(config *Configuration) {
 
 		for _, sentinelConfig := range bits {
 
-			bits1 := strings.Split(sentinelConfig, ":")
-			port, err := strconv.Atoi(bits1[1])
+			ok, host, port := fauxHostAndIpToBits(sentinelConfig)
 
-			if err != nil {
+			if !ok {
 				logger.Error.Panicf("Error parsing port REDISHAPPY_SENTINELS : %s {%s}", env, sentinelConfig)
 			}
-			config.Sentinels = append(config.Sentinels, types.Sentinel{Host: bits1[0], Port: port})
+			config.Sentinels = append(config.Sentinels, types.Sentinel{Host: host, Port: port})
 
 		}
 		logger.Info.Printf("Using environment override for sentinel configuration REDISHAPPY_SENTINELS : %s", env)
 	}
+}
+
+func fauxHostAndIpToBits(hostAndIp string) (bool, string, int) {
+	bits := strings.Split(hostAndIp, ":")
+
+	if len(bits) != 2 {
+		return false, "", 0
+	}
+
+	port, err := strconv.Atoi(bits[1])
+
+	if err != nil {
+		return false, "", 0
+	}
+
+	return true, bits[0], port
 }

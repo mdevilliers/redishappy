@@ -196,6 +196,16 @@ Definitions for the elements
   }
 }
 
+Or you can configure with the following environmental variables -
+
+Environment Variable | Example | Notes
+----------------------|---------------
+REDISHAPPY_CLUSTERS   | clustername:6379 | multiple values can be ; seperated 
+REDISHAPPY_SENTINELS  | ip_name:26377 | multiple values can be ; seperated 
+REDISHAPPY_HAPROXY_TEMPLATE_PATH | | string, see config file for example
+REDISHAPPY_HAPROXY_OUTPUT_PATH | | string, see config file for example
+REDISHAPPY_HAPROXY_RELOAD_CMD | | string, see config file for example
+
 ```
 
 
