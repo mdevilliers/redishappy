@@ -2,10 +2,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"net/http"
 
 	"github.com/mdevilliers/redishappy"
 	"github.com/mdevilliers/redishappy/configuration"
 	"github.com/mdevilliers/redishappy/services/logger"
+	"github.com/zenazn/goji/web"
 )
 
 var configFile string
@@ -39,5 +42,15 @@ func main() {
 	}
 
 	flipper := NewNoOpFlipper()
-	redishappy.NewRedisHappyEngine(flipper, config)
+	engine := redishappy.NewRedisHappyEngine(flipper, config)
+	engine.ConfigureHandlersAndServe(AddHandlers)
+}
+
+// example handler
+func AddHandlers(mux *web.Mux) {
+	logger.Info.Print("muxed!")
+	mux.Get("/api/xxxx", hello)
+}
+func hello(c web.C, w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "Hello!")
 }
