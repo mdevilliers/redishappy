@@ -44,5 +44,6 @@ func main() {
 	}
 
 	flipper := NewHAProxyFlipper(config)
-	redishappy.NewRedisHappyEngine(flipper, config)
+	engine := redishappy.NewRedisHappyEngine(flipper, config)
+	engine.Serve()
 }

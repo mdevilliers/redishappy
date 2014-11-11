@@ -41,5 +41,6 @@ func main() {
 
 	flipper := NewConsulFlipperClient(config)
 
-	redishappy.NewRedisHappyEngine(flipper, config)
+	engine := redishappy.NewRedisHappyEngine(flipper, config)
+	engine.Serve()
 }
