@@ -18,7 +18,7 @@ type RedisHappyEngine struct {
 }
 
 func NewRedisHappyEngine(flipper types.FlipperClient, cm *configuration.ConfigurationManager) *RedisHappyEngine {
-	logger.Info.Print("pre mux")
+
 	masterEvents := make(chan types.MasterSwitchedEvent)
 	sentinelManager := sentinel.NewManager(masterEvents, cm)
 
