@@ -48,7 +48,6 @@ func main() {
 
 // example handler
 func AddHandlers(mux *web.Mux) {
-	logger.Info.Print("muxed!")
 	mux.Get("/api/xxxx", hello)
 }
 func hello(c web.C, w http.ResponseWriter, r *http.Request) {
