@@ -222,6 +222,12 @@ GET /api/sentinels - displays the sentinels being currently monitored and their 
 
 GET /api/topology - displays the current view of the Redis clusters, their master and their host/ip addresses
 
+redishappy-haproxy provides the following additional read only apis
+
+GET /api/template - displays the current template file
+
+GET /api/haproxy - displays the rendered HAProxy file
+
 
 ### Hacking
 

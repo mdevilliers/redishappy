@@ -6,6 +6,7 @@ import (
 	"github.com/mdevilliers/redishappy"
 	"github.com/mdevilliers/redishappy/configuration"
 	"github.com/mdevilliers/redishappy/services/logger"
+	"github.com/zenazn/goji/web"
 )
 
 var configFile string
@@ -45,5 +46,14 @@ func main() {
 
 	flipper := NewHAProxyFlipper(config)
 	engine := redishappy.NewRedisHappyEngine(flipper, config)
-	engine.Serve()
+
+	engine.ConfigureHandlersAndServe(func(mux *web.Mux) {
+
+		templateApi := &TemplateApi{ConfigurationManager: config}
+		haProxyApi := &HAProxyApi{ConfigurationManager: config}
+
+		mux.Get("/api/template", templateApi.Get)
+		mux.Get("/api/haproxy", haProxyApi.Get)
+
+	})
 }
