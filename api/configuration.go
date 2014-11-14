@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/mdevilliers/redishappy/configuration"
+	"github.com/mdevilliers/redishappy/util"
 )
 
 type ConfigurationApi struct {
@@ -12,5 +13,5 @@ type ConfigurationApi struct {
 
 func (s *ConfigurationApi) Get(w http.ResponseWriter, r *http.Request) {
 	config := s.ConfigurationManager.GetCurrentConfiguration()
-	responseJSON(w, config)
+	util.WriteResponseAsJSON(w, config)
 }

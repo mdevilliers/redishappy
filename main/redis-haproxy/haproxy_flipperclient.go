@@ -44,8 +44,8 @@ func (flipper *HAProxyFlipperClient) Orchestrate(switchEvent types.MasterSwitche
 	flipper.lock.Lock()
 	defer flipper.lock.Unlock()
 
-	logger.Info.Printf("Redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", switchEvent.Name, switchEvent.OldMasterIp, switchEvent.OldMasterPort, switchEvent.NewMasterIp, switchEvent.NewMasterPort)
-	logger.Info.Printf("Master Switched : %s", util.String(switchEvent))
+	logger.Error.Printf("Redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", switchEvent.Name, switchEvent.OldMasterIp, switchEvent.OldMasterPort, switchEvent.NewMasterIp, switchEvent.NewMasterPort)
+	logger.Error.Printf("Master Switched : %s", util.String(switchEvent))
 
 	configuration := flipper.configurationManager.GetCurrentConfiguration()
 	logger.Info.Printf("Current Configuration : %s", util.String(configuration.Clusters))
