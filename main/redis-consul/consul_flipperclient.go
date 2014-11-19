@@ -63,7 +63,7 @@ func (c *ConsulFlipperClient) UpdateConsul(name string, ip string, port int) {
 	catalog := c.consulClient.Catalog()
 
 	consulService := &consulapi.AgentService{
-		ID:      fmt.Sprintf("redishappy-consol-%s", name),
+		ID:      fmt.Sprintf("redishappy-consul-%s", name),
 		Service: name,
 		Tags:    service.Tags,
 		Port:    port,
