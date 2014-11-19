@@ -4,10 +4,14 @@ author      "mdevilliers"
 start on filesystem or runlevel [2345]
 stop on [!12345]
 
-script
+respawn
+respawn limit 2 5
 
-    export HOME="/opt/redishappy"
-    echo $$ > /var/run/redishappy.pid
+env HOME="/opt/redishappy"
+ 
+umask 007
+
+script
     cd $HOME
     exec ./redis-consul -config /var/redishappy/config.json -log /var/redishappy/logs
 
