@@ -7,50 +7,36 @@ import (
 	"github.com/mdevilliers/redishappy/types"
 )
 
-// see client_test for mocks used
-func TestMonitorWillErrorWhenCanConnect(t *testing.T) {
-
-	sentinel := types.Sentinel{}
-	manager := &TestManager{}
-	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{RedisReply: &TestRedisReply{}}}
-
-	_, err := NewMonitor(sentinel, manager, redisConnection)
-
-	if err != nil {
-		t.Error("Client should not throw error if connected successfully!")
-	}
+type MockMessage struct {
+	err      error
+	messages []string
 }
 
-func TestMonitorWillThrowErrorWhenCanNotConnect(t *testing.T) {
+func (m *MockMessage) Err() error        { return m.err }
+func (m *MockMessage) Message() []string { return m.messages }
 
-	sentinel := types.Sentinel{Host: "DOESNOTEXIST", Port: 1234} // mock coded to not connect
-	manager := &TestManager{}
-	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{RedisReply: &TestRedisReply{}}}
-
-	_, err := NewMonitor(sentinel, manager, redisConnection)
-
-	if err == nil {
-		t.Error("Client should throw error if unable to connect!")
-	}
-}
-
-func TestMonitorReturnsMasterSwitchEventToTheCorrectChannel(t *testing.T) {
-
-	sentinel := types.Sentinel{}
-	manager := &TestManager{}
-	subscribeReply := &TestRedisPubSubReply{}
-	subscriptionMessage := "name 1.1.1.1 1234 2.2.2.2 5678"
-	receiveReply := &TestRedisPubSubReply{TimedOut: false, ChannelListeningOn: "+switch-master", MessageToReturn: subscriptionMessage}
-	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{PubSubClient: &TestPubSubClient{SubscribePubSubReply: subscribeReply, ReceivePubSubReply: receiveReply}}}
-
-	client, err := NewMonitor(sentinel, manager, redisConnection)
-
-	if err != nil {
-		t.Error("Client should not throw error if connected successfully!")
-	}
+func TestMonitorSignalsAnError(t *testing.T) {
 
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
-	_ = client.StartMonitoringMasterEvents(switchmasterchannel)
+
+	ok := dealWithSentinelMessage(&MockMessage{err: errors.New("Boom")}, switchmasterchannel)
+	if !ok {
+		t.Error("A boom error should have happened")
+	}
+}
+
+func TestMonitorWillParseAndForwardOnAGoodMessage(t *testing.T) {
+
+	switchmasterchannel := make(chan types.MasterSwitchedEvent)
+	validinput := "name 1.1.1.1 1234 2.2.2.2 5678"
+
+	go func() {
+		ok := dealWithSentinelMessage(&MockMessage{messages: []string{validinput}}, switchmasterchannel)
+		if ok {
+			t.Error("A valid message was passed")
+		}
+	}()
+
 	event := <-switchmasterchannel
 
 	if event.Name != "name" {
@@ -58,31 +44,26 @@ func TestMonitorReturnsMasterSwitchEventToTheCorrectChannel(t *testing.T) {
 	}
 }
 
-func TestMonitorReturnsErrorWhenConnectionDisappears(t *testing.T) {
-
-	sentinel := types.Sentinel{}
-	manager := &TestManager{}
-	subscribeReply := &TestRedisPubSubReply{Error: errors.New("CANT'T CONNECT")}
-	redisConnection := &TestRedisConnection{RedisClient: &TestRedisClient{PubSubClient: &TestPubSubClient{SubscribePubSubReply: subscribeReply}}}
-
-	client, err := NewMonitor(sentinel, manager, redisConnection)
-
-	if err != nil {
-		t.Error("Client should not throw error if connected successfully!")
-	}
+func TestMonitorWillReturnFalseOnAnInvalidMessage(t *testing.T) {
 
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
-	err = client.StartMonitoringMasterEvents(switchmasterchannel)
+	invalidinput := "name 1.1.1.1 rubbish 2.2.2.2 5678"
 
-	if err == nil {
-		t.Error("PubSubClient should pass back error on failure")
+	ok := dealWithSentinelMessage(&MockMessage{messages: []string{invalidinput}}, switchmasterchannel)
+	if !ok {
+		t.Error("An invalid message was passed")
 	}
+
 }
 
 func TestParseMasterMessage(t *testing.T) {
 
 	input := "name 1.1.1.1 1234 2.2.2.2 5678"
-	event := parseSwitchMasterMessage(input)
+	event, err := parseSwitchMasterMessage(input)
+
+	if err != nil {
+		t.Error("Error parsing valid message")
+	}
 
 	if event.Name != "name" {
 		t.Error("Error parsing name")
@@ -101,15 +82,21 @@ func TestParseMasterMessage(t *testing.T) {
 	}
 }
 
-func TestParseInstanceDetailsForIpAndPortMessage(t *testing.T) {
+func TestParseInvalidMasterMessage(t *testing.T) {
 
-	input := "type name 1.1.1.1 1234 @ mastername 2.2.2.2 5678"
-	host, port := parseInstanceDetailsForIpAndPortMessage(input)
+	inputs := []string{
+		"rubbish",
+		"name 1.1.1.1 1234 2.2.2.2 rubbish",
+		"name 1.1.1.1 rubbish 2.2.2.2 5566",
+		"name rubbish 2.2.2.2 5566",
+	}
 
-	if host != "1.1.1.1" {
-		t.Error("Error parsing ip")
+	for _, input := range inputs {
+		_, err := parseSwitchMasterMessage(input)
+
+		if err == nil {
+			t.Error("Error parsing invalid message")
+		}
 	}
-	if port != 1234 {
-		t.Error("Error parsing port")
-	}
+
 }

@@ -2,10 +2,11 @@ package redis
 
 import (
 	"github.com/mdevilliers/redishappy/services/logger"
+	"github.com/therealbill/libredis/client"
 )
 
 type PubSubClient struct {
-	subscriptionClient RedisPubSubClient
+	subscriptionClient *client.PubSub
 	channel            chan RedisPubSubReply
 }
 
@@ -17,17 +18,22 @@ func NewPubSubClient(url string, channel chan RedisPubSubReply, redisConnection 
 		logger.Error.Printf("PubSubClient Error connecting to %s : %s", url, err.Error())
 		return nil, err
 	}
+	pubsub, err := client.PubSub()
 
-	subclient := &PubSubClient{subscriptionClient: client.NewPubSubClient(), channel: channel}
+	if err != nil {
+		logger.Error.Printf("Error creating pub sub client : %s : %s", url, err.Error())
+		return nil, err
+	}
+	subclient := &PubSubClient{subscriptionClient: pubsub, channel: channel}
 	return subclient, nil
 }
 
-func (client *PubSubClient) Start(keys []string) error {
+func (client *PubSubClient) Start(key string) error {
 
-	subr := client.subscriptionClient.Subscribe(keys)
+	err := client.subscriptionClient.Subscribe(key)
 
-	if subr.Err() != nil {
-		return subr.Err()
+	if err != nil {
+		return err
 	}
 
 	go client.loopSubscription()
@@ -41,7 +47,7 @@ func (client *PubSubClient) Close() {
 
 func (client *PubSubClient) loopSubscription() {
 	for {
-		r := client.subscriptionClient.Receive()
-		client.channel <- r
+		r, err := client.subscriptionClient.Receive()
+		client.channel <- PubSubReply{err: err, message: r}
 	}
 }

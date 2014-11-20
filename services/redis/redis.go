@@ -3,139 +3,49 @@ package redis
 import (
 	"time"
 
-	"github.com/fzzy/radix/extra/pubsub"
-	"github.com/fzzy/radix/redis"
+	"github.com/therealbill/libredis/client"
 )
 
 const (
 	RedisConnectionTimeoutPeriod = time.Second * 2
 )
 
-type RedisConnection interface {
+type RedisConnection struct{}
+
+type Redis interface {
 	GetConnection(protocol, uri string) (RedisClient, error)
 }
 
-type RedisReply interface {
-	List() ([]string, error)
-	String() string
-	Err() error
-	Elems() []RedisReply
-	Hash() (map[string]string, error)
+func (RedisConnection) GetConnection(protocol, uri string) (RedisClient, error) {
+	client, err := client.DialWithConfig(&client.DialConfig{
+		Network: protocol,
+		Address: uri,
+		Timeout: RedisConnectionTimeoutPeriod})
+	return client, err
 }
 
 type RedisClient interface {
-	Cmd(cmd string, args ...interface{}) RedisReply
-	NewPubSubClient() RedisPubSubClient
-	Close() error
-}
-
-type RedisPubSubClient interface {
-	Subscribe(channels ...interface{}) RedisPubSubReply
-	Receive() RedisPubSubReply
-	Close()
+	ClosePool()
+	SentinelGetMaster(cluster string) (client.MasterAddress, error)
+	SentinelSentinels(cluster string) ([]client.SentinelInfo, error)
+	SentinelMasters() ([]client.MasterInfo, error)
+	Ping() error
+	PubSub() (*client.PubSub, error)
 }
 
 type RedisPubSubReply interface {
 	Err() error
-	Timeout() bool
-	Channel() string
-	Message() string
+	Message() []string
 }
 
-type RadixRedisConnection struct {
+type PubSubReply struct {
+	message []string
+	err     error
 }
 
-type RadixRedisClient struct {
-	client *redis.Client
+func (p PubSubReply) Err() error {
+	return p.err
 }
-
-type RadixRedisReply struct {
-	reply *redis.Reply
-}
-
-type RadixPubSubClient struct {
-	client           *pubsub.SubClient
-	underlyingclient *redis.Client
-}
-
-type RadixPubSubReply struct {
-	reply *pubsub.SubReply
-}
-
-func (c RadixRedisConnection) GetConnection(protocol, uri string) (RedisClient, error) {
-	redisclient, err := redis.DialTimeout(protocol, uri, RedisConnectionTimeoutPeriod)
-	return &RadixRedisClient{client: redisclient}, err
-}
-
-func (c *RadixRedisClient) Cmd(cmd string, args ...interface{}) RedisReply {
-	re := c.client.Cmd(cmd, args)
-	return makeRedisReply(re)
-}
-
-func (c *RadixRedisClient) Close() error {
-	return c.client.Close()
-}
-
-func (c *RadixRedisReply) String() string {
-	return c.reply.String()
-}
-
-func (c *RadixRedisReply) Err() error {
-	return c.reply.Err
-}
-
-func (c *RadixRedisReply) Elems() []RedisReply {
-	elements := c.reply.Elems
-	reply := make([]RedisReply, len(elements))
-
-	for n, element := range elements {
-		reply[n] = makeRedisReply(element)
-	}
-
-	return reply
-}
-func makeRedisReply(re *redis.Reply) RedisReply {
-	return &RadixRedisReply{reply: re}
-}
-
-func (c *RadixRedisReply) Hash() (map[string]string, error) {
-	return c.reply.Hash()
-}
-
-func (c *RadixRedisReply) List() ([]string, error) {
-	return c.reply.List()
-}
-
-func (c *RadixRedisClient) NewPubSubClient() RedisPubSubClient {
-	client := pubsub.NewSubClient(c.client)
-	return &RadixPubSubClient{client: client, underlyingclient: c.client}
-}
-
-func (c *RadixPubSubClient) Subscribe(channels ...interface{}) RedisPubSubReply {
-	reply := c.client.Subscribe(channels)
-	return &RadixPubSubReply{reply: reply}
-}
-func (c *RadixPubSubClient) Receive() RedisPubSubReply {
-	reply := c.client.Receive()
-	return &RadixPubSubReply{reply: reply}
-}
-
-func (c *RadixPubSubClient) Close() {
-	c.underlyingclient.Close()
-}
-
-func (r *RadixPubSubReply) Err() error {
-	return r.reply.Err
-}
-
-func (r *RadixPubSubReply) Timeout() bool {
-	return r.reply.Timeout()
-}
-
-func (r *RadixPubSubReply) Channel() string {
-	return r.reply.Channel
-}
-
-func (r *RadixPubSubReply) Message() string {
-	return r.reply.Message
+func (p PubSubReply) Message() []string {
+	return p.message
 }
