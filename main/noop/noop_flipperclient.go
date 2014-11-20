@@ -14,9 +14,9 @@ func NewNoOpFlipper() *NoOpFlipperClient {
 }
 
 func (*NoOpFlipperClient) InitialiseRunningState(state *types.MasterDetailsCollection) {
-	logger.Info.Printf("InitialiseRunningState called : %s", util.String(state.Items()))
+	logger.NoteWorthy.Printf("InitialiseRunningState called : %s", util.String(state.Items()))
 }
 
 func (*NoOpFlipperClient) Orchestrate(switchEvent types.MasterSwitchedEvent) {
-	logger.Info.Printf("Orchestrate called : %s", util.String(switchEvent))
+	logger.NoteWorthy.Printf("Orchestrate called : %s", util.String(switchEvent))
 }

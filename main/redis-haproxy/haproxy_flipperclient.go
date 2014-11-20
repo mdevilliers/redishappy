@@ -44,8 +44,8 @@ func (flipper *HAProxyFlipperClient) Orchestrate(switchEvent types.MasterSwitche
 	flipper.lock.Lock()
 	defer flipper.lock.Unlock()
 
-	logger.Error.Printf("Redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", switchEvent.Name, switchEvent.OldMasterIp, switchEvent.OldMasterPort, switchEvent.NewMasterIp, switchEvent.NewMasterPort)
-	logger.Error.Printf("Master Switched : %s", util.String(switchEvent))
+	logger.NoteWorthy.Printf("Redis cluster {%s} master failover detected from {%s}:{%d} to {%s}:{%d}.", switchEvent.Name, switchEvent.OldMasterIp, switchEvent.OldMasterPort, switchEvent.NewMasterIp, switchEvent.NewMasterPort)
+	logger.NoteWorthy.Printf("Master Switched : %s", util.String(switchEvent))
 
 	configuration := flipper.configurationManager.GetCurrentConfiguration()
 	logger.Info.Printf("Current Configuration : %s", util.String(configuration.Clusters))
@@ -97,7 +97,7 @@ func executeHAproxyCommand(reloadCommand string) (bool, error) {
 		return false, err
 	}
 
-	logger.Info.Printf("HAProxy reload completed.")
+	logger.NoteWorthy.Printf("HAProxy reload completed.")
 
 	return true, nil
 }
@@ -122,7 +122,7 @@ func renderTemplate(details *types.MasterDetailsCollection, outputPath string, t
 		}
 
 		if newFileHash == oldFileHash {
-			logger.Info.Printf("Existing config file up todate. New file hash : %s == Old file hash %s. Nothing to do.", newFileHash, oldFileHash)
+			logger.NoteWorthy.Printf("Existing config file up todate. New file hash : %s == Old file hash %s. Nothing to do.", newFileHash, oldFileHash)
 			return true, nil
 		}
 

@@ -43,7 +43,7 @@ func (c *ConsulFlipperClient) InitialiseRunningState(state *types.MasterDetailsC
 
 func (c *ConsulFlipperClient) Orchestrate(switchEvent types.MasterSwitchedEvent) {
 
-	logger.Info.Printf("Orchestrate called : %s", util.String(switchEvent))
+	logger.NoteWorthy.Printf("Redis master changed : %s", util.String(switchEvent))
 	c.UpdateConsul(switchEvent.Name, switchEvent.NewMasterIp, switchEvent.NewMasterPort)
 
 }
