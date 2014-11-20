@@ -1,6 +1,7 @@
 package sentinel
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -12,7 +13,7 @@ import (
 
 type Monitor struct {
 	pubSubClient    *redis.PubSubClient
-	client          *SentinelClient
+	client          *redis.SentinelClient
 	channel         chan redis.RedisPubSubReply
 	manager         Manager
 	sentinel        types.Sentinel
@@ -30,7 +31,7 @@ func NewMonitor(sentinel types.Sentinel, manager Manager, redisConnection redis.
 		return nil, err
 	}
 
-	client, err := NewSentinelClient(sentinel, redisConnection)
+	client, err := redis.NewSentinelClient(sentinel, redisConnection)
 
 	if err != nil {
 		return nil, err
@@ -47,8 +48,8 @@ func NewMonitor(sentinel types.Sentinel, manager Manager, redisConnection redis.
 
 func (m *Monitor) StartMonitoringMasterEvents(switchmasterchannel chan types.MasterSwitchedEvent) error {
 
-	keys := []string{"+switch-master", "+sentinel"}
-	err := m.pubSubClient.Start(keys)
+	key := "+sentinel"
+	err := m.pubSubClient.Start(key)
 
 	if err != nil {
 		logger.Error.Printf("Error StartMonitoringMasterEvents %s sentinel@%s", err.Error(), m.sentinel.GetLocation())
@@ -66,36 +67,42 @@ L:
 	for {
 		select {
 		case message := <-m.channel:
-			shutdown := m.dealWithSentinelMessage(message, switchmasterchannel)
+			shutdown := dealWithSentinelMessage(message, switchmasterchannel)
 			if shutdown {
-
-				m.manager.Notify(&SentinelLost{Sentinel: m.sentinel})
-				logger.Info.Printf("Shutting down monitor %s", m.sentinel.GetLocation())
-
+				m.shutDownMonitor()
 				break L
 			}
 
 		case <-time.After(MonitorPingInterval):
 
-			resp := m.client.Ping()
-			if resp != "PONG" {
-
-				logger.Info.Printf("Error pinging client : %s, resonse : %s", m.sentinel.GetLocation(), resp)
-				m.manager.Notify(&SentinelLost{Sentinel: m.sentinel})
-				logger.Info.Printf("Shutting down monitor %s", m.sentinel.GetLocation())
-
+			err := m.client.Ping()
+			if err != nil {
+				logger.Info.Printf("Error pinging client : %s, response : %s", m.sentinel.GetLocation(), err.Error())
+				m.shutDownMonitor()
 				break L
 			}
 
 			m.manager.Notify(&SentinelPing{Sentinel: m.sentinel})
 
-			knownClusters := m.client.FindKnownClusters()
+			knownClusters, err := m.client.FindKnownClusters()
+
+			if err != nil {
+				logger.Info.Printf("Error discovering clusters : %s, response : %s", m.sentinel.GetLocation(), err.Error())
+				m.shutDownMonitor()
+				break L
+			}
 
 			m.manager.Notify(&SentinelClustersMonitoredUpdate{Sentinel: m.sentinel, Clusters: knownClusters})
 
 			for _, clustername := range knownClusters {
 
-				sentinels := m.client.FindConnectedSentinels(clustername)
+				sentinels, err := m.client.FindConnectedSentinels(clustername)
+
+				if err != nil {
+					logger.Info.Printf("Error finding connected sentinels : %s, response : %s", m.sentinel.GetLocation(), err.Error())
+					m.shutDownMonitor()
+					break L
+				}
 
 				for _, connectedsentinel := range sentinels {
 					m.manager.Notify(&SentinelAdded{Sentinel: connectedsentinel})
@@ -105,46 +112,54 @@ L:
 	}
 }
 
-func (m *Monitor) dealWithSentinelMessage(message redis.RedisPubSubReply, switchmasterchannel chan types.MasterSwitchedEvent) bool {
+func (m *Monitor) shutDownMonitor() {
+	logger.Info.Printf("Shutting down monitor %s", m.sentinel.GetLocation())
+	m.manager.Notify(&SentinelLost{Sentinel: m.sentinel})
+	m.pubSubClient.Close()
+}
 
-	if message.Timeout() {
-		return false
-	}
+func dealWithSentinelMessage(message redis.RedisPubSubReply, switchmasterchannel chan types.MasterSwitchedEvent) bool {
+
 	if message.Err() != nil {
-		logger.Info.Printf("Subscription Message : Channel : Error %s", message.Err())
+		logger.Info.Printf("Subscription Message : Channel +switch-master : Error %s", message.Err())
 		return true
 	}
 
-	channel := message.Channel()
+	logger.Info.Printf("Subscription Message : Channel : +switch-master : %s", message.Message())
 
-	if channel == "+switch-master" {
-		logger.Info.Printf("Subscription Message : Channel : %s : %s", message.Channel(), message.Message())
+	for _, s := range message.Message() {
+		event, err := parseSwitchMasterMessage(s)
 
-		event := parseSwitchMasterMessage(message.Message())
-		switchmasterchannel <- event
-		return false
-	}
-	if channel == "+sentinel" {
+		if err != nil {
+			logger.Info.Printf("Subscription Message : Channel +switch-master : Error parsing message %s %s", message.Message(), err.Error())
+			return true
+		} else {
 
-		host, port := parseInstanceDetailsForIpAndPortMessage(message.Message())
-		m.manager.Notify(&SentinelAdded{Sentinel: types.Sentinel{Host: host, Port: port}})
-		return false
+			switchmasterchannel <- event
+		}
+
 	}
 	return false
 }
 
-func parseInstanceDetailsForIpAndPortMessage(message string) (string, int) {
-	//<instance-type> <name> <ip> <port> @ <master-name> <master-ip> <master-port>
-	bits := strings.Split(message, " ")
-	port, _ := strconv.Atoi(bits[3])
-	return bits[2], port
-}
-
-func parseSwitchMasterMessage(message string) types.MasterSwitchedEvent {
+func parseSwitchMasterMessage(message string) (types.MasterSwitchedEvent, error) {
 	bits := strings.Split(message, " ")
 
-	oldmasterport, _ := strconv.Atoi(bits[2])
-	newmasterport, _ := strconv.Atoi(bits[4])
+	if len(bits) != 5 {
+		return types.MasterSwitchedEvent{}, errors.New("Invalid message recieved")
+	}
 
-	return types.MasterSwitchedEvent{Name: bits[0], OldMasterIp: bits[1], OldMasterPort: oldmasterport, NewMasterIp: bits[3], NewMasterPort: newmasterport}
+	oldmasterport, err := strconv.Atoi(bits[2])
+
+	if err != nil {
+		return types.MasterSwitchedEvent{}, err
+	}
+
+	newmasterport, err := strconv.Atoi(bits[4])
+
+	if err != nil {
+		return types.MasterSwitchedEvent{}, err
+	}
+
+	return types.MasterSwitchedEvent{Name: bits[0], OldMasterIp: bits[1], OldMasterPort: oldmasterport, NewMasterIp: bits[3], NewMasterPort: newmasterport}, nil
 }

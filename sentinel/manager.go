@@ -40,7 +40,7 @@ func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, cm *configur
 
 	manager := &SentinelManager{
 		switchmasterchannel:  unthrottled,
-		redisConnection:      redis.RadixRedisConnection{},
+		redisConnection:      redis.RedisConnection{},
 		configurationManager: cm,
 		throttle:             throttle,
 	}
@@ -96,7 +96,7 @@ func (m *SentinelManager) getTopology(stateChannel chan types.MasterDetailsColle
 	configuration := m.configurationManager.GetCurrentConfiguration()
 
 	for _, sentinel := range configuration.Sentinels {
-		client, err := NewSentinelClient(sentinel, m.redisConnection)
+		client, err := redis.NewSentinelClient(sentinel, m.redisConnection)
 
 		if err != nil {
 			logger.Info.Printf("Error starting sentinel (%s) client : %s", sentinel.GetLocation(), err.Error())
