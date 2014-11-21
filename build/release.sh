@@ -4,10 +4,10 @@ set -u
 
 version=${_REDISHAPPY_VERSION:-"1.0.0"}
 url="https://github.com/mdevilliers/redishappy"
-arch="all"
+arch="amd64"
 section="misc"
 license="Apache Software License 2.0"
-package_version=${_REDISHAPPY_PKGVERSION:-"1"}
+package_version=${_REDISHAPPY_PKGVERSION:-"-1"}
 origdir="$(pwd)"
 workspace="build"
 pkgtype=${_PKGTYPE:-"deb"}
@@ -34,8 +34,6 @@ function makeRedisHAProxyPackage() {
     cp ${origdir}/${workspace}/configs/redis-haproxy/config.json ${name}/${configdir}/redishappy/config.json
     cp ${origdir}/${workspace}/configs/redis-haproxy/haproxy_template.cfg ${name}/${configdir}/redishappy/haproxy_template.cfg
 
-    # Versioning
-    echo ${version} > ${name}/${installdir}/redishappy/VERSION
     pushd ${name}
 
       # rubygem: fpm
@@ -95,6 +93,7 @@ function makeRedisConsulPackage() {
         --deb-upstart ../redishappy-consul-service \
         --prefix=/ \
         -s dir \
+	--deb-config etc/init/redishappy-consul-service.conf \
         -- .
 
   mv ${name}*.${pkgtype} ${origdir}/${workspace}/

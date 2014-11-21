@@ -13,6 +13,6 @@ umask 007
 
 script
     cd $HOME
-    exec ./redis-consul -config /var/redishappy/config.json -log /var/redishappy/logs
+    exec ./redis-consul -config /etc/redishappy/config.json -log /var/log/redishappy
 
 end script

@@ -11,12 +11,9 @@ setgid root
 respawn
 respawn limit 2 5
 
-env HOME="/opt/redishappy"
- 
 umask 007
 
 script
-    cd $HOME
-    exec ./redis-haproxy -config /var/redishappy/config.json -log /var/redishappy/logs
+    exec /usr/bin/redis-haproxy -config /etc/redishappy/config.json -log /var/log/redishappy
 
 end script
