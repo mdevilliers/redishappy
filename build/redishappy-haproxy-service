@@ -5,8 +5,8 @@ start on filesystem or runlevel [2345]
 stop on [!12345]
 
 # needs write access to the haproxy config file
-setuid root
-setgid root
+setuid redishappy
+setgid haproxy
 
 respawn
 respawn limit 2 5
@@ -14,6 +14,6 @@ respawn limit 2 5
 umask 007
 
 script
-    exec /usr/bin/redis-haproxy -config /etc/redishappy/config.json -log /var/log/redishappy
+    exec /usr/bin/redis-haproxy -config /etc/redishappy-haproxy/config.json -log /var/log/redishappy-haproxy
 
 end script
