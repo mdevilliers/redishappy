@@ -8,7 +8,7 @@ url="https://github.com/mdevilliers/redishappy"
 arch="amd64"
 section="misc"
 license="Apache Software License 2.0"
-package_version=${_REDISHAPPY_PKGVERSION:-"-2"}
+package_version=${_REDISHAPPY_PKGVERSION:-"-1"}
 origdir="$(pwd)"
 workspace="build"
 pkgtype=${_PKGTYPE:-"deb"}
@@ -75,7 +75,7 @@ function makeRedisConsulPackage() {
     rm -rf ${name}*.{deb,rpm}
     rm -rf ${builddir}
 
-    mkdir -p ${name}/${logdir}/redishappy-haproxy
+    mkdir -p ${name}/${logdir}/redishappy-consul
     mkdir -p ${name}/${configdir}/redishappy-consul
     mkdir -p ${name}/${installdir}/../share/doc/redishappy-consul
 
@@ -104,6 +104,9 @@ function makeRedisConsulPackage() {
         -s dir \
 	--config-files etc/init \
 	--config-files etc/redishappy-consul \
+	--pre-install ../local-scripts/preinstall-redishappy-consul \
+	--post-install ../local-scripts/postinstall-redishappy-consul \
+	--post-uninstall ../local-scripts/postrm-redishappy-consul \
         -- .
 
   mv ${name}*.${pkgtype} ${origdir}/${workspace}/
