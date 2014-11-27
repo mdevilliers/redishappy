@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -eu
+
+USER="redishappy"
+GROUP="haproxy"
+
+mkdir -p /var/log/redishappy-haproxy >/dev/null
+chown $USER:$GROUP /var/log/redishappy-haproxy >/dev/null
+chmod 750 /var/log/redishappy-haproxy >/dev/null
+
+chown -R $USER:$GROUP /etc/redishappy-haproxy
+chmod 640 /etc/redishappy-haproxy/*

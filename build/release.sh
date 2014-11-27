@@ -55,6 +55,9 @@ function makeRedisHAProxyPackage() {
         -s dir \
 	--config-files etc/init \
 	--config-files etc/redishappy-haproxy \
+	--pre-install ../local-scripts/preinstall-redishappy-haproxy \
+	--post-install ../local-scripts/postinstall-redishappy-haproxy \
+	--post-uninstall ../local-scripts/postrm-redishappy-haproxy \
         -- .
 
   mv ${name}*.${pkgtype} ${origdir}/${workspace}/

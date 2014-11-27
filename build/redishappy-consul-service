@@ -10,6 +10,7 @@ respawn limit 2 5
 umask 007
 
 script
-    exec /usr/bin/redis-consul -config /etc/redishappy-consul/config.json -log /var/log/redishappy-consul
+    exec /usr/bin/redis-consul -config /etc/redishappy/config.json -log /var/log/redishappy-consul
 
 end script
+
