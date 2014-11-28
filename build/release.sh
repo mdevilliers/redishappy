@@ -1,19 +1,21 @@
 #!/bin/bash
 set -e
 set -u
+set -x
 
 version=${_REDISHAPPY_VERSION:-"1.0.0"}
 url="https://github.com/mdevilliers/redishappy"
-arch="all"
+arch="amd64"
 section="misc"
 license="Apache Software License 2.0"
-package_version=${_REDISHAPPY_PKGVERSION:-"1"}
+package_version=${_REDISHAPPY_PKGVERSION:-"-1"}
 origdir="$(pwd)"
 workspace="build"
 pkgtype=${_PKGTYPE:-"deb"}
 builddir="output"
-installdir="opt"
-configdir="var"
+installdir="usr/bin"
+logdir="var/log"
+configdir="etc"
 vendor="mdevilliers"
 
 function makeRedisHAProxyPackage() {
@@ -25,17 +27,19 @@ function makeRedisHAProxyPackage() {
     rm -rf ${name}*.{deb,rpm}
     rm -rf ${builddir}
 
-    mkdir -p ${name}/${installdir}/redishappy
-    mkdir -p ${name}/${configdir}/redishappy
+    mkdir -p ${name}/${logdir}/redishappy-haproxy
+    mkdir -p ${name}/${installdir}/../share/doc/redishappy-haproxy
+    mkdir -p ${name}/${configdir}/redishappy-haproxy
+    mkdir -p ${name}/${configdir}/init
 
-    cp ${origdir}/redis-haproxy ${name}/${installdir}/redishappy/redis-haproxy
-    chmod 755 ${name}/${installdir}/redishappy/redis-haproxy
+    cp ${origdir}/redis-haproxy ${name}/${installdir}/redis-haproxy
+    chmod 755 ${name}/${installdir}/redis-haproxy
 
-    cp ${origdir}/${workspace}/configs/redis-haproxy/config.json ${name}/${configdir}/redishappy/config.json
-    cp ${origdir}/${workspace}/configs/redis-haproxy/haproxy_template.cfg ${name}/${configdir}/redishappy/haproxy_template.cfg
+    cp ${origdir}/${workspace}/configs/redis-haproxy/config.json ${name}/${configdir}/redishappy-haproxy/config.json
+    cp ${origdir}/${workspace}/configs/redis-haproxy/haproxy_template.cfg ${name}/${configdir}/redishappy-haproxy/haproxy_template.cfg
 
-    # Versioning
-    echo ${version} > ${name}/${installdir}/redishappy/VERSION
+    cp ${origdir}/${workspace}/redishappy-haproxy-service ${name}/${configdir}/init/redishappy-haproxy-service.conf
+
     pushd ${name}
 
       # rubygem: fpm
@@ -52,6 +56,12 @@ function makeRedisHAProxyPackage() {
         --deb-upstart ../redishappy-haproxy-service \
         --prefix=/ \
         -s dir \
+	--config-files etc/init \
+	--config-files etc/redishappy-haproxy \
+	--pre-install ../local-scripts/preinstall-redishappy-haproxy \
+	--post-install ../local-scripts/postinstall-redishappy-haproxy \
+	--post-uninstall ../local-scripts/postrm-redishappy-haproxy \
+	--debug \
         -- .
 
   mv ${name}*.${pkgtype} ${origdir}/${workspace}/
@@ -69,16 +79,20 @@ function makeRedisConsulPackage() {
     rm -rf ${name}*.{deb,rpm}
     rm -rf ${builddir}
 
-    mkdir -p ${name}/${installdir}/redishappy
-    mkdir -p ${name}/${configdir}/redishappy
+    mkdir -p ${name}/${logdir}/redishappy-consul
+    mkdir -p ${name}/${configdir}/redishappy-consul
+    mkdir -p ${name}/${installdir}/../share/doc/redishappy-consul
+    mkdir -p ${name}/${configdir}/init
 
-    cp ${origdir}/redis-consul ${name}/${installdir}/redishappy/redis-consul
-    chmod 755 ${name}/${installdir}/redishappy/redis-consul
+    cp ${origdir}/redis-consul ${name}/${installdir}/redis-consul
+    chmod 755 ${name}/${installdir}/redis-consul
 
-    cp ${origdir}/main/redis-consul/config.json ${name}/${configdir}/redishappy/config.json
+    cp ${origdir}/main/redis-consul/config.json ${name}/${configdir}/redishappy-consul/config.json
+
+    cp ${origdir}/${workspace}/redishappy-consul-service ${name}/${configdir}/init/redishappy-consul-service.conf
 
     # Versioning
-    echo ${version} > ${name}/${installdir}/redishappy/VERSION
+    echo ${version} > ${name}/${installdir}/../share/doc/redishappy-consul/VERSION
     pushd ${name}
 
       # rubygem: fpm
@@ -95,6 +109,11 @@ function makeRedisConsulPackage() {
         --deb-upstart ../redishappy-consul-service \
         --prefix=/ \
         -s dir \
+	--config-files etc/init \
+	--config-files etc/redishappy-consul \
+	--pre-install ../local-scripts/preinstall-redishappy-consul \
+	--post-install ../local-scripts/postinstall-redishappy-consul \
+	--post-uninstall ../local-scripts/postrm-redishappy-consul \
         -- .
 
   mv ${name}*.${pkgtype} ${origdir}/${workspace}/

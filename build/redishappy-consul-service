@@ -7,12 +7,10 @@ stop on [!12345]
 respawn
 respawn limit 2 5
 
-env HOME="/opt/redishappy"
- 
 umask 007
 
 script
-    cd $HOME
-    exec ./redis-consul -config /var/redishappy/config.json -log /var/redishappy/logs
+    exec /usr/bin/redis-consul -config /etc/redishappy/config.json -log /var/log/redishappy-consul
 
 end script
+
