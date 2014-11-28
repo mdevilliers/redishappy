@@ -30,12 +30,15 @@ function makeRedisHAProxyPackage() {
     mkdir -p ${name}/${logdir}/redishappy-haproxy
     mkdir -p ${name}/${installdir}/../share/doc/redishappy-haproxy
     mkdir -p ${name}/${configdir}/redishappy-haproxy
+    mkdir -p ${name}/${configdir}/init
 
     cp ${origdir}/redis-haproxy ${name}/${installdir}/redis-haproxy
     chmod 755 ${name}/${installdir}/redis-haproxy
 
     cp ${origdir}/${workspace}/configs/redis-haproxy/config.json ${name}/${configdir}/redishappy-haproxy/config.json
     cp ${origdir}/${workspace}/configs/redis-haproxy/haproxy_template.cfg ${name}/${configdir}/redishappy-haproxy/haproxy_template.cfg
+
+    cp ${origdir}/${workspace}/redishappy-haproxy-service ${name}/${configdir}/init/redishappy-haproxy-service.conf
 
     pushd ${name}
 
@@ -79,11 +82,14 @@ function makeRedisConsulPackage() {
     mkdir -p ${name}/${logdir}/redishappy-consul
     mkdir -p ${name}/${configdir}/redishappy-consul
     mkdir -p ${name}/${installdir}/../share/doc/redishappy-consul
+    mkdir -p ${name}/${configdir}/init
 
     cp ${origdir}/redis-consul ${name}/${installdir}/redis-consul
     chmod 755 ${name}/${installdir}/redis-consul
 
     cp ${origdir}/main/redis-consul/config.json ${name}/${configdir}/redishappy-consul/config.json
+
+    cp ${origdir}/${workspace}/redishappy-consul-service ${name}/${configdir}/init/redishappy-consul-service.conf
 
     # Versioning
     echo ${version} > ${name}/${installdir}/../share/doc/redishappy-consul/VERSION
