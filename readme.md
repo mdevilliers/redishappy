@@ -135,13 +135,15 @@ The vagrant box also installs HAProxy for smoke testing.
 
 ### Defaults
 
-Installs to /opt/redishappy
+Installing using the deb package will set the following defaults - 
 
-Configuration to /var/redishappy
+Installs to /usr/bin/redis-haproxy
 
-Logs to file in /var/redishappy/logs
+Configuration to /etc/redishappy-haproxy
 
-Warnings, Errors got to syslog
+Logs to file in /var/log/redishappy-haproxy
+
+Warnings, Errors go to syslog
 
 ### Configuration
 
