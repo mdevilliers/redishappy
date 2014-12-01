@@ -48,7 +48,7 @@ func NewMonitor(sentinel types.Sentinel, manager Manager, redisConnection redis.
 
 func (m *Monitor) StartMonitoringMasterEvents(switchmasterchannel chan types.MasterSwitchedEvent) error {
 
-	key := "+sentinel"
+	key := "+switch-master"
 	err := m.pubSubClient.Start(key)
 
 	if err != nil {
