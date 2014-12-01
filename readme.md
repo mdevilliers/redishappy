@@ -143,7 +143,7 @@ Configuration to /etc/redishappy-haproxy
 
 Logs to file in /var/log/redishappy-haproxy
 
-Warnings, Errors got to syslog
+Warnings, Errors go to syslog
 
 ### Configuration
 
