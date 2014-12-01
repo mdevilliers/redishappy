@@ -48,6 +48,6 @@ func (client *PubSubClient) Close() {
 func (client *PubSubClient) loopSubscription() {
 	for {
 		r, err := client.subscriptionClient.Receive()
-		client.channel <- PubSubReply{err: err, message: r}
+		client.channel <- NewRedisPubSubReply(r, err)
 	}
 }

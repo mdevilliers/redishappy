@@ -121,30 +121,30 @@ func (m *Monitor) shutDownMonitor() {
 func dealWithSentinelMessage(message redis.RedisPubSubReply, switchmasterchannel chan types.MasterSwitchedEvent) bool {
 
 	if message.Err() != nil {
-		logger.Info.Printf("Subscription Message : Channel +switch-master : Error %s", message.Err())
+		logger.Info.Printf("Subscription Message : %s : Error %s", message.Channel(), message.Err())
 		return true
 	}
 
-	logger.Info.Printf("Subscription Message : Channel : +switch-master : %s", message.Message())
+	logger.Info.Printf("Subscription Message : Channel : %s : %s", message.Channel(), message.Message())
 
-	for _, s := range message.Message() {
-		event, err := parseSwitchMasterMessage(s)
+	if message.MessageType() == redis.Message {
+
+		event, err := parseSwitchMasterMessage(message.Message())
 
 		if err != nil {
-			logger.Info.Printf("Subscription Message : Channel +switch-master : Error parsing message %s %s", message.Message(), err.Error())
+			logger.Info.Printf("Subscription Message : Channel %s : Error parsing message %s %s", message.Channel(), message.Message(), err.Error())
 			return true
 		} else {
-
 			switchmasterchannel <- event
 		}
-
 	}
+
 	return false
 }
 
 func parseSwitchMasterMessage(message string) (types.MasterSwitchedEvent, error) {
-	bits := strings.Split(message, " ")
 
+	bits := strings.Split(message, " ")
 	if len(bits) != 5 {
 		return types.MasterSwitchedEvent{}, errors.New("Invalid message recieved")
 	}

@@ -4,16 +4,21 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/mdevilliers/redishappy/services/redis"
 	"github.com/mdevilliers/redishappy/types"
 )
 
 type MockMessage struct {
-	err      error
-	messages []string
+	err         error
+	messages    string
+	channel     string
+	messageType int
 }
 
-func (m *MockMessage) Err() error        { return m.err }
-func (m *MockMessage) Message() []string { return m.messages }
+func (m *MockMessage) Err() error       { return m.err }
+func (m *MockMessage) Message() string  { return m.messages }
+func (m *MockMessage) Channel() string  { return m.channel }
+func (m *MockMessage) MessageType() int { return m.messageType }
 
 func TestMonitorSignalsAnError(t *testing.T) {
 
@@ -31,7 +36,7 @@ func TestMonitorWillParseAndForwardOnAGoodMessage(t *testing.T) {
 	validinput := "name 1.1.1.1 1234 2.2.2.2 5678"
 
 	go func() {
-		ok := dealWithSentinelMessage(&MockMessage{messages: []string{validinput}}, switchmasterchannel)
+		ok := dealWithSentinelMessage(&MockMessage{messageType: redis.Message, messages: validinput}, switchmasterchannel)
 		if ok {
 			t.Error("A valid message was passed")
 		}
@@ -49,11 +54,10 @@ func TestMonitorWillReturnFalseOnAnInvalidMessage(t *testing.T) {
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
 	invalidinput := "name 1.1.1.1 rubbish 2.2.2.2 5678"
 
-	ok := dealWithSentinelMessage(&MockMessage{messages: []string{invalidinput}}, switchmasterchannel)
+	ok := dealWithSentinelMessage(&MockMessage{messageType: redis.Message, messages: invalidinput}, switchmasterchannel)
 	if !ok {
 		t.Error("An invalid message was passed")
 	}
-
 }
 
 func TestParseMasterMessage(t *testing.T) {
@@ -98,5 +102,4 @@ func TestParseInvalidMasterMessage(t *testing.T) {
 			t.Error("Error parsing invalid message")
 		}
 	}
-
 }
