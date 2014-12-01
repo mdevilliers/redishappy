@@ -35,17 +35,57 @@ type RedisClient interface {
 
 type RedisPubSubReply interface {
 	Err() error
-	Message() []string
+	Message() string
+	Channel() string
+	MessageType() int
 }
 
+const (
+	Confirmation = 1
+	Message      = 2
+)
+
 type PubSubReply struct {
-	message []string
-	err     error
+	message     string
+	channel     string
+	err         error
+	messageType int
+}
+
+func NewRedisPubSubReply(message []string, err error) RedisPubSubReply {
+
+	if err != nil {
+		return &PubSubReply{err: err}
+	}
+
+	ret := &PubSubReply{
+		channel: message[1],
+	}
+
+	if message[0] == "subcribe" {
+		ret.messageType = Confirmation
+		return ret
+	}
+
+	if message[0] == "message" {
+		ret.messageType = Message
+	}
+
+	ret.message = message[2]
+	return ret
 }
 
 func (p PubSubReply) Err() error {
 	return p.err
 }
-func (p PubSubReply) Message() []string {
+func (p PubSubReply) Message() string {
 	return p.message
+}
+
+func (p PubSubReply) Channel() string {
+	return p.channel
+}
+
+func (p PubSubReply) MessageType() int {
+	return p.messageType
 }

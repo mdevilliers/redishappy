@@ -87,7 +87,6 @@ func (m *SentinelManager) startNewMonitor(sentinel types.Sentinel) {
 		logger.Error.Printf("Error starting monitoring events %s : %s", sentinel.GetLocation(), err.Error())
 		m.Notify(&SentinelLost{Sentinel: sentinel})
 	}
-
 }
 
 func (m *SentinelManager) getTopology(stateChannel chan types.MasterDetailsCollection) {
@@ -107,6 +106,7 @@ func (m *SentinelManager) getTopology(stateChannel chan types.MasterDetailsColle
 		for _, clusterDetails := range configuration.Clusters {
 
 			details, err := client.DiscoverMasterForCluster(clusterDetails.Name)
+
 			if err != nil {
 				continue
 			}
