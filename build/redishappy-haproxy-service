@@ -5,8 +5,8 @@ start on filesystem or runlevel [2345]
 stop on [!12345]
 
 # needs write access to the haproxy config file
-setuid redishappy
-setgid haproxy
+setuid root
+setgid root
 
 respawn
 respawn limit 2 5
