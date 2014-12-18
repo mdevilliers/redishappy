@@ -108,7 +108,9 @@ RedisHappy attempts to avoid this failure mode by only presenting the correct se
 
 ### Building
 
-Download and build
+Download and build.
+
+Install golang 1.4 +
 
 ```
 go get github.com/mdevilliers/redishappy
@@ -118,9 +120,9 @@ cd $GOPATH/src/github.com/redishappy
 go get github.com/tools/godep
 go get github.com/axw/gocov/gocov
 go get github.com/mattn/goveralls
-go get code.google.com/p/go.tools/cmd/cover
-go get code.google.com/p/go.tools/cmd/vet
-go get code.google.com/p/go.tools/cmd/goimports
+go get golang.org/x/tools/cmd/cover
+go get golang.org/x/tools/cmd/vet
+go get golang.org/x/tools/cmd/goimports
 
 godep restore
 
