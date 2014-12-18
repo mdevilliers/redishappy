@@ -3,7 +3,7 @@
 
 VAGRANTFILE_API_VERSION = "2"
 
-goLangZip = "go1.3.3.linux-amd64.tar.gz"
+goLangZip = "go1.4.src.tar.gz"
 
 script = <<SCRIPT
 
