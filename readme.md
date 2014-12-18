@@ -115,12 +115,32 @@ go get github.com/mdevilliers/redishappy
 
 cd $GOPATH/src/github.com/redishappy
 
+go get github.com/tools/godep
+go get github.com/axw/gocov/gocov
+go get github.com/mattn/goveralls
+go get code.google.com/p/go.tools/cmd/cover
+go get code.google.com/p/go.tools/cmd/vet
+go get code.google.com/p/go.tools/cmd/goimports
+
+godep restore
+
 build/ci.sh
-build/release.sh
 ```
 
 ci.sh - builds the code, runs the tests
+
+Build the deb packages
+
+```
+apt-get install ruby-dev gcc
+gem install fpm
+
+build/ci.sh
+build/release.sh
+
+```
 release.sh - builds the deb packages
+
 
 Using vagrant
 
@@ -233,7 +253,7 @@ GET /api/haproxy - displays the rendered HAProxy file
 
 ### Hacking
 
-Running the following script will gofmt, govet, rune the tests, build all of the executables.
+Running the following script will gofmt, govet, run the tests, build all of the executables.
 
 ```
 build/ci_script.sh
