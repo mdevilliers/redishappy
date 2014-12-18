@@ -150,7 +150,7 @@ vagrant up
 
 The packages are then at - $GOPATH/src/github.com/redishappy/build
 
-The vagrant box also installs HAProxy for smoke testing.
+The vagrant box also installs HAProxy, Docker and https://github.com/mdevilliers/docker-rediscluster for manual testing.
 
 
 ### Defaults
