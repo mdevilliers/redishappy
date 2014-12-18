@@ -9,13 +9,18 @@ script = <<SCRIPT
 
 add-apt-repository ppa:vbernat/haproxy-1.5
 add-apt-repository ppa:bzr/ppa
-apt-get update -y
+
+# add docker key
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9
+echo "deb https://get.docker.io/ubuntu docker main" | sudo tee /etc/apt/sources.list.d/docker.list
+
+apt-get -y update > /dev/null
+apt-get upgrade > /dev/null
 
 # install dev tools
-apt-get install -y git mercurial ruby-dev gcc wget bzr lintian
+apt-get install -y git mercurial ruby-dev gcc wget bzr lintian lxc-docker haproxy redis-server
 
-# install haproxy 1.5+
-apt-get install -y haproxy
+# enable haproxy
 sed -i 's/^ENABLED=.*/ENABLED=1/' /etc/default/haproxy
 
 # install go
@@ -49,8 +54,15 @@ export _REDISHAPPY_PKGVERSION="1"
 build/ci.sh
 build/release.sh
 
-dpkg -i build/redishappy-haproxy_${_REDISHAPPY_VERSION}${_REDISHAPPY_PKGVERSION}_all.deb
+# dpkg -i build/redishappy-haproxy_${_REDISHAPPY_VERSION}${_REDISHAPPY_PKGVERSION}_all.deb
 # dpkg -i build/redishappy-consul_${_REDISHAPPY_VERSION}${_REDISHAPPY_PKGVERSION}_all.deb
+
+# download docker testing pre-reqs
+cd /home/vagrant
+git clone https://github.com/mdevilliers/docker-rediscluster.git
+
+docker pull redis
+docker pull joshula/redis-sentinel
 
 SCRIPT
 
