@@ -3,6 +3,8 @@ package types
 import (
 	"sort"
 	"testing"
+
+	"github.com/mdevilliers/redishappy/util"
 )
 
 func TestBasicMasterDetailsCollectionOperations(t *testing.T) {
@@ -78,5 +80,24 @@ func TestMasterDetailsIsEmpty(t *testing.T) {
 
 	if collection.IsEmpty() {
 		t.Error("Collection should not be empty")
+	}
+}
+
+func TestSerialisationOnNewMasterDetailsCollection(t *testing.T) {
+
+	collection := NewMasterDetailsCollection()
+
+	detail1 := &MasterDetails{ExternalPort: 1111, Name: "a", Ip: "1.1.1.1.", Port: 2222}
+	detail2 := &MasterDetails{ExternalPort: 2222, Name: "b", Ip: "2.2.2.2.", Port: 3333}
+	detail3 := &MasterDetails{ExternalPort: 2222, Name: "c", Ip: "2.2.2.2.", Port: 3333}
+
+	collection.AddOrReplace(detail3)
+	collection.AddOrReplace(detail2)
+	collection.AddOrReplace(detail1)
+
+	json := util.String(collection.Items())
+
+	if json == "{}" {
+		t.Errorf("Json should not be empty : %s", json)
 	}
 }
