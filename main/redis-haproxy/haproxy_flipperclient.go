@@ -126,7 +126,7 @@ func renderTemplate(details *types.MasterDetailsCollection, outputPath string, t
 			return true, nil
 		}
 
-		logger.Info.Printf("Updating config file. New file hash : %s == Old file hash %s", newFileHash, oldFileHash)
+		logger.Info.Printf("Updating config file. New file hash : %s != Old file hash %s", newFileHash, oldFileHash)
 	}
 
 	err = util.WriteFile(outputPath, renderedTemplate)
