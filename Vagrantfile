@@ -20,6 +20,10 @@ apt-get upgrade > /dev/null
 # install dev tools
 apt-get install -y git mercurial ruby-dev gcc wget bzr lintian lxc-docker haproxy redis-server
 
+# stop redis-server
+# we only need the client tools
+service redis-server stop
+
 # enable haproxy
 sed -i 's/^ENABLED=.*/ENABLED=1/' /etc/default/haproxy
 
@@ -32,6 +36,8 @@ export GOPATH=/home/vagrant/go
 
 echo "export PATH=$PATH:/usr/local/go/bin:/home/vagrant/go/bin" >> /home/vagrant/.profile
 echo "export GOPATH=/home/vagrant/go" >> /home/vagrant/.profile
+
+chown -R vagrant:vagrant /home/vagrant/go
 
 # install fpm
 gem install --no-ri --no-rdoc fpm
