@@ -11,7 +11,6 @@ license="Apache Software License 2.0"
 package_version=${_REDISHAPPY_PKGVERSION:-"-1"}
 origdir="$(pwd)"
 workspace="build"
-#pkgtype=${_PKGTYPE:-"deb"}
 builddir="output"
 installdir="usr/bin"
 logdir="var/log"
