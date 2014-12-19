@@ -3,7 +3,7 @@
 # redishappy-consul - this script starts and stops the redishappy-consul daemon
 #
 # chkconfig:   - 85 15
-# description:
+# description: RedisHappy Consul is an automated Redis failover daemon integrating Redis Sentinel with Consul
 # processname: redis-consul
 # config:      /etc/redishappy-consul/config.json
 # config:      /etc/sysconfig/redishappy-consul

@@ -3,7 +3,7 @@
 # redishappy-haproxy - this script starts and stops the redishappy-haproxy daemon
 #
 # chkconfig:   - 85 15
-# description:
+# description: RedisHappy HAProxy is an automated Redis failover daemon integrating Redis Sentinel with HAProxy
 # processname: redis-haproxy
 # config:      /etc/redishappy-haproxy/config.json
 # config:      /etc/sysconfig/redishappy-haproxy
