@@ -19,10 +19,9 @@ fi
 # creating user if it isn't already there
 if ! getent passwd $USER >/dev/null
 then
-        adduser \
+        useradd \
           --system \
-          --disabled-login \
-          --ingroup $GROUP \
+          --group $GROUP \
           --home /nonexistent \
           --shell /bin/false \
           $USER >/dev/null
@@ -34,4 +33,3 @@ chmod 750 /var/log/redishappy-consul >/dev/null
 
 # end of NIS tolerance zone
 set -e
-

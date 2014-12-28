@@ -18,7 +18,7 @@ apt-get -y update > /dev/null
 apt-get upgrade > /dev/null
 
 # install dev tools
-apt-get install -y git mercurial ruby-dev gcc wget bzr lintian lxc-docker haproxy redis-server
+apt-get install -y git mercurial ruby-dev gcc wget bzr lintian lxc-docker haproxy redis-server rpm
 
 # stop redis-server
 # we only need the client tools
