@@ -104,7 +104,7 @@ func executeHAproxyCommand(reloadCommand string) (bool, error) {
 
 func renderTemplate(details *types.MasterDetailsCollection, outputPath string, templatepath string) (bool, error) {
 
-	logger.Info.Printf("Details %s", util.String(details))
+	logger.Info.Printf("Details %s", util.String(details.Items()))
 	renderedTemplate, err := template.RenderTemplate(templatepath, details)
 
 	if err != nil {
@@ -126,7 +126,7 @@ func renderTemplate(details *types.MasterDetailsCollection, outputPath string, t
 			return true, nil
 		}
 
-		logger.Info.Printf("Updating config file. New file hash : %s == Old file hash %s", newFileHash, oldFileHash)
+		logger.Info.Printf("Updating config file. New file hash : %s != Old file hash %s", newFileHash, oldFileHash)
 	}
 
 	err = util.WriteFile(outputPath, renderedTemplate)

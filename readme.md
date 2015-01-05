@@ -108,19 +108,41 @@ RedisHappy attempts to avoid this failure mode by only presenting the correct se
 
 ### Building
 
-Download and build
+Download and build.
+
+Install golang 1.4 +
 
 ```
 go get github.com/mdevilliers/redishappy
 
 cd $GOPATH/src/github.com/redishappy
 
+go get github.com/tools/godep
+go get github.com/axw/gocov/gocov
+go get github.com/mattn/goveralls
+go get golang.org/x/tools/cmd/cover
+go get golang.org/x/tools/cmd/vet
+go get golang.org/x/tools/cmd/goimports
+
+godep restore
+
 build/ci.sh
-build/release.sh
 ```
 
 ci.sh - builds the code, runs the tests
+
+Build the deb packages
+
+```
+apt-get install ruby-dev gcc
+gem install fpm
+
+build/ci.sh
+build/release.sh
+
+```
 release.sh - builds the deb packages
+
 
 Using vagrant
 
@@ -130,7 +152,7 @@ vagrant up
 
 The packages are then at - $GOPATH/src/github.com/redishappy/build
 
-The vagrant box also installs HAProxy for smoke testing.
+The vagrant box also installs HAProxy, Docker and https://github.com/mdevilliers/docker-rediscluster for manual testing.
 
 
 ### Defaults
@@ -233,7 +255,7 @@ GET /api/haproxy - displays the rendered HAProxy file
 
 ### Hacking
 
-Running the following script will gofmt, govet, rune the tests, build all of the executables.
+Running the following script will gofmt, govet, run the tests, build all of the executables.
 
 ```
 build/ci_script.sh
