@@ -19,9 +19,8 @@ fi
 
 if getent passwd $USER >/dev/null
 then
-        deluser $USER >/dev/null
+        userdel $USER >/dev/null
 fi
 
 # end of NIS tolerance zone
 set -e
-

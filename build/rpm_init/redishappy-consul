@@ -1,0 +1,112 @@
+#!/bin/sh
+#
+# redishappy-consul - this script starts and stops the redishappy-consul daemon
+#
+# chkconfig:   - 85 15
+# description: RedisHappy Consul is an automated Redis failover daemon integrating Redis Sentinel with Consul
+# processname: redis-consul
+# config:      /etc/redishappy-consul/config.json
+# config:      /etc/sysconfig/redishappy-consul
+# pidfile:     /var/run/redishappy-consul.pid
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+# Check that networking is up.
+[ "$NETWORKING" = "no" ] && exit 0
+
+exec="/usr/bin/redis-consul"
+prog="redis-consul"
+pidfile="/var/run/redis-consul.pid"
+logdir="/var/log/redishappy-consul"
+
+CONF_FILE="/etc/redishappy-consul/config.json"
+
+lockfile="/var/lock/subsys/redis-consul"
+
+start() {
+    [ -x $exec ] || exit 5
+    [ -f $CONF_FILE ] || exit 6
+    echo -n $"Starting $prog: "
+    if [ -s ${pidfile} ]; then
+       RETVAL=1
+       echo -n "Already running !" && warning
+       echo
+    else
+       nohup $exec -config="${CONF_FILE}" -log="${logdir}" >/dev/null 2>&1 &
+       RETVAL=$?
+       PID=$!
+       [ $RETVAL -eq 0 ] && touch ${lockfile} && success || failure
+       echo
+       echo $PID > ${pidfile}
+    fi
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc -p $pidfile $exec -QUIT
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && rm -f $lockfile && rm -f $pidfile
+    return $retval
+}
+
+restart() {
+    stop
+    sleep 1
+    start
+}
+
+reload() {
+    echo -n $"Reloading $prog: "
+    killproc $exec -HUP
+    RETVAL=$?
+    echo
+}
+
+force_reload() {
+    restart
+}
+
+rh_status() {
+    status -p $pidfile
+    retval=$?
+    return $retval
+}
+
+rh_status_q() {
+    rh_status >/dev/null 2>&1
+}
+
+case "$1" in
+    start)
+        rh_status_q && exit 0
+        $1
+        ;;
+    stop)
+        rh_status_q || exit 0
+        $1
+        ;;
+    restart|configtest)
+        $1
+        ;;
+    reload)
+        rh_status_q || exit 7
+        $1
+        ;;
+    force-reload)
+        force_reload
+        ;;
+    status)
+        rh_status
+        ;;
+    condrestart|try-restart)
+        rh_status_q || exit 0
+	    ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload|force-reload}"
+        exit 2
+esac
