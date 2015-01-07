@@ -16,6 +16,8 @@ Features
 * Developed in Golang, clean deployment with no additional dependencies.
 * Read-only RestAPI.
 * Syslog integration.
+* RPM and Deb packages available.
+* [Puppet module available](https://github.com/lesaux/puppet-redishappy).
 
 ### Deployment
 
@@ -41,6 +43,8 @@ redishappy-consul updates entries in a Consul instance on Redis master promotion
 Q. Why - I thought in 2014 Redis clients should be Sentinel aware? They should connect to the correct Redis instance on failover.
 
 A. Some do, some don't. Some it seems to be an eternal 'work in progress'. Rather than fixing all of the clients we needed to work correctly with Sentinel, RedisHappy was built upon the fact that all of the clients I have tested are great at connecting to a single address. 
+
+Q. Why - Operations teams also need to support legacy applications and libraries - adding redishappy, Sentinels and HAProxy can help provide a HA enviroment for Redis backed applications.
 
 Q. Why - This [article](http://blog.haproxy.com/2014/01/02/haproxy-advanced-redis-health-check/) suggests that HAProxy can healthcheck Redis instances quite fine by itself. 
 
@@ -108,6 +112,18 @@ RedisHappy attempts to avoid this failure mode by only presenting the correct se
 
 ### Building
 
+Using Vagrant
+
+The provided vagrant file creates a virtual machine with all of the dependancies to build redishappy, smoke test it, and build the deb and rpm packages.
+
+```
+vagrant up
+```
+
+The packages are then at - $GOPATH/src/github.com/redishappy/
+
+The vagrant box also installs HAProxy, Docker and https://github.com/mdevilliers/docker-rediscluster for manual testing.
+
 Download and build.
 
 Install golang 1.4 +
@@ -129,35 +145,10 @@ godep restore
 build/ci.sh
 ```
 
-ci.sh - builds the code, runs the tests
-
-Build the deb packages
-
-```
-apt-get install ruby-dev gcc
-gem install fpm
-
-build/ci.sh
-build/release.sh
-
-```
-release.sh - builds the deb packages
-
-
-Using vagrant
-
-```
-vagrant up
-```
-
-The packages are then at - $GOPATH/src/github.com/redishappy/build
-
-The vagrant box also installs HAProxy, Docker and https://github.com/mdevilliers/docker-rediscluster for manual testing.
-
 
 ### Defaults
 
-Installing using the deb package will set the following defaults - 
+Installing using the deb and rpm packages will set the following defaults - 
 
 Installs to /usr/bin/redis-haproxy
 
@@ -268,8 +259,15 @@ https://github.com/mdevilliers/docker-rediscluster
 
 Will start up a master/slave, 3 sentinel redis cluster for testing.
 
+Thanks
+------
+
+Big thanks to 
+	- [Pierig Le Saux](https://github.com/lesaux) for providing the RPM packaging and Puppet expertise 
+	- [Gary Hawkins](https://github.com/aeriandi-garyh) for providing the deb packaging expertise  
+	
 
 Copyright and license
 ---------------------
 
-Code and documentation copyright 2014 Mark deVilliers. Code released under the Apache 2.0 license.
+Code and documentation copyright 2015 Mark deVilliers. Code released under the Apache 2.0 license.
