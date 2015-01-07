@@ -120,7 +120,7 @@ The provided vagrant file creates a virtual machine with all of the dependancies
 vagrant up
 ```
 
-The packages are then at - $GOPATH/src/github.com/redishappy/
+The packages are automatically built to - $GOPATH/src/github.com/redishappy/
 
 The vagrant box also installs HAProxy, Docker and https://github.com/mdevilliers/docker-rediscluster for manual testing.
 
