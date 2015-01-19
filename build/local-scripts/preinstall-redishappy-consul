@@ -21,7 +21,7 @@ if ! getent passwd $USER >/dev/null
 then
         useradd \
           --system \
-          --group $GROUP \
+          -g $GROUP \
           --home /nonexistent \
           --shell /bin/false \
           $USER >/dev/null
