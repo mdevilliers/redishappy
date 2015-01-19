@@ -14,7 +14,7 @@ before_install:
 - godep restore
 script: 
 - build/ci.sh
-- $HOME/gopath/bin/goveralls -coverprofile=profile.cov -service=travis-ci -repotoken $GOVERALLS_TOKEN
+- $HOME/gopath/bin/goveralls -coverprofile=profile.cov -service=travis-ci -repotoken=$GOVERALLS_TOKEN
 - build/release.sh
 env: 
   matrix: 
