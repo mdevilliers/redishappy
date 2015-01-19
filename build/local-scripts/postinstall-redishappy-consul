@@ -2,9 +2,5 @@
 
 set -eu
 
-mkdir -p /var/log/redishappy-consul >/dev/null
-chown root:root /var/log/redishappy-consul >/dev/null
-chmod 750 /var/log/redishappy-consul >/dev/null
-
 chown -R root:root /etc/redishappy-consul
 chmod 640 /etc/redishappy-consul
