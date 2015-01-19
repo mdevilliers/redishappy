@@ -264,7 +264,8 @@ Thanks
 
 Big thanks to 
 	- [Pierig Le Saux](https://github.com/lesaux) for providing the RPM packaging and Puppet expertise 
-	- [Gary Hawkins](https://github.com/aeriandi-garyh) for providing the deb packaging expertise  
+	- [Gary Hawkins](https://github.com/aeriandi-garyh) for providing the deb packaging expertise
+	- [Dominic Scheirlinck](https://github.com/dominics) for fixing up the consul deb package
 	
 
 Copyright and license
