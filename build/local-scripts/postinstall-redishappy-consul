@@ -3,4 +3,4 @@
 set -eu
 
 chown -R root:root /etc/redishappy-consul
-chmod 640 /etc/redishappy-consul
+chmod 750 /etc/redishappy-consul
