@@ -7,6 +7,9 @@ stop on [!12345]
 respawn
 respawn limit 2 5
 
+setuid redishappy
+setgid haproxy
+
 umask 007
 
 script
