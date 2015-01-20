@@ -8,7 +8,7 @@ respawn
 respawn limit 2 5
 
 setuid redishappy
-setgid haproxy
+setgid redishappy
 
 umask 007
 
