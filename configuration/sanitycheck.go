@@ -2,6 +2,7 @@ package configuration
 
 import (
 	"errors"
+	"fmt"
 )
 
 type SanityCheck interface {
@@ -23,6 +24,35 @@ func (c *ConfigContainsRequiredSections) Check(config Configuration) (bool, erro
 	}
 	if len(config.Sentinels) == 0 {
 		return false, errors.New("Configuration needs to contain at least one Sentinel.")
+	}
+
+	return true, nil
+}
+
+type CheckForObviousMisConfiguration struct{}
+
+func (c *CheckForObviousMisConfiguration) Check(config Configuration) (bool, error) {
+
+	for _, cluster := range config.Clusters {
+
+		if cluster.ExternalPort == 0 {
+			return false, errors.New(fmt.Sprintf("Cluster %s configured with port 0", cluster.Name))
+		}
+
+		if cluster.Name == "" {
+			return false, errors.New("Cluster configured without name")
+		}
+	}
+
+	for _, sentinel := range config.Sentinels {
+
+		if sentinel.Port == 0 {
+			return false, errors.New(fmt.Sprintf("Sentinel %s configured with port 0", sentinel.Host))
+		}
+
+		if sentinel.Host == "" {
+			return false, errors.New("Sentinel configured without host address")
+		}
 	}
 
 	return true, nil

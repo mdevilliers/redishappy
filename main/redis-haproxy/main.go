@@ -30,6 +30,7 @@ func main() {
 
 	sane, errors := config.GetCurrentConfiguration().SanityCheckConfiguration(
 		&configuration.ConfigContainsRequiredSections{},
+		&configuration.CheckForObviousMisConfiguration{},
 		&HAProxyConfigContainsRequiredSections{},
 		&CheckPermissionToWriteToHAProxyConfigFile{},
 		&CheckHAProxyTemplateFileExists{},
