@@ -33,7 +33,7 @@ type CheckForObviousMisConfiguration struct{}
 
 func (c *CheckForObviousMisConfiguration) Check(config Configuration) (bool, error) {
 
-	for cluster := range config.Clusters {
+	for _, cluster := range config.Clusters {
 
 		if cluster.ExternalPort == 0 {
 			return false, errors.New(fmt.Sprintf("Cluster %s configured with port 0", cluster.Name))
@@ -44,7 +44,7 @@ func (c *CheckForObviousMisConfiguration) Check(config Configuration) (bool, err
 		}
 	}
 
-	for sentinel := range config.Sentinels {
+	for _, sentinel := range config.Sentinels {
 
 		if sentinel.Port == 0 {
 			return false, errors.New(fmt.Sprintf("Sentinel %s configured with port 0", sentinel.Host))
