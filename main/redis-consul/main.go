@@ -31,7 +31,7 @@ func main() {
 	sane, errors := config.GetCurrentConfiguration().SanityCheckConfiguration(
 		&configuration.ConfigContainsRequiredSections{},
 		&configuration.CheckForObviousMisConfiguration{})
-	
+
 	if !sane {
 
 		for _, errorAsStr := range errors {
