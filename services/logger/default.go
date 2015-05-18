@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/natefinch/lumberjack"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var (
