@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/natefinch/lumberjack"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var (
@@ -25,11 +25,11 @@ func init() {
 }
 
 func newLogFileWriter(logPath string) io.Writer {
+
 	return &lumberjack.Logger{
-		Dir:        logPath,
-		NameFormat: "redis-happy.log",
-		MaxSize:    lumberjack.Megabyte,
+		Filename:   logPath + "/redis-happy.log",
+		MaxSize:    5, // megabytes
 		MaxBackups: 3,
-		MaxAge:     28,
+		MaxAge:     28, // days
 	}
 }

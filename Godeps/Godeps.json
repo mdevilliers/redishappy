@@ -14,11 +14,6 @@
 			"Rev": "4ea3f32c1eb1115ad9e010eeff314fffc5fc8638"
 		},
 		{
-			"ImportPath": "github.com/natefinch/lumberjack",
-			"Comment": "v1.0-2-ga6f35ba",
-			"Rev": "a6f35bab25c9df007f78aa90c441922062451979"
-		},
-		{
 			"ImportPath": "github.com/therealbill/libredis/client",
 			"Rev": "238cd3239bb7d55bf2e71da81bcbba869b56a22a"
 		},
