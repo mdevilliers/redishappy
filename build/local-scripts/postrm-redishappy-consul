@@ -16,11 +16,11 @@ fi
 #then
 #        delgroup $GROUP >/dev/null
 #fi
-
-if getent passwd $USER >/dev/null
-then
-        userdel $USER >/dev/null
-fi
+#
+#if getent passwd $USER >/dev/null
+#then
+#        userdel $USER >/dev/null
+#fi
 
 # end of NIS tolerance zone
 set -e
