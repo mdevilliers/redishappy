@@ -13,7 +13,11 @@ fi
 
 if ! getent group $GROUP >/dev/null
 then
+    if type "groupadd" > /dev/null 2>&1; then
+        groupadd --system $GROUP >/dev/null
+    else
         addgroup --system $GROUP >/dev/null
+    fi
 fi
 
 # creating user if it isn't already there
