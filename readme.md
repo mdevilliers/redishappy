@@ -23,7 +23,7 @@ Features
 
 Redishappy ships in two forms redishappy-haproxy and redishappy-consul.
 
-####redishappy-haproxy
+#### redishappy-haproxy
 
 redishappy-haproxy updates HAProxy's configuration file on Redis master promotion and then reloads the HAProxy configuration file. The reload maintains current connections.
 
@@ -31,7 +31,7 @@ redishappy-haproxy updates HAProxy's configuration file on Redis master promotio
 
 The redishappy daemon is installed on the same machine as HAProxy and runs with correct user rights to interact with HAProxy. Multiple instance of HAProxy/redishappy-haproxy can be deployed and operate seperatly.
 
-####redishappy-consul
+#### redishappy-consul
 
 redishappy-consul updates entries in a Consul instance on Redis master promotion.
 
@@ -44,7 +44,7 @@ Q. Why - I thought in 2014 Redis clients should be Sentinel aware? They should c
 
 A. Some do, some don't. Some it seems to be an eternal 'work in progress'. Rather than fixing all of the clients we needed to work correctly with Sentinel, RedisHappy was built upon the fact that all of the clients I have tested are great at connecting to a single address.
 
-Q. Why - Operations teams also need to support legacy applications and libraries - adding redishappy, Sentinels and HAProxy can help provide a HA enviroment for Redis backed applications.
+Operations teams also need to support legacy applications and libraries - adding redishappy, Sentinels and HAProxy can help provide a HA enviroment for Redis backed applications.
 
 Q. Why - This [article](http://blog.haproxy.com/2014/01/02/haproxy-advanced-redis-health-check/) suggests that HAProxy can healthcheck Redis instances quite fine by itself.
 
@@ -145,7 +145,6 @@ godep restore
 build/ci.sh
 ```
 
-
 ### Defaults
 
 Installing using the deb and rpm packages will set the following defaults -
@@ -211,21 +210,19 @@ Definitions for the elements
 
 Or you can configure with the following environmental variables -
 
-Environment Variable             | Example          | Notes
----------------------------------|------------------|-----------------------------------
-REDISHAPPY_CLUSTERS              | clustername:6379 | multiple values can be ; seperated
-REDISHAPPY_SENTINELS             | ip_name:26377    | multiple values can be ; seperated
-REDISHAPPY_HAPROXY_TEMPLATE_PATH |                  | string, see config file for example
-REDISHAPPY_HAPROXY_OUTPUT_PATH   |                  | string, see config file for example
-REDISHAPPY_HAPROXY_RELOAD_CMD    |                  | string, see config file for example
+Environment Variable               | Example          | Notes
+-----------------------------------|------------------|-----------------------------------
+`REDISHAPPY_CLUSTERS`              | clustername:6379 | multiple values can be ; seperated
+`REDISHAPPY_SENTINELS`             | ip_name:26377    | multiple values can be ; seperated
+`REDISHAPPY_HAPROXY_TEMPLATE_PATH` |                  | string, see config file for example
+`REDISHAPPY_HAPROXY_OUTPUT_PATH`   |                  | string, see config file for example
+`REDISHAPPY_HAPROXY_RELOAD_CMD`    |                  | string, see config file for example
 
 
 
-### Api
+### API
 
-RedisHappy provides a readonly api on port 8000
-
-GET /api/ping - will reply "pong" if running
+RedisHappy provides a readonly API on port 8000. You can change the port by specifying a `PORT` environment variable.
 
 * `GET /api/ping` - will reply "pong" if running
 * `GET /api/configuration` - displays the start up configuration
