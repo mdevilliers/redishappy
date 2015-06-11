@@ -150,21 +150,17 @@ build/ci.sh
 
 Installing using the deb and rpm packages will set the following defaults -
 
-Installs to /usr/bin/redis-haproxy
-
-Configuration to /etc/redishappy-haproxy
-
-Logs to file in /var/log/redishappy-haproxy
-
-Warnings, Errors go to syslog
+* Installs to `/usr/bin/redis-haproxy`
+* Configuration to `/etc/redishappy-haproxy`
+* Logs to file in `/var/log/redishappy-haproxy`
+* Warnings, Errors go to syslog
 
 ### Configuration
 
 Example configurations can be found in the main folders
 
-[HAProxy](main/redis-haproxy)
-
-[Consul](main/redis-consul)
+* [HAProxy](main/redis-haproxy)
+* [Consul](main/redis-consul)
 
 Definitions for the elements
 
@@ -231,18 +227,15 @@ RedisHappy provides a readonly api on port 8000
 
 GET /api/ping - will reply "pong" if running
 
-GET /api/configuration - displays the start up configuration
-
-GET /api/sentinels - displays the sentinels being currently monitored and their current states
-
-GET /api/topology - displays the current view of the Redis clusters, their master and their host/ip addresses
+* `GET /api/ping` - will reply "pong" if running
+* `GET /api/configuration` - displays the start up configuration
+* `GET /api/sentinels` - displays the sentinels being currently monitored and their current states
+* `GET /api/topology` - displays the current view of the Redis clusters, their master and their host/ip addresses
 
 redishappy-haproxy provides the following additional read only apis
 
-GET /api/template - displays the current template file
-
-GET /api/haproxy - displays the rendered HAProxy file
-
+* `GET /api/template` - displays the current template file
+* `GET /api/haproxy` - displays the rendered HAProxy file
 
 ### Hacking
 
@@ -262,9 +255,10 @@ Thanks
 ------
 
 Big thanks to
-    - [Pierig Le Saux](https://github.com/lesaux) for providing the RPM packaging and Puppet expertise
-    - [Gary Hawkins](https://github.com/aeriandi-garyh) for providing the deb packaging expertise
-    - [Dominic Scheirlinck](https://github.com/dominics) for fixing up the consul deb package
+
+- [Pierig Le Saux](https://github.com/lesaux) for providing the RPM packaging and Puppet expertise
+- [Gary Hawkins](https://github.com/aeriandi-garyh) for providing the deb packaging expertise
+- [Dominic Scheirlinck](https://github.com/dominics) for fixing up the consul deb package
 
 
 Copyright and license
