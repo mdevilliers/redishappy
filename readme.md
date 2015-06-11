@@ -248,9 +248,8 @@ GET /api/haproxy - displays the rendered HAProxy file
 
 Running the following script will gofmt, govet, run the tests, build all of the executables.
 
-```
-build/ci_script.sh
-
+```sh
+build/ci.sh
 ```
 
 ### Testing with Docker
