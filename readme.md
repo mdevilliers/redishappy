@@ -116,7 +116,7 @@ Using Vagrant
 
 The provided vagrant file creates a virtual machine with all of the dependancies to build redishappy, smoke test it, and build the deb and rpm packages.
 
-```
+```sh
 vagrant up
 ```
 
@@ -128,7 +128,7 @@ Download and build.
 
 Install golang 1.4 +
 
-```
+```sh
 go get github.com/mdevilliers/redishappy
 
 cd $GOPATH/src/github.com/redishappy
@@ -168,7 +168,7 @@ Example configurations can be found in the main folders
 
 Definitions for the elements
 
-```Javascript
+```js
 {
   // REQUIRED - needs to contain at least one logical cluster
   "Clusters" :[
