@@ -40,7 +40,7 @@ redishappy-consul updates entries in a Consul instance on Redis master promotion
 
 ### FAQ
 
-Q. Why - I thought in 2014 Redis clients should be Sentinel aware? They should connect to the correct Redis instance on failover.
+Q. Why - I thought in the modern age Redis clients should be Sentinel aware? They should connect to the correct Redis instance on failover.
 
 A. Some do, some don't. Some it seems to be an eternal 'work in progress'. Rather than fixing all of the clients we needed to work correctly with Sentinel, RedisHappy was built upon the fact that all of the clients I have tested are great at connecting to a single address.
 
@@ -222,7 +222,7 @@ Environment Variable               | Example          | Notes
 
 ### API
 
-RedisHappy provides a readonly API on port 8000. You can change the port by specifying a `PORT` environment variable.
+RedisHappy provides a readonly API on port 8000. You can change the port by specifying a `PORT` environment variable. It is also possible to use a ['BIND' environment variable](https://github.com/zenazn/goji/blob/master/bind/bind.go#L59) if you wish to bind to other interfaces etc. 
 
 * `GET /api/ping` - will reply "pong" if running
 * `GET /api/configuration` - displays the start up configuration
