@@ -2,35 +2,28 @@ package main
 
 import (
 	"fmt"
+	"sync"
 
-	"github.com/armon/consul-api"
+	"github.com/hashicorp/consul/api"
+	"github.com/mdevilliers/golang-bestiary/pkg/retry"
 	"github.com/mdevilliers/redishappy/configuration"
 	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/types"
 	"github.com/mdevilliers/redishappy/util"
+
+	"golang.org/x/net/context"
 )
 
 type ConsulFlipperClient struct {
-	consulClient         *consulapi.Client
+	sync.RWMutex
+	consulClient         *api.Client
+	clientConnected      bool
 	configurationManager *configuration.ConfigurationManager
 }
 
 func NewConsulFlipperClient(cm *configuration.ConfigurationManager) *ConsulFlipperClient {
 
-	configuration := cm.GetCurrentConfiguration()
-	connectionDetails := consulapi.DefaultConfig()
-
-	if configuration.Consul.Address != "" {
-		connectionDetails.Address = configuration.Consul.Address
-	}
-
-	client, err := consulapi.NewClient(connectionDetails)
-
-	if err != nil {
-		logger.Error.Panicf("Error connecting to consul : %s", err.Error())
-	}
-
-	return &ConsulFlipperClient{consulClient: client, configurationManager: cm}
+	return &ConsulFlipperClient{clientConnected: false, configurationManager: cm}
 }
 
 func (c *ConsulFlipperClient) InitialiseRunningState(state *types.MasterDetailsCollection) {
@@ -48,37 +41,106 @@ func (c *ConsulFlipperClient) Orchestrate(switchEvent types.MasterSwitchedEvent)
 
 }
 
+func (c *ConsulFlipperClient) getConnectedClient() (*api.Client, error) {
+
+	c.Lock()
+	defer c.Unlock()
+
+	if c.clientConnected {
+		return c.consulClient, nil
+	}
+
+	var wg sync.WaitGroup
+	var errorToReurn error = nil
+
+	retryAble := func() error {
+
+		configuration := c.configurationManager.GetCurrentConfiguration()
+		connectionDetails := api.DefaultConfig()
+
+		if configuration.Consul.Address != "" {
+			connectionDetails.Address = configuration.Consul.Address
+		}
+
+		client, err := api.NewClient(connectionDetails)
+
+		if err != nil {
+
+			return fmt.Errorf("Error connecting to consul : %s", err.Error())
+		}
+
+		c.consulClient = client
+		c.clientConnected = true
+		return nil
+	}
+
+	wg.Add(1)
+
+	var notifee = func(err error) {
+
+		errorToReurn = err
+		wg.Done()
+	}
+
+	ret := retry.NewRetry(retryAble, 5, 1000) // total max retry of 31s
+	ret.Execute(context.Background(), notifee)
+	wg.Wait()
+
+	return c.consulClient, errorToReurn
+
+}
+
 func (c *ConsulFlipperClient) UpdateConsul(name string, ip string, port int) {
 
-	configuration := c.configurationManager.GetCurrentConfiguration()
-	consulDetails := configuration.Consul
+	/// TODO : lock this access
+	/// use the canceable context to ensure the latest update is the only one applied
+	retryAble := func() error {
 
-	service, err := consulDetails.FindByClusterName(name)
+		configuration := c.configurationManager.GetCurrentConfiguration()
+		client, err := c.getConnectedClient()
 
-	if err != nil {
-		logger.Error.Printf("Error locating service %s, %s", name, err.Error())
+		if err != nil {
+
+			return fmt.Errorf("Error connecting to consul : %s", err.Error())
+		}
+
+		consulDetails := configuration.Consul
+
+		service, err := consulDetails.FindByClusterName(name)
+
+		if err != nil {
+			return fmt.Errorf("Error locating service %s, %s", name, err.Error())
+		}
+
+		//dig @127.0.0.1 -p 8600 testing.service.consul SRV
+		catalog := client.Catalog()
+
+		consulService := &api.AgentService{
+			ID:      fmt.Sprintf("redishappy-consul-%s", name),
+			Service: name,
+			Tags:    service.Tags,
+			Port:    port,
+		}
+
+		reg := &api.CatalogRegistration{
+			Datacenter: service.Datacenter,
+			Node:       service.Node,
+			Address:    ip,
+			Service:    consulService,
+		}
+
+		_, err = catalog.Register(reg, nil)
+
+		if err != nil {
+			return fmt.Errorf("Error updating consul : %s", err.Error())
+		}
+		return nil
 	}
 
-	//dig @127.0.0.1 -p 8600 testing.service.consul SRV
-	catalog := c.consulClient.Catalog()
+	var notifee = func(err error) {
 
-	consulService := &consulapi.AgentService{
-		ID:      fmt.Sprintf("redishappy-consul-%s", name),
-		Service: name,
-		Tags:    service.Tags,
-		Port:    port,
 	}
 
-	reg := &consulapi.CatalogRegistration{
-		Datacenter: service.Datacenter,
-		Node:       service.Node,
-		Address:    ip,
-		Service:    consulService,
-	}
-
-	_, err = catalog.Register(reg, nil)
-
-	if err != nil {
-		logger.Error.Printf("Error updating consul : %s", err.Error())
-	}
+	ret := retry.NewRetry(retryAble, 5, 1000)
+	ret.Execute(context.Background(), notifee)
 }
