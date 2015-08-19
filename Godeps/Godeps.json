@@ -38,6 +38,6 @@
 		{
 			"ImportPath": "github.com/blackjack/syslog",
 			"Rev": "4ea3f32c1eb1115ad9e010eeff314fffc5fc8638"
-		},
+		}
 	]
 }
