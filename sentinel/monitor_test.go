@@ -64,6 +64,39 @@ func TestMonitorWillReturnFalseOnAnInvalidMessage(t *testing.T) {
 	}
 }
 
+func TestMonitorWillParseSubscribeConfirmation(t *testing.T) {
+
+	connectionChannel := make(chan types.ConnectionEvent)
+	switchmasterchannel := make(chan types.MasterSwitchedEvent)
+	unthrottled := make(chan types.MasterSwitchedEvent)
+	validinput := "1"
+
+	go func() {
+		ok := dealWithSentinelMessage(&MockMessage{messageType: redis.Confirmation, messages: validinput}, switchmasterchannel, connectionChannel)
+		if ok {
+			t.Error("A valid subscription message was passed")
+		}
+	}()
+
+	connection_event := <-connectionChannel
+	if connection_event.Connected != true {
+		t.Error("Error receiving connection event")
+	}
+
+}
+
+func TestMonitorWillReturnFalseOnAnInvalidSubscribeConfirmation(t *testing.T) {
+
+	connectionChannel := make(chan types.ConnectionEvent)
+	switchmasterchannel := make(chan types.MasterSwitchedEvent)
+	invalidinput := "2"
+
+	ok := dealWithSentinelMessage(&MockMessage{messageType: redis.Confirmation, messages: invalidinput}, switchmasterchannel, connectionChannel)
+	if !ok {
+		t.Error("An invalid subscription message was passed")
+	}
+}
+
 func TestParseMasterMessage(t *testing.T) {
 
 	input := "name 1.1.1.1 1234 2.2.2.2 5678"
