@@ -99,7 +99,32 @@ func (m *SentinelManager) startNewMonitor(sentinel types.Sentinel) {
 
 func (m *SentinelManager) receiveConnectionMessage(in chan types.ConnectionEvent, out chan types.MasterSwitchedEvent) {
 	for {
-		// Force a resync of topology after connection?
+		select {
+		case event := <-in:
+			if event.Connected {
+
+				// types.MasterDetailsCollection{items:map[string]*types.MasterDetails{"redis-default":(*types.MasterDetails)(0xc8201f19b0)
+				currentTopology := m.GetCurrentTopology()
+				logger.Trace.Printf("%#v\n", currentTopology)
+
+				for _, v := range currentTopology.Items() {
+					// Tpoplog: types.MasterDetails{ExternalPort:6379, Name:"redis-default", Ip:"10.10.10.101", Port:6379}
+					logger.Info.Printf("Resync Topology: %#v\n", *v)
+
+					resyncMasterSwitchEvent := types.MasterSwitchedEvent{
+						Name:          v.Name,
+						OldMasterIp:   "resync",
+						OldMasterPort: 0,
+						NewMasterIp:   v.Ip,
+						NewMasterPort: v.Port,
+					}
+
+					out <- resyncMasterSwitchEvent
+
+				}
+
+			}
+		}
 	}
 }
 
