@@ -35,7 +35,6 @@ func TestMonitorWillParseAndForwardOnAGoodMessage(t *testing.T) {
 
 	connectionChannel := make(chan types.ConnectionEvent)
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
-	unthrottled := make(chan types.MasterSwitchedEvent)
 	validinput := "name 1.1.1.1 1234 2.2.2.2 5678"
 
 	go func() {
@@ -68,7 +67,6 @@ func TestMonitorWillParseSubscribeConfirmation(t *testing.T) {
 
 	connectionChannel := make(chan types.ConnectionEvent)
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
-	unthrottled := make(chan types.MasterSwitchedEvent)
 	validinput := "1"
 
 	go func() {
