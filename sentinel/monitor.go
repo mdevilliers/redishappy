@@ -132,7 +132,7 @@ func dealWithSentinelMessage(message redis.RedisPubSubReply, switchmasterchannel
 		event, err := parseSwitchMasterMessage(message.Message())
 
 		if err != nil {
-			logger.Info.Printf("Subscription Message : Channel %s : Error parsing message %s %s", message.Channel(), message.Message(), err.Error())
+			logger.Error.Printf("Subscription Message : Channel %s : Error parsing message %s %s", message.Channel(), message.Message(), err.Error())
 			return true
 		} else {
 			switchmasterchannel <- event

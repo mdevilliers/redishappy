@@ -1,6 +1,7 @@
 package sentinel
 
 import (
+	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/types"
 )
 
@@ -32,7 +33,10 @@ func (t *Throttle) loopEvents() {
 			if event.NewMasterIp != t.lastEvent.NewMasterIp || event.NewMasterPort != t.lastEvent.NewMasterPort {
 				t.lastEvent.NewMasterIp = event.NewMasterIp
 				t.lastEvent.NewMasterPort = event.NewMasterPort
+
 				t.out <- event
+			} else {
+				logger.Trace.Printf("Deduped +switch-master event, as I've (probably) already done the same thing. %s : %s : %v", event.Name, event.NewMasterIp, event.NewMasterPort)
 			}
 		}
 	}
