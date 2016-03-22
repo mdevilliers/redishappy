@@ -115,6 +115,7 @@ L:
 func (m *Monitor) shutDownMonitor() {
 	logger.Info.Printf("Shutting down monitor %s", m.sentinel.GetLocation())
 	m.manager.Notify(&SentinelLost{Sentinel: m.sentinel})
+	m.client.Close()
 	m.pubSubClient.Close()
 }
 
