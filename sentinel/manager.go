@@ -27,6 +27,7 @@ type Manager interface {
 
 type SentinelManager struct {
 	switchmasterchannel  chan types.MasterSwitchedEvent
+	connectionChannel    chan types.ConnectionEvent
 	redisConnection      redis.RedisConnection
 	configurationManager *configuration.ConfigurationManager
 	throttle             *Throttle
@@ -38,8 +39,11 @@ func NewManager(switchmasterchannel chan types.MasterSwitchedEvent, cm *configur
 	unthrottled := make(chan types.MasterSwitchedEvent)
 	throttle := NewThrottle(unthrottled, switchmasterchannel)
 
+	connectionChannel := make(chan types.ConnectionEvent)
+
 	manager := &SentinelManager{
 		switchmasterchannel:  unthrottled,
+		connectionChannel:    connectionChannel,
 		redisConnection:      redis.RedisConnection{},
 		configurationManager: cm,
 		throttle:             throttle,
@@ -81,11 +85,21 @@ func (m *SentinelManager) startNewMonitor(sentinel types.Sentinel) {
 		return
 	}
 
-	err = monitor.StartMonitoringMasterEvents(m.switchmasterchannel)
+	err = monitor.StartMonitoringMasterEvents(m.switchmasterchannel, m.connectionChannel)
 
 	if err != nil {
 		logger.Error.Printf("Error starting monitoring events %s : %s", sentinel.GetLocation(), err.Error())
 		m.Notify(&SentinelLost{Sentinel: sentinel})
+	}
+
+	// start our connection channel reciever?
+	go m.receiveConnectionMessage(m.connectionChannel, m.switchmasterchannel)
+
+}
+
+func (m *SentinelManager) receiveConnectionMessage(in chan types.ConnectionEvent, out chan types.MasterSwitchedEvent) {
+	for {
+		// Force a resync of topology after connection?
 	}
 }
 
