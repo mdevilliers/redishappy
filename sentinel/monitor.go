@@ -142,8 +142,10 @@ func dealWithSentinelMessage(message redis.RedisPubSubReply, switchmasterchannel
 
 	// If we've sucessfully subscribed, let the manager know, so it can force a topology resync.
 	if message.MessageType() == redis.Confirmation {
-		logger.Trace.Println("Subscription Message : Firing a ConnectionEvent")
-		connectionChannel <- types.ConnectionEvent{Connected: true}
+		if message.Message() == "1" {
+			logger.Trace.Println("Subscription Message : Firing a ConnectionEvent")
+			connectionChannel <- types.ConnectionEvent{Connected: true}
+		}
 	}
 
 	return false
