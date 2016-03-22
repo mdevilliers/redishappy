@@ -23,7 +23,6 @@ func NewRedisHappyEngine(flipper types.FlipperClient, cm *configuration.Configur
 	sentinelManager := sentinel.NewManager(masterEvents, cm)
 
 	go loopSentinelEvents(flipper, masterEvents)
-	go intiliseTopology(flipper, sentinelManager)
 
 	return &RedisHappyEngine{
 		cm: cm,
