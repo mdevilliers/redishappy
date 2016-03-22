@@ -95,7 +95,7 @@ func (m *SentinelManager) getTopology(stateChannel chan types.MasterDetailsColle
 	configuration := m.configurationManager.GetCurrentConfiguration()
 
 	for _, sentinel := range configuration.Sentinels {
-		client, err := redis.NewSentinelClient(sentinel, m.redisConnection)
+		client, err := redis.NewSentinelClient(sentinel, m.redisConnection, 13)
 
 		if err != nil {
 			logger.Info.Printf("Error starting sentinel (%s) client : %s", sentinel.GetLocation(), err.Error())

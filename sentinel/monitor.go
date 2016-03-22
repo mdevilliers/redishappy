@@ -25,13 +25,13 @@ func NewMonitor(sentinel types.Sentinel, manager Manager, redisConnection redis.
 	uri := sentinel.GetLocation()
 
 	channel := make(chan redis.RedisPubSubReply)
-	pubSubClient, err := redis.NewPubSubClient(uri, channel, redisConnection)
+	pubSubClient, err := redis.NewPubSubClient(uri, channel, redisConnection, 15)
 
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := redis.NewSentinelClient(sentinel, redisConnection)
+	client, err := redis.NewSentinelClient(sentinel, redisConnection, 14)
 
 	if err != nil {
 		return nil, err

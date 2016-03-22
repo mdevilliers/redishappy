@@ -10,9 +10,9 @@ type PubSubClient struct {
 	channel            chan RedisPubSubReply
 }
 
-func NewPubSubClient(url string, channel chan RedisPubSubReply, redisConnection RedisConnection) (*PubSubClient, error) {
+func NewPubSubClient(url string, channel chan RedisPubSubReply, redisConnection RedisConnection, tcp_keepalive int) (*PubSubClient, error) {
 
-	client, err := redisConnection.GetConnection("tcp", url)
+	client, err := redisConnection.GetConnection("tcp", url, tcp_keepalive)
 
 	if err != nil {
 		logger.Error.Printf("PubSubClient Error connecting to %s : %s", url, err.Error())
