@@ -15,11 +15,11 @@
 		},
 		{
 			"ImportPath": "github.com/therealbill/libredis/client",
-			"Rev": "6539abbacf1e3e8526c06394d264581841ecfe9e"
+			"Rev": "a48fa9547817823dc64561bf3fe82a11dcef8b14"
 		},
 		{
 			"ImportPath": "github.com/therealbill/libredis/info",
-			"Rev": "6539abbacf1e3e8526c06394d264581841ecfe9e"
+			"Rev": "a48fa9547817823dc64561bf3fe82a11dcef8b14"
 		},
 		{
 			"ImportPath": "github.com/zenazn/goji",
