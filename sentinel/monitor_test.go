@@ -76,9 +76,9 @@ func TestMonitorWillParseSubscribeConfirmation(t *testing.T) {
 		}
 	}()
 
-	connection_event := <-connectionChannel
-	if connection_event.Connected != true {
-		t.Error("Error receiving connection event")
+	connectionEvent := <-connectionChannel
+	if connectionEvent.Connected != true {
+		t.Error("Error receiving connectionEvent")
 	}
 
 }
