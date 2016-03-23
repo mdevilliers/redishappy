@@ -20,18 +20,18 @@ type Monitor struct {
 	redisConnection redis.RedisConnection
 }
 
-func NewMonitor(sentinel types.Sentinel, manager Manager, redisConnection redis.RedisConnection, tcp_keepalive int) (*Monitor, error) {
+func NewMonitor(sentinel types.Sentinel, manager Manager, redisConnection redis.RedisConnection, tcpKeepAlive int) (*Monitor, error) {
 
 	uri := sentinel.GetLocation()
 
 	channel := make(chan redis.RedisPubSubReply)
-	pubSubClient, err := redis.NewPubSubClient(uri, channel, redisConnection, tcp_keepalive)
+	pubSubClient, err := redis.NewPubSubClient(uri, channel, redisConnection, tcpKeepAlive)
 
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := redis.NewSentinelClient(sentinel, redisConnection, tcp_keepalive)
+	client, err := redis.NewSentinelClient(sentinel, redisConnection, tcpKeepAlive)
 
 	if err != nil {
 		return nil, err

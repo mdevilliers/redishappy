@@ -17,12 +17,12 @@ type Redis interface {
 	GetConnection(protocol, uri string, tcp_keepalive int) (RedisClient, error)
 }
 
-func (RedisConnection) GetConnection(protocol, uri string, tcp_keepalive int) (RedisClient, error) {
+func (RedisConnection) GetConnection(protocol, uri string, tcpKeepAlive int) (RedisClient, error) {
 	client, err := client.DialWithConfig(&client.DialConfig{
 		Network:      protocol,
 		Address:      uri,
 		Timeout:      RedisConnectionTimeoutPeriod,
-		TCPKeepAlive: tcp_keepalive,
+		TCPKeepAlive: tcpKeepAlive,
 	})
 
 	return client, err

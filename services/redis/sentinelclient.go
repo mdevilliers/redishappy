@@ -10,11 +10,11 @@ type SentinelClient struct {
 	redisClient RedisClient
 }
 
-func NewSentinelClient(sentinel types.Sentinel, redisConnection RedisConnection, tcp_keepalive int) (*SentinelClient, error) {
+func NewSentinelClient(sentinel types.Sentinel, redisConnection RedisConnection, tcpKeepAlive int) (*SentinelClient, error) {
 
 	uri := sentinel.GetLocation()
 
-	redisclient, err := redisConnection.GetConnection("tcp", uri, tcp_keepalive)
+	redisclient, err := redisConnection.GetConnection("tcp", uri, tcpKeepAlive)
 
 	if err != nil {
 		logger.Info.Printf("SentinelClient : not connected to %s, %s", uri, err.Error())
