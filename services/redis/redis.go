@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/therealbill/libredis/client"
+	"github.com/therealbill/libredis/structures"
 )
 
 const (
@@ -26,9 +27,9 @@ func (RedisConnection) GetConnection(protocol, uri string) (RedisClient, error) 
 
 type RedisClient interface {
 	ClosePool()
-	SentinelGetMaster(cluster string) (client.MasterAddress, error)
-	SentinelSentinels(cluster string) ([]client.SentinelInfo, error)
-	SentinelMasters() ([]client.MasterInfo, error)
+	SentinelGetMaster(cluster string) (structures.MasterAddress, error)
+	SentinelSentinels(cluster string) ([]structures.SentinelInfo, error)
+	SentinelMasters() ([]structures.MasterInfo, error)
 	Ping() error
 	PubSub() (*client.PubSub, error)
 }
