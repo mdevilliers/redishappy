@@ -120,9 +120,7 @@ func (m *SentinelManager) receiveConnectionMessage(in chan types.ConnectionEvent
 					}
 
 					out <- resyncMasterSwitchEvent
-
 				}
-
 			}
 		}
 	}
