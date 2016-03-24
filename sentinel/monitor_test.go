@@ -22,9 +22,10 @@ func (m *MockMessage) MessageType() int { return m.messageType }
 
 func TestMonitorSignalsAnError(t *testing.T) {
 
+	connectionChannel := make(chan types.ConnectionEvent)
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
 
-	ok := dealWithSentinelMessage(&MockMessage{err: errors.New("Boom")}, switchmasterchannel)
+	ok := dealWithSentinelMessage(&MockMessage{err: errors.New("Boom")}, switchmasterchannel, connectionChannel)
 	if !ok {
 		t.Error("A boom error should have happened")
 	}
@@ -32,11 +33,12 @@ func TestMonitorSignalsAnError(t *testing.T) {
 
 func TestMonitorWillParseAndForwardOnAGoodMessage(t *testing.T) {
 
+	connectionChannel := make(chan types.ConnectionEvent)
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
 	validinput := "name 1.1.1.1 1234 2.2.2.2 5678"
 
 	go func() {
-		ok := dealWithSentinelMessage(&MockMessage{messageType: redis.Message, messages: validinput}, switchmasterchannel)
+		ok := dealWithSentinelMessage(&MockMessage{messageType: redis.Message, messages: validinput}, switchmasterchannel, connectionChannel)
 		if ok {
 			t.Error("A valid message was passed")
 		}
@@ -51,12 +53,45 @@ func TestMonitorWillParseAndForwardOnAGoodMessage(t *testing.T) {
 
 func TestMonitorWillReturnFalseOnAnInvalidMessage(t *testing.T) {
 
+	connectionChannel := make(chan types.ConnectionEvent)
 	switchmasterchannel := make(chan types.MasterSwitchedEvent)
 	invalidinput := "name 1.1.1.1 rubbish 2.2.2.2 5678"
 
-	ok := dealWithSentinelMessage(&MockMessage{messageType: redis.Message, messages: invalidinput}, switchmasterchannel)
+	ok := dealWithSentinelMessage(&MockMessage{messageType: redis.Message, messages: invalidinput}, switchmasterchannel, connectionChannel)
 	if !ok {
 		t.Error("An invalid message was passed")
+	}
+}
+
+func TestMonitorWillParseSubscribeConfirmation(t *testing.T) {
+
+	connectionChannel := make(chan types.ConnectionEvent)
+	switchmasterchannel := make(chan types.MasterSwitchedEvent)
+	validinput := "1"
+
+	go func() {
+		ok := dealWithSentinelMessage(&MockMessage{messageType: redis.Confirmation, messages: validinput}, switchmasterchannel, connectionChannel)
+		if ok {
+			t.Error("A valid subscription message was passed")
+		}
+	}()
+
+	connectionEvent := <-connectionChannel
+	if connectionEvent.Connected != true {
+		t.Error("Error receiving connectionEvent")
+	}
+
+}
+
+func TestMonitorWillReturnFalseOnAnInvalidSubscribeConfirmation(t *testing.T) {
+
+	connectionChannel := make(chan types.ConnectionEvent)
+	switchmasterchannel := make(chan types.MasterSwitchedEvent)
+	invalidinput := "2"
+
+	ok := dealWithSentinelMessage(&MockMessage{messageType: redis.Confirmation, messages: invalidinput}, switchmasterchannel, connectionChannel)
+	if !ok {
+		t.Error("An invalid subscription message was passed")
 	}
 }
 

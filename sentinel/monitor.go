@@ -46,7 +46,7 @@ func NewMonitor(sentinel types.Sentinel, manager Manager, redisConnection redis.
 	return monitor, nil
 }
 
-func (m *Monitor) StartMonitoringMasterEvents(switchmasterchannel chan types.MasterSwitchedEvent) error {
+func (m *Monitor) StartMonitoringMasterEvents(switchmasterchannel chan types.MasterSwitchedEvent, connectionChannel chan types.ConnectionEvent) error {
 
 	key := "+switch-master"
 	err := m.pubSubClient.Start(key)
@@ -57,17 +57,17 @@ func (m *Monitor) StartMonitoringMasterEvents(switchmasterchannel chan types.Mas
 		return err
 	}
 
-	go m.loop(switchmasterchannel)
+	go m.loop(switchmasterchannel, connectionChannel)
 
 	return nil
 }
 
-func (m *Monitor) loop(switchmasterchannel chan types.MasterSwitchedEvent) {
+func (m *Monitor) loop(switchmasterchannel chan types.MasterSwitchedEvent, connectionChannel chan types.ConnectionEvent) {
 L:
 	for {
 		select {
 		case message := <-m.channel:
-			shutdown := dealWithSentinelMessage(message, switchmasterchannel)
+			shutdown := dealWithSentinelMessage(message, switchmasterchannel, connectionChannel)
 			if shutdown {
 				m.shutDownMonitor()
 				break L
@@ -115,10 +115,11 @@ L:
 func (m *Monitor) shutDownMonitor() {
 	logger.Info.Printf("Shutting down monitor %s", m.sentinel.GetLocation())
 	m.manager.Notify(&SentinelLost{Sentinel: m.sentinel})
+	m.client.Close()
 	m.pubSubClient.Close()
 }
 
-func dealWithSentinelMessage(message redis.RedisPubSubReply, switchmasterchannel chan types.MasterSwitchedEvent) bool {
+func dealWithSentinelMessage(message redis.RedisPubSubReply, switchmasterchannel chan types.MasterSwitchedEvent, connectionChannel chan types.ConnectionEvent) bool {
 
 	if message.Err() != nil {
 		logger.Info.Printf("Subscription Message : %s : Error %s", message.Channel(), message.Err())
@@ -136,6 +137,18 @@ func dealWithSentinelMessage(message redis.RedisPubSubReply, switchmasterchannel
 			return true
 		} else {
 			switchmasterchannel <- event
+		}
+	}
+
+	// If we've sucessfully subscribed, let the manager know, so it can force a topology resync.
+	if message.MessageType() == redis.Confirmation {
+		if message.Message() == "1" {
+			// We should expect a value of 1 here (appears to be a subscription counter)
+			logger.Trace.Println("Subscription Message : Firing a ConnectionEvent")
+			connectionChannel <- types.ConnectionEvent{Connected: true}
+		} else {
+			// Something odd has occurred. We're not guarantted to be subscribed.
+			return true
 		}
 	}
 

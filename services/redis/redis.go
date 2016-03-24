@@ -66,9 +66,8 @@ func NewRedisPubSubReply(message []string, err error) RedisPubSubReply {
 		channel: message[1],
 	}
 
-	if message[0] == "subcribe" {
+	if message[0] == "subscribe" {
 		ret.messageType = Confirmation
-		return ret
 	}
 
 	if message[0] == "message" {

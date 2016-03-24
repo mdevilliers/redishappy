@@ -1,5 +1,9 @@
 package types
 
+type ConnectionEvent struct {
+	Connected bool
+}
+
 type MasterSwitchedEvent struct {
 	Name          string
 	OldMasterIp   string
