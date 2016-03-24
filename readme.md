@@ -165,6 +165,8 @@ Definitions for the elements
 
 ```js
 {
+  // OPTIONAL - TCP Keep-Alive time (in seconds)
+  "SentinelTCPKeepAlive" : 0
   // REQUIRED - needs to contain at least one logical cluster
   "Clusters" :[
   {

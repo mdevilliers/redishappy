@@ -1,4 +1,5 @@
 {
+  "SentinelTCPKeepAlive": 0,
   "Clusters" :[
   {
     "Name" : "testing",

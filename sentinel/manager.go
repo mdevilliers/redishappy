@@ -73,7 +73,7 @@ func (m *SentinelManager) GetCurrentTopology() types.MasterDetailsCollection {
 
 func (m *SentinelManager) startNewMonitor(sentinel types.Sentinel) {
 
-	monitor, err := NewMonitor(sentinel, m, m.redisConnection)
+	monitor, err := NewMonitor(sentinel, m, m.redisConnection, m.configurationManager.GetCurrentConfiguration().SentinelTCPKeepAlive)
 
 	if err != nil {
 		logger.Error.Printf("Error starting monitor %s : %s", sentinel.GetLocation(), err.Error())
@@ -95,7 +95,7 @@ func (m *SentinelManager) getTopology(stateChannel chan types.MasterDetailsColle
 	configuration := m.configurationManager.GetCurrentConfiguration()
 
 	for _, sentinel := range configuration.Sentinels {
-		client, err := redis.NewSentinelClient(sentinel, m.redisConnection)
+		client, err := redis.NewSentinelClient(sentinel, m.redisConnection, configuration.SentinelTCPKeepAlive)
 
 		if err != nil {
 			logger.Info.Printf("Error starting sentinel (%s) client : %s", sentinel.GetLocation(), err.Error())

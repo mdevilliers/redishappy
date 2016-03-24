@@ -14,14 +14,17 @@ const (
 type RedisConnection struct{}
 
 type Redis interface {
-	GetConnection(protocol, uri string) (RedisClient, error)
+	GetConnection(protocol, uri string, tcp_keepalive int) (RedisClient, error)
 }
 
-func (RedisConnection) GetConnection(protocol, uri string) (RedisClient, error) {
+func (RedisConnection) GetConnection(protocol, uri string, tcpKeepAlive int) (RedisClient, error) {
 	client, err := client.DialWithConfig(&client.DialConfig{
-		Network: protocol,
-		Address: uri,
-		Timeout: RedisConnectionTimeoutPeriod})
+		Network:      protocol,
+		Address:      uri,
+		Timeout:      RedisConnectionTimeoutPeriod,
+		TCPKeepAlive: tcpKeepAlive,
+	})
+
 	return client, err
 }
 
