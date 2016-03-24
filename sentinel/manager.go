@@ -98,7 +98,7 @@ func (m *SentinelManager) getTopology(stateChannel chan types.MasterDetailsColle
 		client, err := redis.NewSentinelClient(sentinel, m.redisConnection, configuration.SentinelTCPKeepAlive)
 
 		if err != nil {
-			logger.Info.Printf("Error starting sentinel (%s) client : %s", sentinel.GetLocation(), err.Error())
+			logger.Error.Printf("Error starting sentinel (%s) client : %s", sentinel.GetLocation(), err.Error())
 			continue
 		}
 		defer client.Close()
