@@ -3,7 +3,7 @@ set -e
 set -u
 set -x
 
-version=${_REDISHAPPY_VERSION:-"1.0.0"}
+version=${_REDISHAPPY_VERSION:-"1.1.0"}
 url="https://github.com/mdevilliers/redishappy"
 arch="amd64"
 section="misc"
