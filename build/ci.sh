@@ -10,10 +10,13 @@
 set -e
 
 # Automatic checks
+RACE_FLAG="-race"
+if [[ `uname` == "SunOS" ]]; then RACE_FLAG=""; fi
+
 test -z "$(gofmt -l -w .     | tee /dev/stderr)"
 test -z "$(goimports -w .    | tee /dev/stderr)"
 godep go vet ./...
-godep go test -race ./...
+godep go test $RACE_FLAG ./...
 
 # Run test coverage on each subdirectories and merge the coverage profile. 
 echo "mode: count" > profile.cov
