@@ -17,6 +17,7 @@ Features
 * Read-only RestAPI.
 * Syslog integration.
 * RPM and Deb packages available.
+* Support for Linux, Solaris and Windows
 * [Puppet module available](https://github.com/lesaux/puppet-redishappy).
 
 ### Deployment
@@ -258,9 +259,10 @@ Big thanks to
 - [Pierig Le Saux](https://github.com/lesaux) for providing the RPM packaging and Puppet expertise
 - [Gary Hawkins](https://github.com/aeriandi-garyh) for providing the deb packaging expertise
 - [Dominic Scheirlinck](https://github.com/dominics) for fixing up the consul deb package
+- [Charles Phillips](https://github.com/doublerebel) for fixing compilation on Solaris
 
 
 Copyright and license
 ---------------------
 
-Code and documentation copyright 2015 Mark deVilliers. Code released under the Apache 2.0 license.
+Code and documentation copyright 2016 Mark deVilliers. Code released under the Apache 2.0 license.
