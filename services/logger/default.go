@@ -24,6 +24,8 @@ func init() {
 	NoteWorthy = log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 }
 
+func InitLogging(logPath string) {}
+
 func newLogFileWriter(logPath string) io.Writer {
 
 	return &lumberjack.Logger{
