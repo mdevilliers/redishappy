@@ -51,7 +51,6 @@ cd $GOPATH/src/github.com/mdevilliers/redishappy
 godep restore
 
 go get golang.org/x/tools/cmd/cover
-go get golang.org/x/tools/cmd/vet
 go get golang.org/x/tools/cmd/goimports
 
 export _REDISHAPPY_VERSION="1.0.0"
