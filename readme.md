@@ -121,7 +121,7 @@ The provided vagrant file creates a virtual machine with all of the dependancies
 vagrant up
 ```
 
-The packages are automatically built to - $GOPATH/src/github.com/redishappy/
+The packages are automatically built to - $GOPATH/src/github.com/mdevilliers/redishappy/
 
 The vagrant box also installs HAProxy, Docker and https://github.com/mdevilliers/docker-rediscluster for manual testing.
 
@@ -132,7 +132,7 @@ Install golang 1.4 +
 ```sh
 go get github.com/mdevilliers/redishappy
 
-cd $GOPATH/src/github.com/redishappy
+cd $GOPATH/src/github.com/mdevilliers/redishappy
 
 go get github.com/tools/godep
 go get github.com/axw/gocov/gocov
