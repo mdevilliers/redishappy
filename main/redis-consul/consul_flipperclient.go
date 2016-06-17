@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	consulapi "github.com/armon/consul-api"
 	"github.com/mdevilliers/redishappy/configuration"
 	"github.com/mdevilliers/redishappy/services/logger"
 	"github.com/mdevilliers/redishappy/types"
