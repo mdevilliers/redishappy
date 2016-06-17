@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -143,12 +144,19 @@ func overrideClusterConfiguration(config *Configuration) {
 
 		for _, clusterConfig := range bits {
 
-			ok, host, port := fauxHostAndIpToBits(clusterConfig)
+			host, port, err := net.SplitHostPort(clusterConfig)
 
-			if !ok {
+			if err != nil {
 				logger.Error.Panicf("Error parsing port REDISHAPPY_CLUSTERS : %s {%s}", env, clusterConfig)
 			}
-			config.Clusters = append(config.Clusters, types.Cluster{Name: host, ExternalPort: port})
+
+			portAsInt, err := strconv.Atoi(port)
+
+			if err != nil {
+				logger.Error.Panicf("Error parsing port REDISHAPPY_CLUSTERS : %s {%s}", env, clusterConfig)
+			}
+
+			config.Clusters = append(config.Clusters, types.Cluster{Name: host, ExternalPort: portAsInt})
 		}
 		logger.Info.Printf("Using environment override for cluster configuration REDISHAPPY_CLUSTERS : %s", env)
 	}
@@ -165,30 +173,19 @@ func overrideSentinelConfiguration(config *Configuration) {
 
 		for _, sentinelConfig := range bits {
 
-			ok, host, port := fauxHostAndIpToBits(sentinelConfig)
+			host, port, err := net.SplitHostPort(sentinelConfig)
 
-			if !ok {
+			if err != nil {
 				logger.Error.Panicf("Error parsing port REDISHAPPY_SENTINELS : %s {%s}", env, sentinelConfig)
 			}
-			config.Sentinels = append(config.Sentinels, types.Sentinel{Host: host, Port: port})
+			portAsInt, err := strconv.Atoi(port)
+
+			if err != nil {
+				logger.Error.Panicf("Error parsing port REDISHAPPY_SENTINELS : %s {%s}", env, sentinelConfig)
+			}
+			config.Sentinels = append(config.Sentinels, types.Sentinel{Host: host, Port: portAsInt})
 
 		}
 		logger.Info.Printf("Using environment override for sentinel configuration REDISHAPPY_SENTINELS : %s", env)
 	}
-}
-
-func fauxHostAndIpToBits(hostAndIp string) (bool, string, int) {
-	bits := strings.Split(hostAndIp, ":")
-
-	if len(bits) != 2 {
-		return false, "", 0
-	}
-
-	port, err := strconv.Atoi(bits[1])
-
-	if err != nil {
-		return false, "", 0
-	}
-
-	return true, bits[0], port
 }
