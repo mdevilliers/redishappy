@@ -1,7 +1,8 @@
 package types
 
 import (
-	"fmt"
+	"net"
+	"strconv"
 )
 
 type Sentinel struct {
@@ -10,5 +11,5 @@ type Sentinel struct {
 }
 
 func (s *Sentinel) GetLocation() string {
-	return fmt.Sprintf("%s:%d", s.Host, s.Port)
+	return net.JoinHostPort(s.Host, strconv.Itoa(s.Port))
 }
