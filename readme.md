@@ -138,7 +138,6 @@ go get github.com/tools/godep
 go get github.com/axw/gocov/gocov
 go get github.com/mattn/goveralls
 go get golang.org/x/tools/cmd/cover
-go get golang.org/x/tools/cmd/vet
 go get golang.org/x/tools/cmd/goimports
 
 godep restore
