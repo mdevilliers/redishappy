@@ -263,6 +263,7 @@ Big thanks to
 - [Gary Hawkins](https://github.com/aeriandi-garyh) for providing the deb packaging expertise
 - [Dominic Scheirlinck](https://github.com/dominics) for fixing up the consul deb package
 - [Charles Phillips](https://github.com/doublerebel) for fixing compilation on Solaris
+- [Samuel Vijaykumar M](https://github.com/samof76) for contributing his benchmarking findings
 
 
 Copyright and license
