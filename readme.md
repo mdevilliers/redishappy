@@ -224,7 +224,7 @@ Environment Variable               | Example          | Notes
 
 ### API
 
-RedisHappy provides a readonly API on port 8000. You can change the port by specifying a `PORT` environment variable. It is also possible to use a `BIND` [environment variable](https://github.com/zenazn/goji/blob/master/bind/bind.go#L59) if you wish to bind to other interfaces etc. 
+RedisHappy provides a readonly API on port 8000. You can change the port by specifying a `PORT` environment variable. It is also possible to use a `BIND` [environment variable](https://github.com/zenazn/goji/blob/master/bind/bind.go#L59) if you wish to bind to other interfaces etc.
 
 * `GET /api/ping` - will reply "pong" if running
 * `GET /api/configuration` - displays the start up configuration
@@ -243,6 +243,10 @@ Running the following script will gofmt, govet, run the tests, build all of the 
 ```sh
 build/ci.sh
 ```
+
+### Benchmarks
+
+Find some benchmarking information [here](docs/redishappy-benchmark.md).
 
 ### Testing with Docker
 
