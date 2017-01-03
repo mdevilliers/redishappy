@@ -269,4 +269,4 @@ Big thanks to
 Copyright and license
 ---------------------
 
-Code and documentation copyright 2016 Mark deVilliers. Code released under the Apache 2.0 license.
+Code and documentation copyright 2017 Mark deVilliers. Code released under the Apache 2.0 license.
